@@ -60,20 +60,21 @@ class UserNotification extends Model
         return $query->latest()->limit($limit);
     }
 
-    /**
-     * Static helper untuk menjana notifikasi aktiviti pengguna dengan pantas
-     */
-    public static function send($userId, string $title, string $message, string $type = 'sistem', ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald'): self
+    public static function send($userId, string $title, string $message, string $type = 'sistem', ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald'): ?self
     {
-        return self::create([
-            'user_id' => $userId,
-            'type' => $type,
-            'title' => $title,
-            'message' => $message,
-            'action_url' => $actionUrl,
-            'icon' => $icon,
-            'color' => $color,
-            'read_at' => null,
-        ]);
+        try {
+            return self::create([
+                'user_id' => $userId,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'action_url' => $actionUrl,
+                'icon' => $icon,
+                'color' => $color,
+                'read_at' => null,
+            ]);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

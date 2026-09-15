@@ -3,23 +3,26 @@ set -e
 
 echo "Starting JPVNK Application on Render..."
 
-# Create database.sqlite if using SQLite and file does not exist
+# Create database directory and sqlite file with full read/write permissions for www-data
+mkdir -p /var/www/html/database
 if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
     if [ ! -f /var/www/html/database/database.sqlite ]; then
         touch /var/www/html/database/database.sqlite
-        chown www-data:www-data /var/www/html/database/database.sqlite
     fi
+    chown -R www-data:www-data /var/www/html/database
+    chmod -R 777 /var/www/html/database
 fi
 
-# Ensure storage directories exist and have proper permissions
+# Ensure storage directories exist and have full write permissions
 mkdir -p /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/views \
          /var/www/html/storage/logs \
-         /var/www/html/storage/app/public
+         /var/www/html/storage/app/public \
+         /var/www/html/bootstrap/cache
 
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 # Link storage
 php artisan storage:link --force || true
@@ -28,7 +31,14 @@ php artisan storage:link --force || true
 echo "Running migrations..."
 php artisan migrate --force || true
 
-# Cache configurations, routes, and views for speed
+# Ensure permissions again after migration
+chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Clear and cache configurations, routes, and views
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true

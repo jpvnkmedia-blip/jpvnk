@@ -41,9 +41,10 @@ COPY . /var/www/html
 # Install dependencies (no dev dependencies for production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set permissions for storage and bootstrap cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions for storage, database and bootstrap cache
+RUN mkdir -p /var/www/html/database \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 # Make entrypoint script executable
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
