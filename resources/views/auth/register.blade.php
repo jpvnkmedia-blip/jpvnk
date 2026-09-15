@@ -144,9 +144,9 @@
                         Kategori Pengguna <span class="text-rose-500">*</span>
                     </label>
                     <select name="role" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium">
-                        <option value="penternak" {{ old('role', 'penternak') === 'penternak' ? 'selected' : '' }}>Penternak Ruminan (Lembu / Kerbau / Kambing / Biri-biri - EPTR & Pawah)</option>
-                        <option value="usahawan" {{ old('role') === 'usahawan' ? 'selected' : '' }}>Penternak & Usahawan Unggas (Ayam / Itik / Puyuh - e-Unggas)</option>
-                        <option value="orang_awam" {{ old('role') === 'orang_awam' ? 'selected' : '' }}>Orang Awam (Permohonan Kursus & Temujanji Klinik Veterinar)</option>
+                        <option value="orang_awam" {{ old('role', 'orang_awam') === 'orang_awam' ? 'selected' : '' }}>Orang Awam</option>
+                        <option value="penternak" {{ old('role') === 'penternak' ? 'selected' : '' }}>Penternak</option>
+                        <option value="usahawan" {{ old('role') === 'usahawan' ? 'selected' : '' }}>Usahawan</option>
                     </select>
                 </div>
 
