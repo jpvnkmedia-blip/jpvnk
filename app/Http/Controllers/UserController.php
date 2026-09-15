@@ -1,0 +1,392 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\Pemunya;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Closure;
+
+class UserController extends Controller implements HasMiddleware
+{
+    public static function middleware(): array
+    {
+        return [
+            function (Request $request, Closure $next) {
+                if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+                    abort(403, 'Akses Ditolak: Hanya Super Admin yang dibenarkan mengakses Pengurusan Pengguna.');
+                }
+                return $next($request);
+            }
+        ];
+    }
+
+    public static function getRoleDefinitions(): array
+    {
+        return [
+            'Pentadbiran & Pengurusan Sistem' => [
+                'super_admin' => [
+                    'label' => 'Super Admin',
+                    'desc' => 'Akses penuh ke semua modul sistem dan pengurusan pengguna pentadbir.',
+                    'badge' => 'bg-purple-100 text-purple-800 border-purple-300',
+                    'icon' => 'fa-crown text-purple-600',
+                ],
+                'admin_eptr' => [
+                    'label' => 'Admin EPTR Negeri',
+                    'desc' => 'Pengurusan pendaftaran ruminan, permit sembelihan & pemindahan peringkat negeri.',
+                    'badge' => 'bg-amber-100 text-amber-800 border-amber-300',
+                    'icon' => 'fa-cow text-amber-600',
+                ],
+                'admin_jajahan' => [
+                    'label' => 'Admin EPTR Jajahan',
+                    'desc' => 'Kelulusan tag telinga, verifikasi dan pengesahan ternakan mengikut Jajahan.',
+                    'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    'icon' => 'fa-landmark text-emerald-600',
+                ],
+                'admin_program' => [
+                    'label' => 'Admin Program Pawah',
+                    'desc' => 'Pengurusan skim bantuan pawah, perjanjian pembiakan dan pemantauan kelahiran.',
+                    'badge' => 'bg-teal-100 text-teal-800 border-teal-300',
+                    'icon' => 'fa-handshake-angle text-teal-600',
+                ],
+                'admin_epu' => [
+                    'label' => 'Admin EPU Unggas',
+                    'desc' => 'Pengurusan ladang ternakan unggas (ayam, itik, puyuh) dan pemantauan permit.',
+                    'badge' => 'bg-orange-100 text-orange-800 border-orange-300',
+                    'icon' => 'fa-feather text-orange-600',
+                ],
+                'admin_kursus' => [
+                    'label' => 'Admin Kursus',
+                    'desc' => 'Penerbitan modul latihan, jadual kursus penternakan dan pengurusan peserta.',
+                    'badge' => 'bg-cyan-100 text-cyan-800 border-cyan-300',
+                    'icon' => 'fa-graduation-cap text-cyan-600',
+                ],
+                'admin_ubat' => [
+                    'label' => 'Admin Stor Ubat & Farmasi',
+                    'desc' => 'Pengurusan inventori ubat, vaksin veterinar dan kelulusan pesanan jajahan.',
+                    'badge' => 'bg-rose-100 text-rose-800 border-rose-300',
+                    'icon' => 'fa-pills text-rose-600',
+                ],
+                'admin_klinik' => [
+                    'label' => 'Admin Klinik Haiwan',
+                    'desc' => 'Pengurusan temujanji rawatan klinikal, surgeri dan kad rawatan haiwan.',
+                    'badge' => 'bg-pink-100 text-pink-800 border-pink-300',
+                    'icon' => 'fa-stethoscope text-pink-600',
+                ],
+                'admin_pejabat' => [
+                    'label' => 'Admin Pejabat & Kenderaan',
+                    'desc' => 'Pengurusan stor alatan pejabat, fleet kenderaan rasmi jabatan dan pemandu.',
+                    'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                    'icon' => 'fa-building text-indigo-600',
+                ],
+                'staf' => [
+                    'label' => 'Kakitangan Jabatan (Staf)',
+                    'desc' => 'Staf JPVNK yang boleh memohon alatan stor dan mendaftar kursus.',
+                    'badge' => 'bg-blue-100 text-blue-800 border-blue-300',
+                    'icon' => 'fa-user-tie text-blue-600',
+                ],
+            ],
+            'Penternak & Pengguna Luar' => [
+                'penternak' => [
+                    'label' => 'Penternak Ruminan',
+                    'desc' => 'Pemilik ternakan lembu, kambing, biri-biri dan kerbau (Profil Pemunya dicipta automatik).',
+                    'badge' => 'bg-lime-100 text-lime-800 border-lime-300',
+                    'icon' => 'fa-wheat-awn text-lime-600',
+                ],
+                'usahawan' => [
+                    'label' => 'Usahawan Unggas / Komersial',
+                    'desc' => 'Pengusaha ladang ayam pedaging, penelur, itik dan puyuh komersial.',
+                    'badge' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                    'icon' => 'fa-briefcase text-yellow-600',
+                ],
+                'orang_awam' => [
+                    'label' => 'Orang Awam',
+                    'desc' => 'Pengguna awam yang memohon permit sembelihan, temujanji klinik atau kursus.',
+                    'badge' => 'bg-slate-100 text-slate-800 border-slate-300',
+                    'icon' => 'fa-user text-slate-600',
+                ],
+            ],
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $query = User::query();
+
+        // Carian Nama, IC, Emel, Telefon
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $cleanIc = str_replace(['-', ' '], '', $search);
+            $query->where(function ($q) use ($search, $cleanIc) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('ic_number', 'like', "%{$search}%")
+                  ->orWhere('ic_number', 'like', "%{$cleanIc}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Tapis Peranan (Role)
+        if ($request->filled('role') && $request->role !== 'semua') {
+            if ($request->role === 'admin_jajahan') {
+                $query->whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan']);
+            } else {
+                $query->where('role', $request->role);
+            }
+        }
+
+        // Tapis Jajahan
+        if ($request->filled('jajahan') && $request->jajahan !== 'semua') {
+            $query->where('jajahan', $request->jajahan);
+        }
+
+        // Tapis Status
+        if ($request->filled('status') && $request->status !== 'semua') {
+            $query->where('status', $request->status);
+        }
+
+        $users = $query->orderBy('role')->orderBy('name')->paginate(20)->withQueryString();
+
+        // Statistik Keseluruhan
+        $totalUsers = User::count();
+        $totalStaff = User::whereIn('role', [
+            'super_admin', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
+            'admin_program', 'admin_epu', 'admin_kursus', 'admin_ubat',
+            'admin_klinik', 'admin_pejabat', 'staf'
+        ])->count();
+        $totalPenternak = User::where('role', 'penternak')->count();
+        $totalUsahawan = User::where('role', 'usahawan')->count();
+        $totalAwam = User::where('role', 'orang_awam')->count();
+        $totalAktif = User::where('status', 'Aktif')->count();
+
+        $kelantanData = config('kelantan.jajahan', []);
+        $jajahanList = array_keys($kelantanData);
+        $roleDefinitions = self::getRoleDefinitions();
+
+        return view('users.index', compact(
+            'users',
+            'totalUsers',
+            'totalStaff',
+            'totalPenternak',
+            'totalUsahawan',
+            'totalAwam',
+            'totalAktif',
+            'jajahanList',
+            'roleDefinitions'
+        ));
+    }
+
+    public function create()
+    {
+        $kelantanData = config('kelantan.jajahan', []);
+        $jajahanList = array_keys($kelantanData);
+        $roleDefinitions = self::getRoleDefinitions();
+
+        return view('users.create', compact('jajahanList', 'kelantanData', 'roleDefinitions'));
+    }
+
+    public function store(Request $request)
+    {
+        $cleanIc = str_replace(['-', ' '], '', $request->input('ic_number', ''));
+        $request->merge(['ic_number' => $cleanIc]);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'ic_number' => ['required', 'string', 'max:20', 'unique:users,ic_number'],
+            'phone' => ['required', 'string', 'max:25'],
+            'address' => ['required', 'string'],
+            'jajahan' => ['required', 'string'],
+            'role' => ['required', 'string'],
+            'status' => ['required', 'in:Aktif,Tidak Aktif'],
+            'password' => ['nullable', 'confirmed', Password::min(6)],
+        ], [
+            'name.required' => 'Nama penuh pengguna wajib diisi.',
+            'email.required' => 'Alamat emel wajib diisi.',
+            'email.unique' => 'Alamat emel ini telah pun digunakan oleh pengguna lain.',
+            'ic_number.required' => 'No. Kad Pengenalan wajib diisi.',
+            'ic_number.unique' => 'No. Kad Pengenalan ini telah pun didaftarkan dalam sistem.',
+            'phone.required' => 'No. Telefon wajib diisi.',
+            'address.required' => 'Alamat kediaman / pejabat wajib diisi.',
+            'jajahan.required' => 'Sila pilih Jajahan.',
+            'role.required' => 'Sila pilih peranan pengguna.',
+            'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
+            'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
+        ]);
+
+        $finalPassword = !empty($validated['password'])
+            ? $validated['password']
+            : User::generateDefaultPassword($validated['ic_number']);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'ic_number' => $validated['ic_number'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'jajahan' => $validated['jajahan'],
+            'role' => $validated['role'],
+            'auth_provider' => 'manual',
+            'status' => $validated['status'],
+            'password' => Hash::make($finalPassword),
+        ]);
+
+        // Jika peranan penternak, cipta atau pautkan profil Pemunya Ternakan
+        if ($user->role === 'penternak') {
+            Pemunya::firstOrCreate(
+                ['no_kp' => $user->ic_number],
+                [
+                    'user_id' => $user->id,
+                    'nama' => $user->name,
+                    'no_telefon' => $user->phone,
+                    'alamat' => $user->address,
+                    'jajahan' => $user->jajahan,
+                    'status' => 'Aktif',
+                ]
+            );
+        }
+
+        return redirect()->route('users.index')->with('success', "Akaun pengguna baharu berjaya didaftarkan untuk: {$user->name} ({$user->role_label})!");
+    }
+
+    public function show($id)
+    {
+        $targetUser = User::with([
+            'pemunya.ternakan',
+            'pawahPerjanjian',
+            'ladangUnggas',
+            'permohonanKursus.course',
+            'temujanjiKlinik',
+            'tempahanKenderaan.kenderaan',
+            'permohonanInventori'
+        ])->findOrFail($id);
+
+        return view('users.show', compact('targetUser'));
+    }
+
+    public function edit($id)
+    {
+        $targetUser = User::findOrFail($id);
+        $kelantanData = config('kelantan.jajahan', []);
+        $jajahanList = array_keys($kelantanData);
+        $roleDefinitions = self::getRoleDefinitions();
+
+        return view('users.edit', compact('targetUser', 'jajahanList', 'kelantanData', 'roleDefinitions'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $targetUser = User::findOrFail($id);
+        $currentUser = Auth::user();
+
+        $cleanIc = str_replace(['-', ' '], '', $request->input('ic_number', ''));
+        $request->merge(['ic_number' => $cleanIc]);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
+            'ic_number' => ['required', 'string', 'max:20', 'unique:users,ic_number,' . $id],
+            'phone' => ['required', 'string', 'max:25'],
+            'address' => ['required', 'string'],
+            'jajahan' => ['required', 'string'],
+            'role' => ['required', 'string'],
+            'status' => ['required', 'in:Aktif,Tidak Aktif'],
+            'password' => ['nullable', 'confirmed', Password::min(6)],
+        ], [
+            'name.required' => 'Nama penuh pengguna wajib diisi.',
+            'email.required' => 'Alamat emel wajib diisi.',
+            'email.unique' => 'Alamat emel ini telah pun digunakan oleh pengguna lain.',
+            'ic_number.required' => 'No. Kad Pengenalan wajib diisi.',
+            'ic_number.unique' => 'No. Kad Pengenalan ini telah pun didaftarkan.',
+            'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
+            'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
+        ]);
+
+        // Lindungi akaun sendiri dari diturunkan taraf atau dinyahaktif
+        if ($currentUser->id === $targetUser->id) {
+            if ($validated['role'] !== 'super_admin') {
+                return back()->with('error', 'Akses Ditolak: Anda tidak boleh mengubah peranan akaun Super Admin anda sendiri.');
+            }
+            if ($validated['status'] !== 'Aktif') {
+                return back()->with('error', 'Akses Ditolak: Anda tidak boleh menyahaktifkan akaun anda sendiri.');
+            }
+        }
+
+        $targetUser->name = $validated['name'];
+        $targetUser->email = $validated['email'];
+        $targetUser->ic_number = $validated['ic_number'];
+        $targetUser->phone = $validated['phone'];
+        $targetUser->address = $validated['address'];
+        $targetUser->jajahan = $validated['jajahan'];
+        $targetUser->role = $validated['role'];
+        $targetUser->status = $validated['status'];
+
+        if (!empty($validated['password'])) {
+            $targetUser->password = Hash::make($validated['password']);
+        }
+
+        $targetUser->save();
+
+        // Kemaskini atau cipta profil Pemunya jika peranan adalah penternak
+        if ($targetUser->role === 'penternak') {
+            if ($targetUser->pemunya) {
+                $targetUser->pemunya->update([
+                    'nama' => $targetUser->name,
+                    'no_kp' => $targetUser->ic_number,
+                    'no_telefon' => $targetUser->phone,
+                    'alamat' => $targetUser->address,
+                    'jajahan' => $targetUser->jajahan,
+                ]);
+            } else {
+                Pemunya::firstOrCreate(
+                    ['no_kp' => $targetUser->ic_number],
+                    [
+                        'user_id' => $targetUser->id,
+                        'nama' => $targetUser->name,
+                        'no_telefon' => $targetUser->phone,
+                        'alamat' => $targetUser->address,
+                        'jajahan' => $targetUser->jajahan,
+                        'status' => 'Aktif',
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('users.index')->with('success', "Maklumat pengguna {$targetUser->name} berjaya dikemaskini!");
+    }
+
+    public function toggleStatus($id)
+    {
+        $targetUser = User::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if ($currentUser->id === $targetUser->id) {
+            return back()->with('error', 'Akses Ditolak: Anda tidak boleh menyahaktifkan akaun anda sendiri.');
+        }
+
+        $targetUser->status = ($targetUser->status === 'Aktif') ? 'Tidak Aktif' : 'Aktif';
+        $targetUser->save();
+
+        return back()->with('success', "Status akaun {$targetUser->name} telah ditukar kepada: {$targetUser->status}.");
+    }
+
+    public function destroy($id)
+    {
+        $targetUser = User::findOrFail($id);
+        $currentUser = Auth::user();
+
+        if ($currentUser->id === $targetUser->id) {
+            return back()->with('error', 'Akses Ditolak: Anda tidak boleh memadam akaun Super Admin anda sendiri.');
+        }
+
+        $name = $targetUser->name;
+        $targetUser->delete();
+
+        return redirect()->route('users.index')->with('success', "Akaun pengguna {$name} telah berjaya dipadam dari sistem.");
+    }
+}
