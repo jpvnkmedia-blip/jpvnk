@@ -92,12 +92,12 @@
                 <form action="{{ route('login') }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <label for="ic_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">No. Kad Pengenalan</label>
+                        <label for="ic_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">No. Kad Pengenalan / Emel</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                                 <i class="fa-solid fa-id-card text-sm"></i>
                             </span>
-                            <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number', '800515035511') }}" placeholder="800515035511" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                            <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number') }}" placeholder="Contoh: 900729035413 atau emel" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-mono">
                         </div>
                         <p class="text-[11px] text-slate-400 mt-1">Masukkan 12 digit tanpa tanda sempang (-) atau alamat emel berdaftar.</p>
                     </div>
@@ -108,7 +108,7 @@
                             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                                 <i class="fa-solid fa-lock text-sm"></i>
                             </span>
-                            <input id="password" name="password" type="password" required value="password" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                            <input id="password" name="password" type="password" required placeholder="Masukkan kata laluan anda" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
                         </div>
                     </div>
 
@@ -117,7 +117,6 @@
                             <input type="checkbox" name="remember" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
                             <span class="ml-2">Ingat saya pada peranti ini</span>
                         </label>
-                        <a href="#" class="text-emerald-700 font-semibold hover:underline">Lupa kata laluan?</a>
                     </div>
 
                     <button type="submit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-700/30 transition duration-150 flex items-center justify-center gap-2">
@@ -168,29 +167,6 @@
                 <a href="{{ route('register') }}" class="font-bold text-emerald-700 hover:underline ml-1">
                     Daftar Akaun Sekali Sahaja (Percuma) &rarr;
                 </a>
-            </div>
-
-            <!-- Quick Demo Login Buttons -->
-            <div class="mt-8 pt-6 border-t border-slate-200">
-                <div class="text-center mb-3">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full">
-                        <i class="fa-solid fa-bolt text-amber-500 mr-1"></i> Log Masuk Pantas Ujian
-                    </span>
-                </div>
-                
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
-                    @foreach($demoUsers as $demoUser)
-                        <form action="{{ route('auth.switch-role') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="user_id" value="{{ $demoUser->id }}">
-                            <button type="submit" class="w-full text-left p-2 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition flex flex-col justify-between h-full bg-slate-50/70">
-                                <span class="font-bold text-slate-800 truncate">{{ $demoUser->role_label }}</span>
-                                <span class="text-[10px] text-slate-500 truncate">{{ $demoUser->name }}</span>
-                                <span class="text-[9px] font-mono text-emerald-700 truncate"><i class="fa-solid fa-id-badge mr-0.5"></i> {{ $demoUser->ic_number }}</span>
-                            </button>
-                        </form>
-                    @endforeach
-                </div>
             </div>
 
         </div>
