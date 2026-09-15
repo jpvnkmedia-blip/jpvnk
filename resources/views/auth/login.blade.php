@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ms" class="h-full bg-slate-900">
+<html lang="ms" class="min-h-screen bg-slate-950">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Log Masuk - Sistem Veterinar Bersepadu JPVNK</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-veterinar.png') }}">
     
@@ -30,17 +30,23 @@
 
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        html, body {
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
 </head>
-<body class="h-full font-sans antialiased text-slate-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950">
+<body class="min-h-screen font-sans antialiased text-slate-800 flex flex-col justify-start py-8 sm:py-12 px-3.5 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950">
 
-    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div class="inline-flex items-center justify-center mb-4">
-            <img src="{{ asset('images/logo-veterinar.png') }}" alt="Logo Jabatan Perkhidmatan Veterinar" class="w-20 h-20 object-contain drop-shadow-2xl bg-white/95 p-2 rounded-2xl border border-slate-700/40">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center px-2">
+        <div class="inline-flex items-center justify-center mb-3">
+            <img src="{{ asset('images/logo-veterinar.png') }}" alt="Logo Jabatan Perkhidmatan Veterinar" class="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-2xl bg-white/95 p-2 rounded-2xl border border-slate-700/40">
         </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        <h2 class="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
             Sistem Veterinar Bersepadu
         </h2>
-        <p class="mt-2 text-sm text-emerald-300/90 font-medium">
+        <p class="mt-1 sm:mt-2 text-xs sm:text-sm text-emerald-300/90 font-medium">
             Jabatan Perkhidmatan Veterinar Negeri Kelantan
         </p>
         <p class="text-xs text-slate-400 mt-1">

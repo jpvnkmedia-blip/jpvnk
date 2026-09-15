@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ms" class="h-full bg-slate-900">
+<html lang="ms" class="min-h-screen bg-slate-950">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Pendaftaran Pengguna Baharu - Sistem Veterinar Bersepadu JPVNK</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-veterinar.png') }}">
     
@@ -30,25 +30,31 @@
 
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        html, body {
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
 </head>
-<body class="h-full font-sans antialiased text-slate-800 flex flex-col justify-center py-10 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950">
+<body class="min-h-screen font-sans antialiased text-slate-800 flex flex-col justify-start py-6 sm:py-12 px-3.5 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950">
 
-    <div class="sm:mx-auto sm:w-full sm:max-w-xl text-center px-4">
-        <div class="inline-flex items-center justify-center mb-3">
-            <img src="{{ asset('images/logo-veterinar.png') }}" alt="Logo JPVNK" class="w-16 h-16 object-contain drop-shadow-2xl bg-white/95 p-2 rounded-2xl border border-slate-700/40">
+    <div class="sm:mx-auto sm:w-full sm:max-w-xl text-center px-2">
+        <div class="inline-flex items-center justify-center mb-2.5">
+            <img src="{{ asset('images/logo-veterinar.png') }}" alt="Logo JPVNK" class="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-2xl bg-white/95 p-2 rounded-2xl border border-slate-700/40">
         </div>
-        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+        <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight">
             Sistem Veterinar Bersepadu
         </h1>
         <p class="text-xs sm:text-sm text-emerald-300 font-semibold mt-0.5">
             Jabatan Perkhidmatan Veterinar Negeri Kelantan
         </p>
-        <div class="inline-block mt-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+        <div class="inline-block mt-2 px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
             PENDAFTARAN BARU PENGGUNA (KALI PERTAMA)
         </div>
     </div>
 
-    <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-xl px-4" x-data="{
+    <div class="mt-4 sm:mt-6 sm:mx-auto sm:w-full sm:max-w-xl px-1 sm:px-4 pb-12" x-data="{
         icNumber: '{{ old('ic_number', '') }}',
         showPass: false,
         showConfirmPass: false,
@@ -59,7 +65,7 @@
             return 'super@DVS' + last4;
         }
     }">
-        <div class="bg-white py-8 px-6 shadow-2xl rounded-3xl sm:px-10 border border-slate-100">
+        <div class="bg-white py-6 px-4 shadow-2xl rounded-2xl sm:rounded-3xl sm:py-8 sm:px-10 border border-slate-100">
             
             @if($errors->any())
                 <div class="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
