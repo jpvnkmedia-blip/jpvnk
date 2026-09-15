@@ -39,18 +39,20 @@ class DatabaseSeeder extends Seeder
         // 1. PENGGUNA (10 ROLES)
         $password = Hash::make('password');
 
-        $superAdmin = User::create([
-            'name' => 'Dr. Mohd Fauzi bin Abdullah',
-            'email' => 'superadmin@veterinar.kelantan.gov.my',
-            'ic_number' => '800515035511',
-            'phone' => '019-9112233',
-            'address' => 'Ibu Pejabat JPVNK, Jalan Kubang Kachang, 15200 Kota Bharu, Kelantan',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'super_admin',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $superAdmin = User::updateOrCreate(
+            ['role' => 'super_admin'],
+            [
+                'name' => 'Mohd Hanif bin Ismail',
+                'email' => 'hanif@dvs.gov.my',
+                'ic_number' => '900729035413',
+                'phone' => '019-9112233',
+                'address' => 'Ibu Pejabat JPVNK, Jalan Kubang Kachang, 15200 Kota Bharu, Kelantan',
+                'jajahan' => 'Kota Bharu',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => Hash::make('super@DVS5413'),
+            ]
+        );
 
         $adminPejabat = User::create([
             'name' => 'Pn. Noraini binti Che Mat',
