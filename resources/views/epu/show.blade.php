@@ -227,13 +227,23 @@
                         <div class="flex items-start gap-3">
                             <i class="fa-solid fa-receipt text-amber-600 text-base mt-0.5"></i>
                             <div>
-                                <div class="font-bold">Makluman Kelulusan Lesen & Arahan Pembayaran Fi</div>
-                                <p class="text-amber-900 mt-0.5">Permohonan lesen anda telah diluluskan oleh Pegawai Pelesen / Pengarah DVS! Sila jelaskan fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> dan muat naik bukti pembayaran untuk membolehkan pencetakan Lesen Borang B rasmi.</p>
+                                <div class="font-bold">Makluman Kelulusan Lesen &amp; Status Bayaran Fi</div>
+                                @if(!$isStaff || $isOwner)
+                                    <p class="text-amber-900 mt-0.5">Permohonan lesen anda telah diluluskan oleh Pegawai Pelesen / Pengarah DVS! Sila jelaskan fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> dan muat naik bukti pembayaran untuk membolehkan pencetakan Lesen Borang B rasmi.</p>
+                                @else
+                                    <p class="text-amber-900 mt-0.5">Permohonan lesen bagi penternak ini telah diluluskan. Menunggu pemohon menjelaskan bayaran fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> dan memuat naik resit bayaran.</p>
+                                @endif
                             </div>
                         </div>
-                        <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto">
-                            <i class="fa-solid fa-upload"></i> Bayar & Muat Naik Resit
-                        </button>
+                        @if(!$isStaff || $isOwner)
+                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto">
+                                <i class="fa-solid fa-upload"></i> Bayar &amp; Muat Naik Resit
+                            </button>
+                        @else
+                            <div class="px-3.5 py-2 bg-amber-100 text-amber-900 font-bold rounded-xl text-xs border border-amber-300 whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5">
+                                <i class="fa-solid fa-hourglass-half text-amber-600"></i> Menunggu Bayaran Pemohon
+                            </div>
+                        @endif
                     </div>
                 @elseif($p->status_bayaran_fi === 'Menunggu Pengesahan')
                     <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200 text-blue-950 text-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
@@ -257,7 +267,7 @@
                                     </div>
                                 @else
                                     <div class="pt-0.5 text-amber-700 text-[11px] font-medium flex items-center gap-1">
-                                        <i class="fa-solid fa-circle-info"></i> Fail imbasan resit belum dimuat naik. Sila klik "Kemaskini / Muat Naik Resit" jika ingin melampirkan fail.
+                                        <i class="fa-solid fa-circle-info"></i> Fail imbasan resit belum dimuat naik oleh pemohon.
                                     </div>
                                 @endif
                             </div>
@@ -272,9 +282,13 @@
                                     <i class="fa-solid fa-receipt text-sm"></i> Lihat Butiran Resit
                                 </button>
                             @endif
-                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-file-arrow-up text-blue-600"></i> Kemaskini / Muat Naik Resit
-                            </button>
+
+                            @if(!$isStaff || $isOwner)
+                                <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-arrow-up text-blue-600"></i> Kemaskini / Muat Naik Resit
+                                </button>
+                            @endif
+
                             @if($isStaff)
                                 <form action="{{ route('epu.sahkan-bayaran', $p->id) }}" method="POST">
                                     @csrf
@@ -611,9 +625,15 @@
                     <p class="text-xs text-slate-500">Semak dan buka fail lampiran dokumen tanah, pelan tapak, SSM dan bukti pembayaran fi</p>
                 </div>
             </div>
-            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5 self-start sm:self-auto">
-                <i class="fa-solid fa-upload text-blue-600"></i> Muat Naik / Kemaskini Fail
-            </button>
+            @if(!$isStaff || $isOwner)
+                <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5 self-start sm:self-auto">
+                    <i class="fa-solid fa-upload text-blue-600"></i> Muat Naik / Kemaskini Fail
+                </button>
+            @else
+                <span class="px-3 py-1 rounded-xl bg-slate-100 text-slate-500 font-bold text-xs flex items-center gap-1.5 self-start sm:self-auto">
+                    <i class="fa-solid fa-eye text-blue-600"></i> Semakan Dokumen Rasmi
+                </span>
+            @endif
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
@@ -634,18 +654,30 @@
                 </div>
                 <div>
                     @if($p->resit_bayaran_fi)
-                        <div class="flex items-center gap-1.5">
-                            <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                        @if(!$isStaff || $isOwner)
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i> Buka Resit (PDF/Imej)
+                                </a>
+                                <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-2.5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-xl transition text-xs" title="Muat Naik Semula / Tukar Fail">
+                                    <i class="fa-solid fa-upload"></i>
+                                </button>
+                            </div>
+                        @else
+                            <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
                                 <i class="fa-solid fa-file-invoice-dollar"></i> Buka Resit (PDF/Imej)
                             </a>
-                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-2.5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-xl transition text-xs" title="Muat Naik Semula / Tukar Fail">
-                                <i class="fa-solid fa-upload"></i>
-                            </button>
-                        </div>
+                        @endif
                     @else
-                        <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
-                            <i class="fa-solid fa-upload"></i> Muat Naik Fail Resit
-                        </button>
+                        @if(!$isStaff || $isOwner)
+                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-upload"></i> Muat Naik Fail Resit
+                            </button>
+                        @else
+                            <span class="w-full py-2 bg-slate-100 text-slate-500 font-semibold rounded-xl flex items-center justify-center text-xs gap-1.5">
+                                <i class="fa-solid fa-hourglass-half text-amber-500"></i> Belum Dimuat Naik oleh Pemohon
+                            </span>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -1005,6 +1037,7 @@
     </div>
 </div>
 
+@if(!$isStaff || $isOwner)
 <!-- Modal 2: Pembayaran Fi Lesen & Muat Naik Resit -->
 <div id="modalBayarFi" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-100">
@@ -1055,6 +1088,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <!-- Modal 3: Paparan / Semakan Butiran Resit Bayaran Fi -->
 <div id="modalLihatResit" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -1113,12 +1147,18 @@
                     </div>
                 @else
                     <div class="space-y-2">
-                        <p class="text-[11px] text-amber-900">
-                            Tiada fail lampiran resit fizikal/PDF disimpan dalam rekod ini. Anda boleh memuat naik fail resit rasmi atau slip transaksi sekarang.
-                        </p>
-                        <button type="button" onclick="document.getElementById('modalLihatResit').classList.add('hidden'); document.getElementById('modalBayarFi').classList.remove('hidden');" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
-                            <i class="fa-solid fa-upload"></i> Muat Naik / Lampirkan Fail Resit
-                        </button>
+                        @if(!$isStaff || $isOwner)
+                            <p class="text-[11px] text-amber-900">
+                                Tiada fail lampiran resit fizikal/PDF disimpan dalam rekod ini. Sila muat naik fail resit rasmi atau slip transaksi pembayaran anda.
+                            </p>
+                            <button type="button" onclick="document.getElementById('modalLihatResit').classList.add('hidden'); document.getElementById('modalBayarFi').classList.remove('hidden');" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-upload"></i> Muat Naik / Lampirkan Fail Resit
+                            </button>
+                        @else
+                            <p class="text-[11px] text-amber-900">
+                                Tiada fail lampiran resit fizikal/PDF disimpan dalam rekod ini. Menunggu pemohon memuat naik bukti resit bayaran.
+                            </p>
+                        @endif
                     </div>
                 @endif
             </div>

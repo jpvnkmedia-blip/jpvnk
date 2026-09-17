@@ -870,12 +870,14 @@ class EpuController extends Controller implements HasMiddleware
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
         $user = Auth::user();
 
-        if (!$user->isStaff() && $permohonan->ladang->user_id !== $user->id) {
-            abort(403);
+        // Resit hanya boleh dimuat naik oleh pemohon (pemilik ladang)
+        $isOwner = ($permohonan->ladang->user_id === $user->id);
+        if (!$isOwner && !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Resit bayaran fi hanya boleh dimuat naik oleh pemohon.');
         }
 
         $validated = $request->validate([
-            'resit_bayaran_fi' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'resit_bayaran_fi' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'no_resit_bayaran' => 'nullable|string|max:50',
             'kaedah_bayaran' => 'nullable|string',
         ]);
@@ -884,7 +886,7 @@ class EpuController extends Controller implements HasMiddleware
         $noResit = $validated['no_resit_bayaran'] ?? ('RES-EPU-' . date('Y') . '-' . rand(1000, 9999));
 
         $permohonan->update([
-            'status_bayaran_fi' => $user->isStaff() ? 'Selesai Bayar' : 'Menunggu Pengesahan',
+            'status_bayaran_fi' => 'Menunggu Pengesahan',
             'resit_bayaran_fi' => $pathResit ?? $permohonan->resit_bayaran_fi,
             'no_resit_bayaran' => $noResit,
             'tarikh_bayaran_fi' => Carbon::now()->toDateString(),

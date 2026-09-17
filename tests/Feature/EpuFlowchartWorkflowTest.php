@@ -395,4 +395,79 @@ class EpuFlowchartWorkflowTest extends TestCase
         $this->actingAs($adminEpu)->get('/kenderaan')->assertStatus(403);
         $this->actingAs($adminEpu)->get('/inventori/permohonan/saya')->assertStatus(403);
     }
+
+    public function test_receipt_upload_restricted_to_applicant_and_admin_can_view()
+    {
+        Storage::fake('public');
+        $penternak = User::where('role', 'penternak')->first();
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $otherUser = User::where('role', 'penternak')->where('id', '!=', $penternak->id)->first();
+
+        // 1. Cipta ladang dan permohonan untuk pemohon $penternak
+        $ladang = EpuLadang::create([
+            'user_id' => $penternak->id,
+            'nama_pemohon_atau_syarikat' => 'Penternak Ayam Segar',
+            'nama_ladang' => 'Ladang Ayam Segar Kelantan',
+            'id_premis' => 'PRM-KB-999',
+            'jajahan' => 'Kota Bharu',
+            'alamat_ladang' => 'Lot 100, Kota Bharu',
+            'status_ladang' => 'Aktif',
+        ]);
+
+        $permohonan = EpuPermohonan::create([
+            'epu_ladang_id' => $ladang->id,
+            'no_rujukan_permohonan' => 'EPU/KB/2026/9991',
+            'jenis_permohonan' => 'Baru',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'bilangan_semasa_unggas' => 1000,
+            'kapasiti_ladang' => 5000,
+            'no_lesen_epu' => 'EPU-KB-2026-9991',
+            'yuran_lesen' => 100.00,
+            'status' => 'Diluluskan',
+            'status_bayaran_fi' => 'Belum Bayar',
+        ]);
+
+        $resit = UploadedFile::fake()->create('resit_bayaran.pdf', 200, 'application/pdf');
+
+        // 2. Admin EPU / Pegawai cuba muat naik resit -> Ditolak (403 Forbidden)
+        $adminUploadResponse = $this->actingAs($adminEpu)->post("/epu/permohonan/{$permohonan->id}/bayar-fi", [
+            'no_resit_bayaran' => 'RES-ADMIN-001',
+            'resit_bayaran_fi' => $resit,
+        ]);
+        $adminUploadResponse->assertStatus(403);
+
+        // 3. Pengguna lain yang bukan pemilik cuba muat naik -> Ditolak (403 Forbidden)
+        if ($otherUser) {
+            $otherUploadResponse = $this->actingAs($otherUser)->post("/epu/permohonan/{$permohonan->id}/bayar-fi", [
+                'no_resit_bayaran' => 'RES-OTHER-001',
+                'resit_bayaran_fi' => $resit,
+            ]);
+            $otherUploadResponse->assertStatus(403);
+        }
+
+        // 4. Pemohon (pemilik ladang) muat naik resit -> Berjaya
+        $applicantUploadResponse = $this->actingAs($penternak)->post("/epu/permohonan/{$permohonan->id}/bayar-fi", [
+            'no_resit_bayaran' => 'RES-PENTERNAK-8899',
+            'resit_bayaran_fi' => $resit,
+        ]);
+        $applicantUploadResponse->assertRedirect();
+        $permohonan->refresh();
+        $this->assertEquals('Menunggu Pengesahan', $permohonan->status_bayaran_fi);
+        $this->assertEquals('RES-PENTERNAK-8899', $permohonan->no_resit_bayaran);
+        $this->assertNotNull($permohonan->resit_bayaran_fi);
+
+        // 5. Admin EPU boleh melihat butiran permohonan dan resit yang dimuat naik
+        $viewResponse = $this->actingAs($adminEpu)->get("/epu/ladang/{$ladang->id}");
+        $viewResponse->assertStatus(200);
+        $viewResponse->assertSee('RES-PENTERNAK-8899');
+        $viewResponse->assertSee('Buka Resit (PDF/Imej)');
+        $viewResponse->assertDontSee('Bayar &amp; Muat Naik Resit', false);
+
+        // 6. Admin EPU boleh mengesahkan bayaran
+        $sahkanResponse = $this->actingAs($adminEpu)->post("/epu/permohonan/{$permohonan->id}/sahkan-bayaran");
+        $sahkanResponse->assertRedirect();
+        $permohonan->refresh();
+        $this->assertEquals('Selesai Bayar', $permohonan->status_bayaran_fi);
+    }
 }
