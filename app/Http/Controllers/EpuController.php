@@ -259,6 +259,18 @@ class EpuController extends Controller implements HasMiddleware
             );
         }
 
+        // Notifikasi kepada Pegawai Verifikasi PPVJ Jajahan, Admin EPU & Super Admin
+        $this->notifyEpuOfficers(
+            ['pegawai_verifikasi_epu', 'admin_epu', 'super_admin'],
+            $ladang->jajahan,
+            "Permohonan Lesen EPU Baharu (PPVJ {$ladang->jajahan})",
+            "Permohonan lesen Borang A bagi '{$ladang->nama_ladang}' ({$ladang->nama_pemohon_atau_syarikat}) di Jajahan {$ladang->jajahan} telah dihantar dan memerlukan semakan dokumen & verifikasi tapak.",
+            route('epu.show', $ladang->id),
+            'fa-solid fa-feather-pointed',
+            'amber',
+            $user->id
+        );
+
         return redirect()->route('epu.show', $ladang->id)->with('success', 'Permohonan Pendaftaran & Lesen Ladang Unggas (EPU Borang A) berjaya dihantar!');
     }
 
@@ -353,6 +365,29 @@ class EpuController extends Controller implements HasMiddleware
             'tarikh_kelulusan' => Auth::user()->isStaff() ? Carbon::now()->toDateString() : null,
         ]);
 
+        if ($ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $ladang->user_id,
+                'Permohonan Pembaharuan Lesen EPU Dihantar',
+                "Permohonan pembaharuan lesen (Borang C) bagi '{$ladang->nama_ladang}' telah direkodkan.",
+                'epu',
+                route('epu.show', $ladang->id),
+                'fa-solid fa-arrows-rotate',
+                'blue'
+            );
+        }
+
+        $this->notifyEpuOfficers(
+            ['pegawai_verifikasi_epu', 'admin_epu', 'pegawai_pelesen', 'super_admin'],
+            $ladang->jajahan,
+            "Permohonan Pembaharuan Lesen EPU (PPVJ {$ladang->jajahan})",
+            "Permohonan pembaharuan lesen Borang C bagi '{$ladang->nama_ladang}' (No. Ruj: {$noRujukan}) telah dihantar.",
+            route('epu.show', $ladang->id),
+            'fa-solid fa-arrows-rotate',
+            'blue',
+            Auth::id()
+        );
+
         return redirect()->route('epu.show', $ladang->id)->with('success', 'Permohonan Pembaharuan Lesen Unggas (EPU Borang C) berjaya didaftarkan.');
     }
 
@@ -398,6 +433,29 @@ class EpuController extends Controller implements HasMiddleware
             'tarikh_akhir_pematuhan' => $validated['tarikh_akhir_pematuhan'] ?? null,
         ]);
 
+        if ($ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $ladang->user_id,
+                'Laporan Pemeriksaan Ladang EPU Direkodkan',
+                "Laporan pemeriksaan tapak (Borang D) bagi '{$ladang->nama_ladang}' telah direkodkan. Keputusan: {$validated['status_keputusan']} (Skor: {$validated['skor_kebersihan_peratus']}%).",
+                'epu',
+                route('epu.show', $ladang->id),
+                'fa-solid fa-clipboard-check',
+                $validated['status_keputusan'] === 'Lulus' ? 'emerald' : 'amber'
+            );
+        }
+
+        $this->notifyEpuOfficers(
+            ['admin_epu', 'pegawai_pelesen', 'super_admin'],
+            $ladang->jajahan,
+            "Laporan Pemeriksaan Ladang EPU (PPVJ {$ladang->jajahan})",
+            "Laporan pemeriksaan Borang D bagi '{$ladang->nama_ladang}' telah direkodkan oleh " . Auth::user()->name . ". Keputusan: {$validated['status_keputusan']}.",
+            route('epu.show', $ladang->id),
+            'fa-solid fa-clipboard-check',
+            'blue',
+            Auth::id()
+        );
+
         return redirect()->route('epu.show', $ladang->id)->with('success', 'Laporan Pemeriksaan Tapak & Penguatkuasaan (EPU Borang D) telah direkodkan.');
     }
 
@@ -440,35 +498,71 @@ class EpuController extends Controller implements HasMiddleware
 
         $ownerId = $permohonan->ladang->user_id;
 
-        if ($statusVerifikasi === 'Tidak Lengkap' && $ownerId) {
-            \App\Models\UserNotification::send(
-                $ownerId,
-                'Permohonan EPU: Dokumen / Maklumat Tidak Lengkap',
-                "Permohonan lesen unggas anda (No: {$permohonan->no_rujukan_permohonan}) memerlukan pembetulan dokumen: {$catatan}",
-                'epu',
+        if ($statusVerifikasi === 'Tidak Lengkap') {
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Permohonan EPU: Dokumen / Maklumat Tidak Lengkap',
+                    "Permohonan lesen unggas anda (No: {$permohonan->no_rujukan_permohonan}) memerlukan pembetulan dokumen: {$catatan}",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-triangle-exclamation',
+                    'rose'
+                );
+            }
+            $this->notifyEpuOfficers(
+                ['admin_epu', 'super_admin'],
+                $permohonan->ladang->jajahan,
+                "Verifikasi PPVJ {$permohonan->ladang->jajahan}: Dokumen Tidak Lengkap",
+                "Pegawai Verifikasi {$user->name} mendapati dokumen bagi '{$permohonan->ladang->nama_ladang}' tidak lengkap.",
                 route('epu.show', $permohonan->ladang->id),
                 'fa-solid fa-triangle-exclamation',
-                'rose'
+                'rose',
+                $user->id
             );
-        } elseif ($statusVerifikasi === 'Tidak Patuh' && $ownerId) {
-            \App\Models\UserNotification::send(
-                $ownerId,
-                'Makluman Ketidakpatuhan Ladang EPU & Tindakan Penambahbaikan',
-                "Pemeriksaan verifikasi mendapati premis ladang belum mematuhi syarat. Tindakan penambahbaikan diperlukan: {$tindakan}",
-                'epu',
+        } elseif ($statusVerifikasi === 'Tidak Patuh') {
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Makluman Ketidakpatuhan Ladang EPU & Tindakan Penambahbaikan',
+                    "Pemeriksaan verifikasi mendapati premis ladang belum mematuhi syarat. Tindakan penambahbaikan diperlukan: {$tindakan}",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-clipboard-question',
+                    'amber'
+                );
+            }
+            $this->notifyEpuOfficers(
+                ['admin_epu', 'super_admin'],
+                $permohonan->ladang->jajahan,
+                "Verifikasi PPVJ {$permohonan->ladang->jajahan}: Ketidakpatuhan Ladang",
+                "Pegawai Verifikasi {$user->name} mengeluarkan arahan penambahbaikan bagi '{$permohonan->ladang->nama_ladang}': {$tindakan}",
                 route('epu.show', $permohonan->ladang->id),
                 'fa-solid fa-clipboard-question',
-                'amber'
+                'amber',
+                $user->id
             );
-        } elseif ($statusVerifikasi === 'Patuh' && $ownerId) {
-            \App\Models\UserNotification::send(
-                $ownerId,
-                'Verifikasi Ladang EPU: Patuh Piawaian',
-                "Verifikasi ladang ({$permohonan->ladang->nama_ladang}) telah disahkan PATUH oleh Pegawai Verifikasi PPVJ {$permohonan->ladang->jajahan}.",
-                'epu',
+        } elseif ($statusVerifikasi === 'Patuh') {
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Verifikasi Ladang EPU: Patuh Piawaian',
+                    "Verifikasi ladang ({$permohonan->ladang->nama_ladang}) telah disahkan PATUH oleh Pegawai Verifikasi PPVJ {$permohonan->ladang->jajahan}.",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-circle-check',
+                    'emerald'
+                );
+            }
+            $this->notifyEpuOfficers(
+                ['admin_epu', 'pegawai_pelesen', 'super_admin'],
+                $permohonan->ladang->jajahan,
+                "Verifikasi PPVJ {$permohonan->ladang->jajahan}: Disahkan Patuh",
+                "Verifikasi tapak bagi '{$permohonan->ladang->nama_ladang}' telah disahkan PATUH oleh {$user->name}. Bersedia untuk perakuan penilaian kelulusan.",
                 route('epu.show', $permohonan->ladang->id),
                 'fa-solid fa-circle-check',
-                'emerald'
+                'emerald',
+                $user->id
             );
         }
 
@@ -507,6 +601,18 @@ class EpuController extends Controller implements HasMiddleware
                 'blue'
             );
         }
+
+        // Notifikasi kepada Pegawai Pelesen / Pengarah, Admin EPU & Super Admin
+        $this->notifyEpuOfficers(
+            ['pegawai_pelesen', 'admin_epu', 'super_admin'],
+            null,
+            "Penilaian Ladang EPU Memerlukan Semakan Kelulusan",
+            "Penilaian ladang '{$permohonan->ladang->nama_ladang}' (PPVJ {$permohonan->ladang->jajahan}) telah dimajukan oleh Pegawai Verifikasi {$user->name} untuk semakan keputusan kelulusan lesen.",
+            route('epu.show', $permohonan->ladang->id),
+            'fa-solid fa-stamp',
+            'blue',
+            $user->id
+        );
 
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Penilaian ladang berjaya dimajukan kepada Pegawai Pelesen.');
     }
@@ -581,6 +687,18 @@ class EpuController extends Controller implements HasMiddleware
             }
         }
 
+        // Notifikasi kepada Pegawai Verifikasi PPVJ & Admin EPU berkenaan keputusan
+        $this->notifyEpuOfficers(
+            ['pegawai_verifikasi_epu', 'admin_epu'],
+            $permohonan->ladang->jajahan,
+            "Keputusan Lesen EPU: {$keputusan} (PPVJ {$permohonan->ladang->jajahan})",
+            "Pegawai Pelesen ({$user->name}) telah merekodkan keputusan [{$keputusan}] bagi permohonan '{$permohonan->ladang->nama_ladang}'.",
+            route('epu.show', $permohonan->ladang->id),
+            $keputusan === 'Lulus' ? 'fa-solid fa-award' : 'fa-solid fa-circle-xmark',
+            $keputusan === 'Lulus' ? 'emerald' : 'rose',
+            $user->id
+        );
+
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Keputusan Pegawai Pelesen ({$keputusan}) telah direkodkan dan makluman dihantar.");
     }
 
@@ -620,6 +738,18 @@ class EpuController extends Controller implements HasMiddleware
                 'amber'
             );
         }
+
+        // Notifikasi kepada Pegawai Pelesen / Pengarah, Admin EPU & Super Admin
+        $this->notifyEpuOfficers(
+            ['pegawai_pelesen', 'admin_epu', 'super_admin'],
+            null,
+            "Rayuan Lesen EPU Diterima untuk Pertimbangan Pengarah",
+            "Pemohon bagi '{$permohonan->ladang->nama_ladang}' (Jajahan {$permohonan->ladang->jajahan}) telah mengemukakan rayuan rasmi kepada Pengarah DVS.",
+            route('epu.show', $permohonan->ladang->id),
+            'fa-solid fa-scale-balanced',
+            'purple',
+            $user->id
+        );
 
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Rayuan kepada Pengarah DVS telah berjaya dihantar.');
     }
@@ -703,6 +833,18 @@ class EpuController extends Controller implements HasMiddleware
             }
         }
 
+        // Notifikasi kepada Pegawai Verifikasi PPVJ & Admin EPU
+        $this->notifyEpuOfficers(
+            ['pegawai_verifikasi_epu', 'admin_epu'],
+            $permohonan->ladang->jajahan,
+            "Keputusan Rayuan Lesen EPU: {$tindakan}",
+            "Pengarah / PBN telah merekodkan keputusan rayuan [{$tindakan}] bagi ladang '{$permohonan->ladang->nama_ladang}'.",
+            route('epu.show', $permohonan->ladang->id),
+            'fa-solid fa-gavel',
+            'purple',
+            $user->id
+        );
+
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Keputusan rayuan telah direkodkan: {$tindakan}");
     }
 
@@ -744,6 +886,18 @@ class EpuController extends Controller implements HasMiddleware
             );
         }
 
+        // Notifikasi kepada Admin EPU, Pegawai Verifikasi PPVJ, Pegawai Pelesen & Super Admin
+        $this->notifyEpuOfficers(
+            ['admin_epu', 'pegawai_verifikasi_epu', 'pegawai_pelesen', 'super_admin'],
+            $permohonan->ladang->jajahan,
+            "Bukti Pembayaran Fi Lesen EPU Dimuat Naik (PPVJ {$permohonan->ladang->jajahan})",
+            "Pemohon '{$permohonan->ladang->nama_ladang}' telah memuat naik resit bayaran fi lesen (No. Resit: {$noResit}). Sila buat semakan dan pengesahan bayaran.",
+            route('epu.show', $permohonan->ladang->id),
+            'fa-solid fa-money-check-dollar',
+            'amber',
+            $user->id
+        );
+
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah berjaya direkodkan.');
     }
 
@@ -773,7 +927,54 @@ class EpuController extends Controller implements HasMiddleware
             );
         }
 
+        // Notifikasi kepada Pegawai Pelesen, PPVJ, Admin EPU & Super Admin
+        $this->notifyEpuOfficers(
+            ['pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_epu', 'super_admin'],
+            $permohonan->ladang->jajahan,
+            "Pembayaran Fi Lesen EPU Telah Disahkan",
+            "Pembayaran fi lesen bagi '{$permohonan->ladang->nama_ladang}' telah disahkan oleh {$user->name}. Lesen Borang B kini sedia dicetak.",
+            route('epu.show', $permohonan->ladang->id),
+            'fa-solid fa-file-circle-check',
+            'emerald',
+            $user->id
+        );
+
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah disahkan.');
+    }
+
+    /**
+     * Hantar notifikasi kepada pegawai EPU berkaitan (Admin EPU, PPVJ Jajahan, Pegawai Pelesen, Super Admin)
+     */
+    private function notifyEpuOfficers(array $roles, ?string $jajahan, string $title, string $message, ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald', ?int $excludeUserId = null): void
+    {
+        $query = User::whereIn('role', $roles);
+
+        if ($jajahan && in_array('pegawai_verifikasi_epu', $roles)) {
+            $query->where(function ($q) use ($jajahan) {
+                $q->where('jajahan', $jajahan)
+                  ->orWhereNull('jajahan')
+                  ->orWhere('jajahan', '')
+                  ->orWhereIn('role', ['admin_epu', 'pegawai_pelesen', 'super_admin']);
+            });
+        }
+
+        if ($excludeUserId) {
+            $query->where('id', '!=', $excludeUserId);
+        }
+
+        $officers = $query->get();
+
+        foreach ($officers as $officer) {
+            \App\Models\UserNotification::send(
+                $officer->id,
+                $title,
+                $message,
+                'epu',
+                $actionUrl,
+                $icon,
+                $color
+            );
+        }
     }
 
     private function uploadFileSafely($file, $folder)

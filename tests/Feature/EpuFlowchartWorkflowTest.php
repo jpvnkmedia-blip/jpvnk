@@ -259,4 +259,51 @@ class EpuFlowchartWorkflowTest extends TestCase
         ]);
         $verifRayuanResponse->assertStatus(403);
     }
+
+    public function test_epu_notifications_broadcasted_to_all_relevant_officers()
+    {
+        $penternak = User::where('role', 'penternak')->first();
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $pegawaiVerifikasi = User::where('role', 'pegawai_verifikasi_epu')->where('jajahan', 'Kota Bharu')->first();
+        $pegawaiPelesen = User::where('role', 'pegawai_pelesen')->first();
+
+        // 1. Pemohon hantar Borang A
+        $this->actingAs($penternak)->post('/epu/daftar-borang-a', [
+            'nama_pemohon_atau_syarikat' => 'Ladang Notifikasi KB',
+            'nama_ladang' => 'Ladang Ayam Notifikasi',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'kapasiti_maksimum_unggas' => 3000,
+            'alamat_ladang' => 'Lot 999',
+            'jajahan' => 'Kota Bharu',
+        ]);
+
+        $ladang = EpuLadang::where('nama_ladang', 'Ladang Ayam Notifikasi')->first();
+        $permohonan = $ladang->permohonanTerkini;
+
+        // Semak notifikasi sampai kepada Admin EPU & PPVJ Kota Bharu
+        $this->assertDatabaseHas('user_notifications', [
+            'user_id' => $adminEpu->id,
+            'type' => 'epu',
+        ]);
+        $this->assertDatabaseHas('user_notifications', [
+            'user_id' => $pegawaiVerifikasi->id,
+            'type' => 'epu',
+        ]);
+
+        // 2. PPVJ hantar penilaian ladang
+        $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/verifikasi", [
+            'status_verifikasi' => 'Patuh',
+        ]);
+        $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/hantar-penilaian", [
+            'catatan_penilaian_ladang' => 'Penilaian lengkap.',
+        ]);
+
+        // Semak notifikasi sampai kepada Pegawai Pelesen
+        $this->assertDatabaseHas('user_notifications', [
+            'user_id' => $pegawaiPelesen->id,
+            'type' => 'epu',
+            'title' => 'Penilaian Ladang EPU Memerlukan Semakan Kelulusan',
+        ]);
+    }
 }
