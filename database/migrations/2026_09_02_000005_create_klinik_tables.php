@@ -15,13 +15,13 @@ return new class extends Migration
             $table->string('no_temujanji', 50)->unique();
             $table->string('jenis_haiwan', 50); // Lembu, Kambing, Kucing, Anjing, Kuda, Unggas, Lain-lain
             $table->string('nama_haiwan')->nullable();
-            $table->string('baka', 50)->nullable();
+            $table->string('baka', 100)->nullable();
             $table->enum('jantina_haiwan', ['Jantan', 'Betina', 'Tidak Diketahui'])->default('Tidak Diketahui');
-            $table->string('umur_haiwan', 30)->nullable();
+            $table->string('umur_haiwan', 50)->nullable();
             $table->text('simptom_atau_tujuan'); // Pemeriksaan Kesihatan, Vaksinasi, Rawatan Sakit, Pembedahan/Kembiri, Surgeri Kecemasan
             $table->date('tarikh_temujanji');
             $table->enum('sesi', ['Pagi (8:30 AM - 12:30 PM)', 'Petang (2:00 PM - 4:30 PM)'])->default('Pagi (8:30 AM - 12:30 PM)');
-            $table->string('klinik_jajahan', 50); // Pusat Veterinar Kota Bharu, Machang, Pasir Mas, dll
+            $table->string('klinik_jajahan', 255); // Pusat Veterinar Kota Bharu, Machang, Pasir Mas, dll
             $table->string('status', 30)->default('Menunggu'); // Menunggu, Disahkan, Sedang Rawatan, Selesai, Batal
             $table->text('catatan_pegawai')->nullable();
             $table->timestamps();
