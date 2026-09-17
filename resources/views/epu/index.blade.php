@@ -109,13 +109,15 @@
                                 <a href="{{ route('epu.show', $ladang->id) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition" title="Lihat Ladang">
                                     <i class="fa-solid fa-eye"></i> Ladang
                                 </a>
-                                <a href="{{ route('epu.cetak-borang-a', $ladang->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold transition" title="Cetak Borang A Rasmi (Warta)">
-                                    <i class="fa-solid fa-print"></i> Borang A
-                                </a>
-                                @if($latestLesen && $latestLesen->status === 'Diluluskan')
-                                    <a href="{{ route('epu.cetak-lesen', $latestLesen->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold transition" title="Cetak Lesen EPU Borang B">
-                                        <i class="fa-solid fa-certificate"></i> Lesen
+                                @if(Auth::user()->canCetakBorangEpu())
+                                    <a href="{{ route('epu.cetak-borang-a', $ladang->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold transition" title="Cetak Borang A Rasmi (Warta)">
+                                        <i class="fa-solid fa-print"></i> Borang A
                                     </a>
+                                    @if($latestLesen && $latestLesen->status === 'Diluluskan')
+                                        <a href="{{ route('epu.cetak-lesen', $latestLesen->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold transition" title="Cetak Lesen EPU Borang B">
+                                            <i class="fa-solid fa-certificate"></i> Lesen
+                                        </a>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
