@@ -824,36 +824,6 @@
                         <p class="text-[11px] text-slate-500">Salinan pendaftaran SSM bagi permohonan atas nama syarikat.</p>
                         <input type="file" name="dokumen_ssm" accept=".pdf,.png,.jpg,.jpeg" class="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl">
                     </div>
-
-                    <!-- Resit Pembayaran Fi Permohonan Lesen (Wajib jika tidak percuma/dikecualikan) -->
-                    <div class="p-5 bg-gradient-to-br from-amber-50 to-orange-50/50 border-2 border-amber-300 rounded-2xl space-y-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <label class="block font-black text-amber-950 uppercase text-xs flex items-center gap-1.5">
-                                    <i class="fa-solid fa-receipt text-amber-600"></i>
-                                    <span>Resit / Slip Pembayaran Fi Lesen Permohonan</span>
-                                </label>
-                                <p class="text-[11px] text-amber-900 mt-0.5">Sila muat naik slip pembayaran bank atau resit bayaran kaunter rasmi PPVJ / JPVNK bersama permohonan ini.</p>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-xl bg-amber-200 text-amber-900 font-bold text-xs whitespace-nowrap" x-text="computedFi === 0 ? 'Percuma (RM 0.00)' : 'Kadar Fi: RM ' + computedFi.toFixed(2)"></span>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                            <div>
-                                <label class="block font-bold text-slate-700 text-[11px] mb-1">No. Rujukan / No. Resit Transaksi</label>
-                                <input type="text" name="no_resit_bayaran" placeholder="Contoh: RES-2026-00123 / Ref Bank" class="w-full px-3 py-2 text-xs bg-white border border-amber-200 rounded-xl font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block font-bold text-slate-700 text-[11px] mb-1">Muat Naik Fail Slip / Resit (PDF / Imej)</label>
-                                <input type="file" name="resit_bayaran_fi" accept=".pdf,.png,.jpg,.jpeg" class="w-full px-3 py-1.5 text-xs bg-white border border-amber-200 rounded-xl">
-                            </div>
-                        </div>
-
-                        <div class="p-2.5 bg-white/80 rounded-xl border border-amber-200/80 text-[10px] text-amber-900 space-y-0.5">
-                            <div><i class="fa-solid fa-building-columns mr-1"></i> Akaun Rasmi: <b>Jabatan Perkhidmatan Veterinar Negeri Kelantan</b></div>
-                            <div><i class="fa-solid fa-info-circle mr-1"></i> Nota: Permohonan skala kecil (≤ 500 ekor ayam/itik, ≤ 1,000 ekor puyuh/merpati) atau program pengecualian berstatus <b>Dikecualikan Bayaran</b>.</div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Navigation Step 3 -->
