@@ -598,6 +598,194 @@
         </div>
     </div>
 
+    <!-- Uploaded Attachments & Verification Hub -->
+    @if($p)
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Dokumen &amp; Lampiran Dimuat Naik Pemohon</h3>
+                    <p class="text-xs text-slate-500">Semak dan buka fail lampiran dokumen tanah, pelan tapak, SSM dan bukti pembayaran fi</p>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5 self-start sm:self-auto">
+                <i class="fa-solid fa-upload text-blue-600"></i> Muat Naik / Kemaskini Fail
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+            <!-- 1. Resit Bayaran Fi Lesen -->
+            <div class="p-4 rounded-2xl border {{ $p->resit_bayaran_fi ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200' }} flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-receipt text-emerald-600"></i> Bukti Bayaran Fi Lesen
+                        </span>
+                        @if($p->resit_bayaran_fi)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Tersedia</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Belum Ada Fail</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500">No. Resit: <b class="font-mono text-slate-800">{{ $p->no_resit_bayaran ?? '-' }}</b> (RM {{ number_format($p->yuran_lesen, 2) }})</p>
+                </div>
+                <div>
+                    @if($p->resit_bayaran_fi)
+                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Buka Fail Resit (PDF/Imej)
+                        </a>
+                    @else
+                        <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-upload"></i> Muat Naik Resit
+                        </button>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 2. Pelan Susunatur Tapak -->
+            <div class="p-4 rounded-2xl border {{ $p->dokumen_pelan ? 'bg-blue-50/60 border-blue-200' : 'bg-slate-50 border-slate-200' }} flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-map-location-dot text-blue-600"></i> Pelan Susunatur Tapak
+                        </span>
+                        @if($p->dokumen_pelan)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Tersedia</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Tiada Lampiran</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500">Lakaran pelan reban, jarak kediaman &amp; zon penampan</p>
+                </div>
+                <div>
+                    @if($p->dokumen_pelan)
+                        <a href="{{ asset('storage/' . $p->dokumen_pelan) }}" target="_blank" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Pelan Tapak
+                        </a>
+                    @else
+                        <span class="w-full py-2 bg-slate-100 text-slate-400 font-semibold rounded-xl flex items-center justify-center text-xs">
+                            Tidak Dilampirkan
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 3. Geran Tanah / Perjanjian Pajakan -->
+            <div class="p-4 rounded-2xl border {{ $p->dokumen_tanah ? 'bg-indigo-50/60 border-indigo-200' : 'bg-slate-50 border-slate-200' }} flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-contract text-indigo-600"></i> Geran / Surat Tanah
+                        </span>
+                        @if($p->dokumen_tanah)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Tersedia</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Tiada Lampiran</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500">Pemilikan tanah / Perjanjian sewaan pajakan tapak</p>
+                </div>
+                <div>
+                    @if($p->dokumen_tanah)
+                        <a href="{{ asset('storage/' . $p->dokumen_tanah) }}" target="_blank" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Dokumen Tanah
+                        </a>
+                    @else
+                        <span class="w-full py-2 bg-slate-100 text-slate-400 font-semibold rounded-xl flex items-center justify-center text-xs">
+                            Tidak Dilampirkan
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 4. Sijil SSM / Pendaftaran Syarikat -->
+            <div class="p-4 rounded-2xl border {{ $p->dokumen_ssm ? 'bg-purple-50/60 border-purple-200' : 'bg-slate-50 border-slate-200' }} flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-building-shield text-purple-600"></i> Sijil SSM / Syarikat
+                        </span>
+                        @if($p->dokumen_ssm)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Tersedia</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Tiada Lampiran</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500">Pendaftaran SSM entiti perniagaan / syarikat</p>
+                </div>
+                <div>
+                    @if($p->dokumen_ssm)
+                        <a href="{{ asset('storage/' . $p->dokumen_ssm) }}" target="_blank" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Sijil SSM
+                        </a>
+                    @else
+                        <span class="w-full py-2 bg-slate-100 text-slate-400 font-semibold rounded-xl flex items-center justify-center text-xs">
+                            Tidak Dilampirkan
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 5. Surat Sokongan / PBT -->
+            <div class="p-4 rounded-2xl border {{ $p->dokumen_pbt ? 'bg-teal-50/60 border-teal-200' : 'bg-slate-50 border-slate-200' }} flex flex-col justify-between space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-city text-teal-600"></i> Surat Kebenaran PBT
+                        </span>
+                        @if($p->dokumen_pbt)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800">Tersedia</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Tiada Lampiran</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500">Kebenaran Majlis Daerah / Pihak Berkuasa Tempatan</p>
+                </div>
+                <div>
+                    @if($p->dokumen_pbt)
+                        <a href="{{ asset('storage/' . $p->dokumen_pbt) }}" target="_blank" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Surat PBT
+                        </a>
+                    @else
+                        <span class="w-full py-2 bg-slate-100 text-slate-400 font-semibold rounded-xl flex items-center justify-center text-xs">
+                            Tidak Dilampirkan
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 6. Lampiran Rayuan / Pengecualian (jika ada) -->
+            @if($p->dokumen_rayuan || $p->lampiran_pengecualian)
+                <div class="p-4 rounded-2xl border bg-amber-50/60 border-amber-200 flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-lines text-amber-600"></i> Dokumen Rayuan / Pengecualian
+                            </span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Tersedia</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">Lampiran sokongan khas permohonan / rayuan</p>
+                    </div>
+                    <div>
+                        @if($p->dokumen_rayuan)
+                            <a href="{{ asset('storage/' . $p->dokumen_rayuan) }}" target="_blank" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Fail Rayuan
+                            </a>
+                        @elseif($p->lampiran_pengecualian)
+                            <a href="{{ asset('storage/' . $p->lampiran_pengecualian) }}" target="_blank" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Lampiran Pengecualian
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- Official Gazetted Forms Printable Hub (Enakmen 2005) -->
     @if(Auth::user()->canCetakBorangEpu())
     <div class="bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-3xl border border-amber-200/80 p-6 sm:p-7 shadow-xs">
