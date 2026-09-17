@@ -228,27 +228,42 @@
                             <i class="fa-solid fa-receipt text-amber-600 text-base mt-0.5"></i>
                             <div>
                                 <div class="font-bold">Makluman Kelulusan Lesen & Arahan Pembayaran Fi</div>
-                                <p class="text-amber-900 mt-0.5">Permohonan lesen anda telah diluluskan! Sila jelaskan fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> untuk membolehkan pencetakan Lesen Borang B rasmi.</p>
+                                <p class="text-amber-900 mt-0.5">Permohonan lesen anda telah diluluskan oleh Pegawai Pelesen / Pengarah DVS! Sila jelaskan fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> dan muat naik bukti pembayaran untuk membolehkan pencetakan Lesen Borang B rasmi.</p>
                             </div>
                         </div>
                         <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto">
-                            <i class="fa-solid fa-upload"></i> Bayar / Muat Naik Resit
+                            <i class="fa-solid fa-upload"></i> Bayar & Muat Naik Resit
                         </button>
                     </div>
                 @elseif($p->status_bayaran_fi === 'Menunggu Pengesahan')
-                    <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950 text-xs flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-hourglass-half text-blue-600"></i>
-                            <span>Resit pembayaran fi (No: <b>{{ $p->no_resit_bayaran ?? '-' }}</b>) telah dimuat naik dan sedang menunggu pengesahan pegawai.</span>
+                    <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-hourglass-half text-blue-600 text-base mt-0.5"></i>
+                            <div>
+                                <div class="font-bold">Resit Pembayaran Fi Sedang Disemak</div>
+                                <p class="text-blue-900 mt-0.5">Bukti pembayaran (No. Resit: <b class="font-mono">{{ $p->no_resit_bayaran ?? '-' }}</b>) telah berjaya dihantar pada {{ $p->tarikh_bayaran_fi ? $p->tarikh_bayaran_fi->format('d/m/Y') : date('d/m/Y') }}. Sedang menunggu pengesahan pegawai sebelum Lesen Borang B dijana.</p>
+                                @if($p->resit_bayaran_fi)
+                                    <div class="mt-1.5">
+                                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="text-blue-700 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
+                                            <i class="fa-solid fa-file-invoice-dollar"></i> Papar Fail Resit Dimuat Naik
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                        @if($isStaff)
-                            <form action="{{ route('epu.sahkan-bayaran', $p->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
-                                    <i class="fa-solid fa-check"></i> Sahkan Bayaran Fi
-                                </button>
-                            </form>
-                        @endif
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3 py-1.5 bg-white border border-blue-200 hover:bg-blue-100/50 text-blue-900 font-bold text-xs rounded-xl transition">
+                                <i class="fa-solid fa-file-arrow-up mr-1"></i> Kemaskini Resit
+                            </button>
+                            @if($isStaff)
+                                <form action="{{ route('epu.sahkan-bayaran', $p->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                                        <i class="fa-solid fa-check mr-1"></i> Sahkan Bayaran Fi
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                 @else
                     <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -764,29 +779,41 @@
             <button type="button" onclick="document.getElementById('modalBayarFi').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
         </div>
 
-        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs">
-            <div class="flex justify-between font-bold text-amber-950">
-                <span>Jumlah Fi Ditetapkan:</span>
-                <span class="text-base font-black">RM {{ number_format($p->yuran_lesen, 2) }}</span>
+        <div class="p-4 bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-2xl border border-amber-200 text-xs space-y-2.5">
+            <div class="flex justify-between items-center font-bold text-amber-950">
+                <span class="text-xs">Jumlah Fi Ditetapkan:</span>
+                <span class="text-lg font-black text-amber-900 bg-white px-3 py-0.5 rounded-xl border border-amber-200">RM {{ number_format($p->yuran_lesen, 2) }}</span>
             </div>
-            <p class="text-[11px] text-amber-800 mt-1">Pembayaran boleh dibuat melalui kaunter PPVJ / DVS atau pindahan bank rasmi Kerajaan Negeri Kelantan.</p>
+            
+            <div class="p-3 bg-white/90 rounded-xl border border-amber-200/80 text-[11px] text-amber-950 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-amber-900">
+                    <i class="fa-solid fa-building-columns text-amber-600"></i> Akaun Bank Rasmi JPVNK:
+                </div>
+                <div><b>Nama Akaun:</b> Jabatan Perkhidmatan Veterinar Negeri Kelantan</div>
+                <div><b>Bank:</b> Bank Islam Malaysia Berhad (BIMB)</div>
+                <div><b>No. Akaun:</b> <span class="font-mono font-bold select-all bg-amber-100/70 px-1.5 py-0.5 rounded">03018010000000</span></div>
+                <div class="text-[10px] text-slate-500 pt-0.5">* Sila masukkan No. Rujukan <b>{{ $p->no_rujukan_permohonan }}</b> sebagai rujukan semasa pembayaran. Bayaran juga boleh dibuat terus di kaunter PPVJ {{ $ladang->jajahan }}.</div>
+            </div>
         </div>
 
         <form action="{{ route('epu.bayar-fi', $p->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3 text-xs">
             @csrf
             <div>
-                <label class="block font-bold text-slate-700 mb-1">No. Resit / No. Transaksi Bank</label>
-                <input type="text" name="no_resit_bayaran" placeholder="Contoh: RES-2026-9901 atau Ref Online Bank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 font-mono">
+                <label class="block font-bold text-slate-700 mb-1">No. Resit / No. Rujukan Transaksi Bank <span class="text-rose-500">*</span></label>
+                <input type="text" name="no_resit_bayaran" required value="{{ old('no_resit_bayaran', $p->no_resit_bayaran) }}" placeholder="Contoh: RES-2026-9901 atau Ref Transaksi Online" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 font-mono">
             </div>
 
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Muat Naik Resit / Slip Bayaran (PDF / Gambar) <span class="text-rose-500">*</span></label>
                 <input type="file" name="resit_bayaran_fi" required accept=".pdf,.jpg,.jpeg,.png" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                <span class="text-[10px] text-slate-400 mt-1 block">Format diterima: PDF, JPG, PNG (Maksimum 10MB)</span>
             </div>
 
             <div class="pt-2 flex justify-end gap-2">
                 <button type="button" onclick="document.getElementById('modalBayarFi').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Batal</button>
-                <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition">Hantar Bukti Pembayaran</button>
+                <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Hantar Bukti Pembayaran
+                </button>
             </div>
         </form>
     </div>
