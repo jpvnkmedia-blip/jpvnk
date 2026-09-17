@@ -67,7 +67,28 @@ class User extends Authenticatable
 
     public function isAdminEpu(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin_epu', 'admin_jajahan', 'admin_eptr_jajahan']);
+        return in_array($this->role, ['super_admin', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_epu_jajahan', 'admin_jajahan', 'admin_eptr_jajahan']);
+    }
+
+    public function isPegawaiVerifikasiEpu(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'admin_epu',
+            'pegawai_verifikasi_epu',
+            'admin_epu_jajahan',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+        ]);
+    }
+
+    public function isPegawaiPelesen(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pegawai_pelesen',
+            'admin_epu',
+        ]);
     }
 
     public function isAdminKursus(): bool
@@ -254,6 +275,9 @@ class User extends Authenticatable
             'admin_eptr',
             'admin_program',
             'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
+            'admin_epu_jajahan',
             'admin_kursus',
             'admin_jajahan',
             'admin_eptr_jajahan',
@@ -283,7 +307,9 @@ class User extends Authenticatable
             'admin_klinik' => 'Admin Klinik Haiwan & Rawatan',
             'admin_eptr' => 'Admin EPTR Negeri',
             'admin_program' => 'Admin Program Pawah',
-            'admin_epu' => 'Admin EPU',
+            'admin_epu' => 'Admin EPU Negeri',
+            'pegawai_pelesen' => 'Pegawai Pelesen / Pengarah (EPU)',
+            'pegawai_verifikasi_epu', 'admin_epu_jajahan' => 'Pegawai Verifikasi EPU (PPVJ ' . ($this->jajahan ?? 'Jajahan') . ')',
             'admin_kursus' => 'Admin Kursus',
             'admin_jajahan', 'admin_eptr_jajahan' => 'Admin EPTR Jajahan (' . ($this->jajahan ?? 'Kelantan') . ')',
             'staf' => 'Kakitangan Jabatan (Staf Biasa)',

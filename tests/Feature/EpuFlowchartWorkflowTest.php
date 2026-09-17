@@ -164,4 +164,55 @@ class EpuFlowchartWorkflowTest extends TestCase
         $this->assertEquals('Lulus Rayuan', $permohonan->status_rayuan);
         $this->assertEquals('Diluluskan', $permohonan->status);
     }
+
+    public function test_pegawai_verifikasi_and_pegawai_pelesen_role_specific_actions()
+    {
+        Storage::fake('public');
+        $penternak = User::where('role', 'penternak')->first();
+        $pegawaiVerifikasi = User::where('role', 'pegawai_verifikasi_epu')->where('jajahan', 'Kota Bharu')->first();
+        $pegawaiPelesen = User::where('role', 'pegawai_pelesen')->first();
+
+        $this->assertNotNull($pegawaiVerifikasi);
+        $this->assertNotNull($pegawaiPelesen);
+        $this->assertTrue($pegawaiVerifikasi->isPegawaiVerifikasiEpu());
+        $this->assertTrue($pegawaiPelesen->isPegawaiPelesen());
+
+        // 1. Pemohon mohon
+        $this->actingAs($penternak)->post('/epu/daftar-borang-a', [
+            'nama_pemohon_atau_syarikat' => 'Reban Ayam Kampung KB',
+            'nama_ladang' => 'Reban Unggas Organik KB',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'kapasiti_maksimum_unggas' => 4000,
+            'alamat_ladang' => 'Kg Pasir Hor',
+            'jajahan' => 'Kota Bharu',
+        ]);
+
+        $ladang = EpuLadang::where('nama_ladang', 'Reban Unggas Organik KB')->first();
+        $permohonan = $ladang->permohonanTerkini;
+
+        // 2. Pegawai Verifikasi PPVJ verifikasi patuh & hantar penilaian
+        $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/verifikasi", [
+            'status_verifikasi' => 'Patuh',
+            'catatan_verifikasi' => 'Pemeriksaan PPVJ Kota Bharu mendapati premis bersih dan patuh.',
+        ]);
+        $permohonan->refresh();
+        $this->assertEquals('Patuh', $permohonan->status_verifikasi);
+        $this->assertEquals($pegawaiVerifikasi->id, $permohonan->pegawai_verifikasi_id);
+
+        $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/hantar-penilaian", [
+            'catatan_penilaian_ladang' => 'Diperakukan untuk pertimbangan Pegawai Pelesen DVS.',
+        ]);
+        $permohonan->refresh();
+        $this->assertEquals('Dihantar ke Pegawai Pelesen', $permohonan->status_penilaian_ladang);
+
+        // 3. Pegawai Pelesen menyemak penilaian dan meluluskan lesen
+        $this->actingAs($pegawaiPelesen)->post("/epu/permohonan/{$permohonan->id}/keputusan-pelesen", [
+            'keputusan' => 'Lulus',
+            'catatan_pegawai' => 'Disemak dan diluluskan oleh Pegawai Pelesen EPU JPVNK.',
+        ]);
+        $permohonan->refresh();
+        $this->assertEquals('Diluluskan', $permohonan->status);
+        $this->assertEquals($pegawaiPelesen->id, $permohonan->diluluskan_oleh);
+    }
 }

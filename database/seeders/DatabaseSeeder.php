@@ -119,6 +119,54 @@ class DatabaseSeeder extends Seeder
             'password' => $password,
         ]);
 
+        // Pegawai Pelesen / Pengarah (EPU)
+        $pegawaiPelesen = User::firstOrCreate(
+            ['ic_number' => '780410035123'],
+            [
+                'name' => 'Dr. Roslan bin Abdul Wahid',
+                'email' => 'pelesen.epu@dvs.gov.my',
+                'phone' => '019-9112233',
+                'address' => 'Pejabat Pengarah / Pegawai Pelesen EPU, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'pegawai_pelesen',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => bcrypt('super@DVS5123'),
+            ]
+        );
+
+        // Pegawai Verifikasi EPU Jajahan (PPVJ Kota Bharu)
+        $verifikasiKb = User::firstOrCreate(
+            ['ic_number' => '850312035521'],
+            [
+                'name' => 'Dr. Nor Azman bin Yusof',
+                'email' => 'verifikasi.kb@dvs.gov.my',
+                'phone' => '019-9223344',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu (PPVJ)',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'pegawai_verifikasi_epu',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => bcrypt('super@DVS5521'),
+            ]
+        );
+
+        // Pegawai Verifikasi EPU Jajahan (PPVJ Pasir Mas)
+        $verifikasiPm = User::firstOrCreate(
+            ['ic_number' => '870815035541'],
+            [
+                'name' => 'En. Zulkifli bin Daud',
+                'email' => 'verifikasi.pm@dvs.gov.my',
+                'phone' => '019-9334455',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Mas (PPVJ)',
+                'jajahan' => 'Pasir Mas',
+                'role' => 'pegawai_verifikasi_epu',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => bcrypt('super@DVS5541'),
+            ]
+        );
+
         $adminKursus = User::create([
             'name' => 'Pn. Roslina binti Daud',
             'email' => 'adminkursus@veterinar.kelantan.gov.my',

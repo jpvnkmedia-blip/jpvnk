@@ -274,14 +274,24 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
             
             <!-- Panel 1: Tindakan Pegawai Verifikasi PPVJ (Jajahan) -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <div class="bg-white rounded-3xl border {{ $user->isPegawaiVerifikasiEpu() ? 'border-blue-400 ring-2 ring-blue-100' : 'border-slate-200' }} p-6 shadow-xs space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-clipboard-user text-blue-600 text-base"></i>
-                        <h3 class="font-black text-slate-900">Tindakan Pegawai Verifikasi PPVJ ({{ $ladang->jajahan }})</h3>
+                        <div>
+                            <h3 class="font-black text-slate-900">Pegawai Verifikasi Jajahan (PPVJ {{ $ladang->jajahan }})</h3>
+                            <p class="text-[10px] text-slate-500">Semakan kelengkapan dokumen & verifikasi kepatuhan ladang di tapak</p>
+                        </div>
                     </div>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">PPVJ</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">PPVJ {{ $ladang->jajahan }}</span>
                 </div>
+
+                @if($p->pegawaiVerifikasi)
+                    <div class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl text-[11px] text-blue-900 flex items-center justify-between">
+                        <span><i class="fa-solid fa-user-check text-blue-600 mr-1"></i> Pegawai Bertanggungjawab: <b>{{ $p->pegawaiVerifikasi->name }}</b></span>
+                        <span class="text-[10px] text-slate-500 font-mono">{{ $p->tarikh_verifikasi ? $p->tarikh_verifikasi->format('d/m/Y') : '-' }}</span>
+                    </div>
+                @endif
 
                 <form action="{{ route('epu.verifikasi', $p->id) }}" method="POST" class="space-y-3">
                     @csrf
@@ -331,14 +341,33 @@
             </div>
 
             <!-- Panel 2: Tindakan Pegawai Pelesen / Pengarah & Proses Rayuan -->
-            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <div class="bg-white rounded-3xl border {{ $user->isPegawaiPelesen() ? 'border-amber-400 ring-2 ring-amber-100' : 'border-slate-200' }} p-6 shadow-xs space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-stamp text-amber-600 text-base"></i>
-                        <h3 class="font-black text-slate-900">Keputusan Pegawai Pelesen / Pengarah</h3>
+                        <div>
+                            <h3 class="font-black text-slate-900">Pegawai Pelesen / Pengarah DVS</h3>
+                            <p class="text-[10px] text-slate-500">Semakan penilaian tapak, kelulusan lesen Borang B & pemprosesan rayuan</p>
+                        </div>
                     </div>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">HQ / Pengarah</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">HQ / Pelesen</span>
                 </div>
+
+                @if($p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen')
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs space-y-1">
+                        <div class="font-bold text-amber-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bell text-amber-600"></i> Penilaian Ladang Diterima dari PPVJ
+                        </div>
+                        <p class="text-amber-900 text-[11px]"><b>Syor PPVJ:</b> {{ $p->catatan_penilaian_ladang ?? 'Laporan verifikasi dan penilaian diperakukan untuk kelulusan.' }} (Tarikh: {{ $p->tarikh_hantar_penilaian ? $p->tarikh_hantar_penilaian->format('d/m/Y') : '-' }})</p>
+                    </div>
+                @endif
+
+                @if($p->pelulus)
+                    <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-700 flex items-center justify-between">
+                        <span><i class="fa-solid fa-signature text-slate-500 mr-1"></i> Keputusan Direkodkan Oleh: <b>{{ $p->pelulus->name }}</b></span>
+                        <span class="text-[10px] text-slate-400 font-mono">{{ $p->tarikh_kelulusan ? $p->tarikh_kelulusan->format('d/m/Y') : '-' }}</span>
+                    </div>
+                @endif
 
                 <!-- Form Kelulusan / Penolakan Pelesen -->
                 <form action="{{ route('epu.keputusan-pelesen', $p->id) }}" method="POST" class="space-y-3">
