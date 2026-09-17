@@ -93,6 +93,7 @@ class EpuFlowchartWorkflowTest extends TestCase
         ]);
         $permohonan->refresh();
         $this->assertEquals('RES-ONLINE-8877', $permohonan->no_resit_bayaran);
+        $this->assertNotNull($permohonan->resit_bayaran_fi);
 
         // 7. Pegawai Sahkan Bayaran Fi
         $this->actingAs($adminEpu)->post("/epu/permohonan/{$permohonan->id}/sahkan-bayaran");

@@ -90,7 +90,7 @@
                 </div>
                 <div>
                     <span class="text-slate-500 text-[11px] uppercase font-bold block">No. Resit Bayaran:</span>
-                    <span class="font-mono font-bold">{{ $permohonan->no_resit_bayaran }} (RM {{ number_format($permohonan->yuran_lesen, 2) }})</span>
+                    <span class="font-mono font-bold">{{ $permohonan->no_resit_bayaran ?? '-' }} (RM {{ number_format($permohonan->yuran_lesen, 2) }})</span>
                 </div>
             </div>
         </div>

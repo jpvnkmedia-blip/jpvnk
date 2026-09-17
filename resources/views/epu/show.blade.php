@@ -630,16 +630,21 @@
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Belum Ada Fail</span>
                         @endif
                     </div>
-                    <p class="text-[11px] text-slate-500">No. Resit: <b class="font-mono text-slate-800">{{ $p->no_resit_bayaran ?? '-' }}</b> (RM {{ number_format($p->yuran_lesen, 2) }})</p>
+                    <p class="text-[11px] text-slate-500">No. Resit: <b class="font-mono text-slate-800">{{ $p->no_resit_bayaran ?? 'Belum Dijana' }}</b> (RM {{ number_format($p->yuran_lesen, 2) }})</p>
                 </div>
                 <div>
                     @if($p->resit_bayaran_fi)
-                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
-                            <i class="fa-solid fa-file-invoice-dollar"></i> Buka Fail Resit (PDF/Imej)
-                        </a>
+                        <div class="flex items-center gap-1.5">
+                            <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> Buka Resit (PDF/Imej)
+                            </a>
+                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-2.5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-xl transition text-xs" title="Muat Naik Semula / Tukar Fail">
+                                <i class="fa-solid fa-upload"></i>
+                            </button>
+                        </div>
                     @else
                         <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
-                            <i class="fa-solid fa-upload"></i> Muat Naik Resit
+                            <i class="fa-solid fa-upload"></i> Muat Naik Fail Resit
                         </button>
                     @endif
                 </div>
