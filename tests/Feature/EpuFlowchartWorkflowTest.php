@@ -215,4 +215,48 @@ class EpuFlowchartWorkflowTest extends TestCase
         $this->assertEquals('Diluluskan', $permohonan->status);
         $this->assertEquals($pegawaiPelesen->id, $permohonan->diluluskan_oleh);
     }
+
+    public function test_strict_separation_of_powers_between_ppvj_and_pegawai_pelesen()
+    {
+        $penternak = User::where('role', 'penternak')->first();
+        $pegawaiVerifikasi = User::where('role', 'pegawai_verifikasi_epu')->where('jajahan', 'Kota Bharu')->first();
+        $pegawaiPelesen = User::where('role', 'pegawai_pelesen')->first();
+
+        // Pemohon cipta permohonan
+        $this->actingAs($penternak)->post('/epu/daftar-borang-a', [
+            'nama_pemohon_atau_syarikat' => 'Ladang Ayam Pasir Mas',
+            'nama_ladang' => 'Ladang Reban PM',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'kapasiti_maksimum_unggas' => 2000,
+            'alamat_ladang' => 'Lot 55',
+            'jajahan' => 'Pasir Mas',
+        ]);
+        $ladang = EpuLadang::where('nama_ladang', 'Ladang Reban PM')->first();
+        $permohonan = $ladang->permohonanTerkini;
+
+        // 1. Pegawai Pelesen CUBA buat verifikasi PPVJ -> MESTI DITOLAK (403 Forbidden)
+        $pelesenVerifResponse = $this->actingAs($pegawaiPelesen)->post("/epu/permohonan/{$permohonan->id}/verifikasi", [
+            'status_verifikasi' => 'Patuh',
+        ]);
+        $pelesenVerifResponse->assertStatus(403);
+
+        // 2. Pegawai Pelesen CUBA hantar penilaian PPVJ -> MESTI DITOLAK (403 Forbidden)
+        $pelesenHantarResponse = $this->actingAs($pegawaiPelesen)->post("/epu/permohonan/{$permohonan->id}/hantar-penilaian", [
+            'catatan_penilaian_ladang' => 'Test',
+        ]);
+        $pelesenHantarResponse->assertStatus(403);
+
+        // 3. Pegawai Verifikasi CUBA buat keputusan pelesenan lesen -> MESTI DITOLAK (403 Forbidden)
+        $verifKeputusanResponse = $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/keputusan-pelesen", [
+            'keputusan' => 'Lulus',
+        ]);
+        $verifKeputusanResponse->assertStatus(403);
+
+        // 4. Pegawai Verifikasi CUBA proses rayuan Pengarah -> MESTI DITOLAK (403 Forbidden)
+        $verifRayuanResponse = $this->actingAs($pegawaiVerifikasi)->post("/epu/permohonan/{$permohonan->id}/proses-rayuan", [
+            'tindakan_rayuan' => 'Lulus Rayuan',
+        ]);
+        $verifRayuanResponse->assertStatus(403);
+    }
 }

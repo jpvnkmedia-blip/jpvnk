@@ -405,11 +405,12 @@ class EpuController extends Controller implements HasMiddleware
     public function verifikasiJajahan(Request $request, $id)
     {
         $user = Auth::user();
-        if (!$user->isStaff()) {
-            abort(403, 'Hanya pegawai berdaftar dibenarkan melakukan verifikasi jajahan.');
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+
+        if (!$user->canPerformVerifikasi($permohonan->ladang->jajahan)) {
+            abort(403, 'Akses Ditolak: Pegawai Pelesen / Pengarah tidak dibenarkan mengubahsuai semakan kelengkapan dan verifikasi kepatuhan tapak. Tindakan ini dikhaskan untuk Pegawai Verifikasi PPVJ (' . $permohonan->ladang->jajahan . ').');
         }
 
-        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
         $validated = $request->validate([
             'status_verifikasi' => 'required|in:Lengkap,Tidak Lengkap,Tidak Patuh,Patuh',
             'catatan_verifikasi' => 'nullable|string',
@@ -478,11 +479,12 @@ class EpuController extends Controller implements HasMiddleware
     public function hantarPenilaian(Request $request, $id)
     {
         $user = Auth::user();
-        if (!$user->isStaff()) {
-            abort(403);
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+
+        if (!$user->canPerformVerifikasi($permohonan->ladang->jajahan)) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Verifikasi PPVJ dibenarkan menghantar penilaian ladang ke Pegawai Pelesen.');
         }
 
-        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
         $validated = $request->validate([
             'catatan_penilaian_ladang' => 'nullable|string',
         ]);
@@ -513,8 +515,8 @@ class EpuController extends Controller implements HasMiddleware
     public function keputusanPelesen(Request $request, $id)
     {
         $user = Auth::user();
-        if (!$user->isStaff()) {
-            abort(403);
+        if (!$user->canPerformKeputusanPelesen()) {
+            abort(403, 'Akses Ditolak: Pegawai Verifikasi Jajahan tidak mempunyai kebenaran untuk membuat keputusan kelulusan lesen atau pemprosesan rayuan. Tindakan ini dikhaskan untuk Pegawai Pelesen / Pengarah.');
         }
 
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
@@ -626,8 +628,8 @@ class EpuController extends Controller implements HasMiddleware
     public function prosesRayuan(Request $request, $id)
     {
         $user = Auth::user();
-        if (!$user->isStaff()) {
-            abort(403);
+        if (!$user->canPerformKeputusanPelesen()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Pelesen / Pengarah dibenarkan memproses keputusan rayuan.');
         }
 
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);

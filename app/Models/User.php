@@ -91,6 +91,27 @@ class User extends Authenticatable
         ]);
     }
 
+    public function canPerformVerifikasi(?string $ladangJajahan = null): bool
+    {
+        if ($this->isSuperAdmin() || $this->role === 'admin_epu') {
+            return true;
+        }
+
+        if (in_array($this->role, ['pegawai_verifikasi_epu', 'admin_epu_jajahan', 'admin_jajahan', 'admin_eptr_jajahan'])) {
+            if ($ladangJajahan && !empty($this->jajahan)) {
+                return strcasecmp($this->jajahan, $ladangJajahan) === 0;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    public function canPerformKeputusanPelesen(): bool
+    {
+        return in_array($this->role, ['super_admin', 'pegawai_pelesen', 'admin_epu']);
+    }
+
     public function isAdminKursus(): bool
     {
         return in_array($this->role, ['super_admin', 'admin_kursus']);
