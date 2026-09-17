@@ -236,30 +236,50 @@
                         </button>
                     </div>
                 @elseif($p->status_bayaran_fi === 'Menunggu Pengesahan')
-                    <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200 text-blue-950 text-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs">
                         <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-hourglass-half text-blue-600 text-base mt-0.5"></i>
-                            <div>
-                                <div class="font-bold">Resit Pembayaran Fi Sedang Disemak</div>
-                                <p class="text-blue-900 mt-0.5">Bukti pembayaran (No. Resit: <b class="font-mono">{{ $p->no_resit_bayaran ?? '-' }}</b>) telah berjaya dihantar pada {{ $p->tarikh_bayaran_fi ? $p->tarikh_bayaran_fi->format('d/m/Y') : date('d/m/Y') }}. Sedang menunggu pengesahan pegawai sebelum Lesen Borang B dijana.</p>
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="font-black text-sm text-blue-950 flex items-center gap-2">
+                                    <span>Resit Pembayaran Fi Sedang Disemak</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-200/80 text-blue-900 border border-blue-300">Menunggu Pengesahan Pegawai</span>
+                                </div>
+                                <p class="text-blue-900 text-xs leading-relaxed">
+                                    Bukti bayaran (No. Resit: <b class="font-mono text-blue-950 bg-white/80 px-1.5 py-0.5 rounded border border-blue-200">{{ $p->no_resit_bayaran ?? '-' }}</b> &bull; Jumlah: <b>RM {{ number_format($p->yuran_lesen, 2) }}</b>) telah dihantar pada {{ $p->tarikh_bayaran_fi ? $p->tarikh_bayaran_fi->format('d/m/Y') : date('d/m/Y') }}.
+                                </p>
                                 @if($p->resit_bayaran_fi)
-                                    <div class="mt-1.5">
-                                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="text-blue-700 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
-                                            <i class="fa-solid fa-file-invoice-dollar"></i> Papar Fail Resit Dimuat Naik
+                                    <div class="pt-0.5">
+                                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-bold hover:underline text-[11px]">
+                                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Pautan Terus Fail: {{ basename($p->resit_bayaran_fi) }}
                                         </a>
+                                    </div>
+                                @else
+                                    <div class="pt-0.5 text-amber-700 text-[11px] font-medium flex items-center gap-1">
+                                        <i class="fa-solid fa-circle-info"></i> Fail imbasan resit belum dimuat naik. Sila klik "Kemaskini / Muat Naik Resit" jika ingin melampirkan fail.
                                     </div>
                                 @endif
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 self-start sm:self-auto">
-                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3 py-1.5 bg-white border border-blue-200 hover:bg-blue-100/50 text-blue-900 font-bold text-xs rounded-xl transition">
-                                <i class="fa-solid fa-file-arrow-up mr-1"></i> Kemaskini Resit
+                        <div class="flex flex-wrap items-center gap-2 self-start lg:self-auto shrink-0">
+                            @if($p->resit_bayaran_fi)
+                                <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 hover:scale-102">
+                                    <i class="fa-solid fa-file-invoice-dollar text-sm"></i> Buka &amp; Lihat Fail Resit
+                                </a>
+                            @else
+                                <button type="button" onclick="document.getElementById('modalLihatResit').classList.remove('hidden')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-receipt text-sm"></i> Lihat Butiran Resit
+                                </button>
+                            @endif
+                            <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-arrow-up text-blue-600"></i> Kemaskini / Muat Naik Resit
                             </button>
                             @if($isStaff)
                                 <form action="{{ route('epu.sahkan-bayaran', $p->id) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
-                                        <i class="fa-solid fa-check mr-1"></i> Sahkan Bayaran Fi
+                                    <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 hover:scale-102">
+                                        <i class="fa-solid fa-check-double"></i> Sahkan Bayaran Fi
                                     </button>
                                 </form>
                             @endif
@@ -840,6 +860,80 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal 3: Paparan / Semakan Butiran Resit Bayaran Fi -->
+<div id="modalLihatResit" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar text-blue-600 text-base"></i>
+                <h3 class="text-sm font-bold text-slate-900">Maklumat Resit Pembayaran Fi Lesen EPU</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('modalLihatResit').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">No. Resit / Rujukan:</span>
+                    <span class="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">{{ $p->no_resit_bayaran ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Jumlah Fi Lesen:</span>
+                    <span class="font-bold text-emerald-700 text-sm">RM {{ number_format($p->yuran_lesen, 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Tarikh Bayaran:</span>
+                    <span class="font-semibold text-slate-800">{{ $p->tarikh_bayaran_fi ? $p->tarikh_bayaran_fi->format('d/m/Y') : '-' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-500 font-medium">Status Bayaran:</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $p->status_bayaran_fi === 'Selesai Bayar' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800' }}">
+                        {{ $p->status_bayaran_fi }}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+                    <span class="text-slate-500 font-medium">Pembayar / Ladang:</span>
+                    <span class="font-bold text-slate-800 text-right">{{ $ladang->nama_ladang }} ({{ $ladang->nama_pemohon_atau_syarikat }})</span>
+                </div>
+            </div>
+
+            <!-- Fail Imbasan Resit -->
+            <div class="p-4 rounded-2xl border {{ $p->resit_bayaran_fi ? 'bg-emerald-50/50 border-emerald-200' : 'bg-amber-50/50 border-amber-200' }}">
+                <div class="font-bold text-slate-800 mb-2 flex items-center justify-between">
+                    <span>Fail Imbasan Resit / Bukti Bayaran:</span>
+                    @if($p->resit_bayaran_fi)
+                        <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">Tersedia</span>
+                    @else
+                        <span class="text-[10px] text-amber-700 font-bold bg-amber-100 px-2 py-0.5 rounded">Belum Dimuat Naik</span>
+                    @endif
+                </div>
+
+                @if($p->resit_bayaran_fi)
+                    <div class="space-y-2">
+                        <p class="text-[11px] text-slate-600">Fail resit yang dimuat naik oleh pemohon:</p>
+                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-2 text-xs">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Fail Resit (Tab Baharu)
+                        </a>
+                    </div>
+                @else
+                    <div class="space-y-2">
+                        <p class="text-[11px] text-amber-900">
+                            Tiada fail lampiran resit fizikal/PDF disimpan dalam rekod ini. Anda boleh memuat naik fail resit rasmi atau slip transaksi sekarang.
+                        </p>
+                        <button type="button" onclick="document.getElementById('modalLihatResit').classList.add('hidden'); document.getElementById('modalBayarFi').classList.remove('hidden');" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                            <i class="fa-solid fa-upload"></i> Muat Naik / Lampirkan Fail Resit
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+            <button type="button" onclick="document.getElementById('modalLihatResit').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">Tutup</button>
+        </div>
     </div>
 </div>
 @endif
