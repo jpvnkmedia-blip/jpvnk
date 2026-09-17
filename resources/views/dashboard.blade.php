@@ -25,6 +25,12 @@
             <p class="mt-2 text-sm text-slate-300 leading-relaxed">
                 @if($user->role === 'admin_pejabat')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin Pejabat</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Inventori &amp; Stor Peralatan Pejabat</span> serta <span class="text-white font-semibold">Pengurusan Kenderaan Rasmi</span> JPVNK.
+                @elseif($user->role === 'admin_epu')
+                    Anda sedang mengakses sistem sebagai <span class="text-amber-400 font-bold">Admin EPU Negeri</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Enakmen Penternakan Unggas (EPU)</span>, pendaftaran ladang ternakan unggas, semakan permohonan lesen, pengesahan bayaran fi, dan cetakan borang rasmi peringkat Negeri Kelantan.
+                @elseif($user->role === 'pegawai_verifikasi_epu')
+                    Anda sedang mengakses sistem sebagai <span class="text-amber-400 font-bold">Pegawai Verifikasi EPU Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab menyemak kelengkapan dokumen, melaksanakan lawatan verifikasi tapak kepatuhan ladang unggas, dan mencetak Borang A serta Lesen Borang B bagi Jajahan <span class="text-amber-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
+                @elseif($user->role === 'pegawai_pelesen')
+                    Anda sedang mengakses sistem sebagai <span class="text-amber-400 font-bold">Pegawai Pelesen / Pengarah DVS</span>. Anda bertanggungjawab menyemak penilaian tapak ladang, meluluskan permohonan lesen Borang B, surat sokongan teknikal, dan memproses rayuan lesen EPU peringkat HQ JPVNK.
                 @elseif($user->role === 'admin_eptr')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin EPTR Negeri</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Pendaftaran Ternakan Ruminan (EPTR)</span>, kelulusan tag telinga, pembatalan/kematian ternakan, permit sembelihan dan permit pemindahan ternakan peringkat Negeri Kelantan.
                 @elseif($user->role === 'admin_jajahan' || $user->role === 'admin_eptr_jajahan')
@@ -153,6 +159,33 @@
                         <i class="fa-solid fa-graduation-cap"></i>
                         <span>Daftar Kursus Ternakan</span>
                     </a>
+                @elseif(in_array($user->role, ['admin_epu', 'pegawai_verifikasi_epu', 'pegawai_pelesen']))
+                    <a href="{{ route('epu.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-900/40 transition">
+                        <i class="fa-solid fa-feather"></i>
+                        <span>Senarai Permohonan EPU</span>
+                    </a>
+                    <a href="{{ route('epu.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition">
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Direktori Ladang Unggas</span>
+                    </a>
+                    @if($user->role === 'pegawai_verifikasi_epu' || $user->role === 'admin_epu' || $user->isSuperAdmin())
+                    <a href="{{ route('epu.index', ['status' => 'Menunggu Semakan Dokumen']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>Verifikasi Dokumen &amp; Tapak ({{ $totalEpuPendingVerifikasi }})</span>
+                    </a>
+                    @endif
+                    @if($user->role === 'pegawai_pelesen' || $user->isSuperAdmin())
+                    <a href="{{ route('epu.index', ['status' => 'Menunggu Kelulusan Pelesen']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-900/40 transition">
+                        <i class="fa-solid fa-stamp"></i>
+                        <span>Kelulusan Pelesen / Pengarah ({{ $totalEpuPendingPelesen }})</span>
+                    </a>
+                    @endif
+                    @if($user->role === 'admin_epu' || $user->isSuperAdmin())
+                    <a href="{{ route('epu.index', ['status' => 'Diluluskan']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span>Pengesahan Bayaran Fi ({{ $totalEpuPendingBayaran }})</span>
+                    </a>
+                    @endif
                 @else
                     @if(Auth::user()->canAccessEptr())
                         @if(!$user->isStaff() || $user->isSuperAdmin())
@@ -1298,6 +1331,229 @@
                             </div>
                         @endforelse
                     </div>
+                </div>
+            </div>
+        </div>
+    @elseif(in_array($user->role, ['admin_epu', 'pegawai_verifikasi_epu', 'pegawai_pelesen']))
+        <!-- EPU KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 1. Ladang Unggas Berdaftar -->
+            <a href="{{ route('epu.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-amber-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-warehouse"></i>
+                    </div>
+                    <span class="text-xs font-bold text-amber-600 uppercase">Ladang Unggas</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-slate-900">{{ $totalEpuFarms }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Jumlah Premis / Ladang</div>
+                    <div class="text-xs text-slate-500 mt-1">Ayam, Itik, Puyuh &amp; Burung Unta</div>
+                </div>
+            </a>
+
+            <!-- 2. Menunggu Verifikasi Dokumen & Tapak -->
+            <a href="{{ route('epu.index', ['status' => 'Menunggu Semakan Dokumen']) }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-indigo-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <span class="text-xs font-bold text-indigo-600 uppercase">Verifikasi Jajahan</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black {{ $totalEpuPendingVerifikasi > 0 ? 'text-indigo-600' : 'text-slate-900' }}">{{ $totalEpuPendingVerifikasi }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Menunggu Semakan &amp; Tapak</div>
+                    <div class="text-xs text-indigo-600 font-semibold mt-1">Tindakan Pegawai PPVJ &rarr;</div>
+                </div>
+            </a>
+
+            <!-- 3. Menunggu Kelulusan Pelesen / Pengarah -->
+            <a href="{{ route('epu.index', ['status' => 'Menunggu Kelulusan Pelesen']) }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-rose-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-stamp"></i>
+                    </div>
+                    <span class="text-xs font-bold text-rose-600 uppercase">Kelulusan Lesen</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black {{ $totalEpuPendingPelesen > 0 ? 'text-rose-600' : 'text-slate-900' }}">{{ $totalEpuPendingPelesen }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Menunggu Kelulusan Pelesen</div>
+                    <div class="text-xs text-rose-600 font-semibold mt-1">Tindakan Pengarah / HQ &rarr;</div>
+                </div>
+            </a>
+
+            <!-- 4. Lesen Diluluskan & Fi -->
+            <a href="{{ route('epu.index', ['status' => 'Diluluskan']) }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-emerald-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-certificate"></i>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-600 uppercase">Lesen Sah</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-emerald-700">{{ $totalEpuLicenses }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Lesen Borang B Diluluskan</div>
+                    <div class="text-xs text-slate-500 mt-1">
+                        <span class="font-bold text-amber-600">{{ $totalEpuPendingBayaran }} Menunggu Fi</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- EPU Main Content Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Senarai Permohonan EPU Terkini -->
+            <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-feather"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Senarai Permohonan Lesen EPU Terkini</h3>
+                            <p class="text-[11px] text-slate-500">Aliran kerja semakan PPVJ Jajahan, kelulusan Pegawai Pelesen &amp; bayaran fi</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('epu.index') }}" class="text-xs text-amber-600 hover:text-amber-800 font-bold">
+                        Lihat Semua Permohonan &rarr;
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 uppercase font-semibold">
+                                <th class="py-2.5">No. Rujukan</th>
+                                <th class="py-2.5">Pemohon &amp; Ladang</th>
+                                <th class="py-2.5">Jenis Ternakan</th>
+                                <th class="py-2.5">Jajahan</th>
+                                <th class="py-2.5">Status Aliran</th>
+                                <th class="py-2.5 text-right">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($recentEpu as $epu)
+                                <tr class="hover:bg-slate-50/80 transition">
+                                    <td class="py-3 font-mono font-bold text-amber-900">
+                                        {{ $epu->no_rujukan }}
+                                        <div class="text-[10px] text-slate-400 font-normal">{{ $epu->created_at ? $epu->created_at->format('d/m/Y') : '-' }}</div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="font-bold text-slate-900">{{ $epu->ladang->pemilik->name ?? 'Pemohon' }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ $epu->ladang->nama_ladang ?? '-' }}</div>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="font-semibold text-slate-800">{{ $epu->ladang->kategori_unggas ?? 'Unggas' }}</div>
+                                        <div class="text-[11px] text-slate-500">{{ number_format($epu->ladang->kapasiti_ternakan ?? 0) }} Ekor</div>
+                                    </td>
+                                    <td class="py-3 text-slate-600 font-medium">
+                                        {{ $epu->ladang->jajahan ?? '-' }}
+                                    </td>
+                                    <td class="py-3">
+                                        @if($epu->status === 'Diluluskan')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                                <i class="fa-solid fa-circle-check mr-1"></i> Diluluskan
+                                            </span>
+                                        @elseif($epu->status === 'Menunggu Kelulusan Pelesen')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                                <i class="fa-solid fa-stamp mr-1"></i> Kelulusan Pelesen
+                                            </span>
+                                        @elseif($epu->status === 'Ditolak')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">
+                                                <i class="fa-solid fa-circle-xmark mr-1"></i> Ditolak
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                                <i class="fa-solid fa-clock mr-1"></i> {{ $epu->status }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-right space-x-1">
+                                        <a href="{{ route('epu.show', $epu->id) }}" class="p-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-700 transition" title="Buka Butiran Permohonan">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        @if(Auth::user()->canCetakBorangEpu())
+                                            <a href="{{ route('epu.cetak-borang-a', $epu->id) }}" target="_blank" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition" title="Cetak Borang A">
+                                                <i class="fa-solid fa-print"></i>
+                                            </a>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-slate-400">
+                                        Tiada rekod permohonan lesen EPU dijumpai.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Tindakan Pantas & Panduan Enakmen Unggas -->
+            <div class="space-y-6">
+                <!-- Box 1: Tindakan Pantas Mengikut Peranan -->
+                <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900">Tindakan Pantas EPU</h3>
+                    </div>
+                    <div class="space-y-2.5">
+                        @if($user->role === 'pegawai_verifikasi_epu' || $user->role === 'admin_epu' || $user->isSuperAdmin())
+                        <a href="{{ route('epu.index', ['status' => 'Menunggu Semakan Dokumen']) }}" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-indigo-50/80 hover:bg-indigo-100/80 border border-indigo-200/80 text-indigo-900 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-clipboard-check text-indigo-700"></i>
+                                <span class="text-xs font-bold">Verifikasi Dokumen / Tapak ({{ $totalEpuPendingVerifikasi }})</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-indigo-600 group-hover:translate-x-0.5 transition-transform"></i>
+                        </a>
+                        @endif
+
+                        @if($user->role === 'pegawai_pelesen' || $user->isSuperAdmin())
+                        <a href="{{ route('epu.index', ['status' => 'Menunggu Kelulusan Pelesen']) }}" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/80 text-rose-900 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-stamp text-rose-700"></i>
+                                <span class="text-xs font-bold">Kelulusan Pelesen ({{ $totalEpuPendingPelesen }})</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-rose-600 group-hover:translate-x-0.5 transition-transform"></i>
+                        </a>
+                        @endif
+
+                        <a href="{{ route('epu.index') }}" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200/80 text-amber-900 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-warehouse text-amber-700"></i>
+                                <span class="text-xs font-bold">Pengurusan Ladang Unggas</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-amber-600 group-hover:translate-x-0.5 transition-transform"></i>
+                        </a>
+
+                        @if($user->role === 'admin_epu' || $user->isSuperAdmin())
+                        <a href="{{ route('epu.index', ['status' => 'Diluluskan']) }}" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200/80 text-emerald-900 transition group">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-receipt text-emerald-700"></i>
+                                <span class="text-xs font-bold">Semakan Bayaran Fi ({{ $totalEpuPendingBayaran }})</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-emerald-600 group-hover:translate-x-0.5 transition-transform"></i>
+                        </a>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Box 2: Panduan & Pengasingan Kuasa Enakmen Unggas -->
+                <div class="bg-gradient-to-br from-slate-900 to-amber-950 rounded-3xl p-6 text-white shadow-xs">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                        <h4 class="text-sm font-bold text-white">Enakmen Penternakan Unggas 2007</h4>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 leading-relaxed list-disc list-inside">
+                        <li><b class="text-amber-300">Pegawai Verifikasi Jajahan (PPVJ)</b>: Verifikasi kelengkapan dokumen permohonan &amp; pemeriksaan tapak di peringkat jajahan.</li>
+                        <li><b class="text-rose-300">Pegawai Pelesen / Pengarah DVS</b>: Semakan penilaian tapak, kelulusan Lesen Borang B &amp; rayuan HQ.</li>
+                        <li><b class="text-emerald-300">Admin EPU Negeri</b>: Pengesahan resit fi pelesenan, kawalan modul &amp; cetakan borang rasmi.</li>
+                        <li><b class="text-white">Kawalan Cetakan</b>: Borang A dan Lesen Borang B hanya boleh dicetak oleh Pegawai Verifikasi dan Admin Negeri.</li>
+                    </ul>
                 </div>
             </div>
         </div>

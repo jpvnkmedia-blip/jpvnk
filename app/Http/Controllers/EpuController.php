@@ -297,6 +297,9 @@ class EpuController extends Controller implements HasMiddleware
     // Cetak Borang A: Permohonan Lesen Perladangan Unggas (Enakmen 2005 Format Rasmi Warta)
     public function cetakBorangA($id)
     {
+        if (!Auth::user()->canCetakBorangEpu()) {
+            abort(403, 'Akses Ditolak: Borang EPU hanya boleh dicetak oleh Pegawai Verifikasi EPU dan Admin EPU Negeri.');
+        }
         [$ladang, $permohonan] = $this->resolveLadangDanPermohonan($id);
         return view('epu.cetak-borang-a', compact('ladang', 'permohonan'));
     }
@@ -304,6 +307,9 @@ class EpuController extends Controller implements HasMiddleware
     // Cetak Borang B: Permohonan Pengecualian Lesen Perladangan Unggas
     public function cetakBorangBPengecualian($id)
     {
+        if (!Auth::user()->canCetakBorangEpu()) {
+            abort(403, 'Akses Ditolak: Borang EPU hanya boleh dicetak oleh Pegawai Verifikasi EPU dan Admin EPU Negeri.');
+        }
         [$ladang, $permohonan] = $this->resolveLadangDanPermohonan($id);
         return view('epu.cetak-borang-b-pengecualian', compact('ladang', 'permohonan'));
     }
@@ -311,6 +317,9 @@ class EpuController extends Controller implements HasMiddleware
     // Cetak Borang C: Sijil Pengecualian Lesen Perladangan Unggas
     public function cetakSijilPengecualianC($id)
     {
+        if (!Auth::user()->canCetakBorangEpu()) {
+            abort(403, 'Akses Ditolak: Borang EPU hanya boleh dicetak oleh Pegawai Verifikasi EPU dan Admin EPU Negeri.');
+        }
         [$ladang, $permohonan] = $this->resolveLadangDanPermohonan($id);
         return view('epu.cetak-sijil-pengecualian-c', compact('ladang', 'permohonan'));
     }
@@ -318,6 +327,9 @@ class EpuController extends Controller implements HasMiddleware
     // Cetak Borang A: Permohonan Salinan Pendua Lesen
     public function cetakSalinanPendua($id)
     {
+        if (!Auth::user()->canCetakBorangEpu()) {
+            abort(403, 'Akses Ditolak: Borang EPU hanya boleh dicetak oleh Pegawai Verifikasi EPU dan Admin EPU Negeri.');
+        }
         [$ladang, $permohonan] = $this->resolveLadangDanPermohonan($id);
         return view('epu.cetak-salinan-pendua', compact('ladang', 'permohonan'));
     }
@@ -325,6 +337,9 @@ class EpuController extends Controller implements HasMiddleware
     // EPU Borang B: Cetak Lesen Ladang Unggas
     public function cetakLesen($permohonanId)
     {
+        if (!Auth::user()->canCetakBorangEpu()) {
+            abort(403, 'Akses Ditolak: Lesen Ladang Unggas (Borang B) hanya boleh dicetak oleh Pegawai Verifikasi EPU dan Admin EPU Negeri.');
+        }
         $permohonan = EpuPermohonan::with('ladang.pemilik', 'pelulus')->findOrFail($permohonanId);
         return view('epu.borang-b-lesen', compact('permohonan'));
     }

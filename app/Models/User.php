@@ -178,7 +178,6 @@ class User extends Authenticatable
         return in_array($this->role, [
             'super_admin',
             'admin_pejabat',
-            'admin_epu',
         ]);
     }
 
@@ -200,6 +199,8 @@ class User extends Authenticatable
         return !in_array($this->role, [
             'admin_program',
             'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
             'admin_ubat',
@@ -212,6 +213,9 @@ class User extends Authenticatable
     {
         return !in_array($this->role, [
             'admin_eptr',
+            'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
             'admin_ubat',
@@ -237,6 +241,9 @@ class User extends Authenticatable
     {
         return !in_array($this->role, [
             'admin_eptr',
+            'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
             'admin_program',
             'admin_pejabat',
             'admin_ubat',
@@ -248,6 +255,9 @@ class User extends Authenticatable
     {
         return !in_array($this->role, [
             'admin_eptr',
+            'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
             'admin_program',
             'admin_kursus',
             'admin_pejabat',
@@ -263,17 +273,26 @@ class User extends Authenticatable
 
     public function canRequestInventori(): bool
     {
-        return $this->isStaff() && !in_array($this->role, ['admin_program', 'admin_eptr']);
+        return $this->isStaff() && !in_array($this->role, ['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu']);
     }
 
     public function canRequestAlatanPejabat(): bool
     {
-        return $this->isStaff() && !in_array($this->role, ['admin_program', 'admin_eptr']);
+        return $this->isStaff() && !in_array($this->role, ['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu']);
     }
 
     public function canRequestUbat(): bool
     {
         return in_array($this->role, ['admin_jajahan', 'admin_eptr_jajahan', 'super_admin']);
+    }
+
+    public function canCetakBorangEpu(): bool
+    {
+        return in_array($this->role, [
+            'admin_epu',
+            'pegawai_verifikasi_epu',
+            'super_admin',
+        ]);
     }
 
     public function canManagePermohonanPejabat(): bool

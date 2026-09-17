@@ -274,9 +274,15 @@
                                 <p class="text-emerald-800 mt-0.5">No. Lesen: <b class="font-mono">{{ $p->no_lesen_epu }}</b> &bull; Sah laku: {{ $p->tarikh_mula_lesen ? $p->tarikh_mula_lesen->format('d/m/Y') : '-' }} sehingga {{ $p->tarikh_tamat_lesen ? $p->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</p>
                             </div>
                         </div>
-                        <a href="{{ route('epu.cetak-lesen', $p->id) }}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto">
-                            <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
-                        </a>
+                        @if(Auth::user()->canCetakBorangEpu())
+                            <a href="{{ route('epu.cetak-lesen', $p->id) }}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto">
+                                <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
+                            </a>
+                        @else
+                            <span class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-semibold self-start sm:self-auto">
+                                <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> Lesen Sah (Cetakan oleh Pegawai PPVJ / Admin Negeri)
+                            </span>
+                        @endif
                     </div>
                 @endif
             @endif
@@ -564,6 +570,7 @@
     </div>
 
     <!-- Official Gazetted Forms Printable Hub (Enakmen 2005) -->
+    @if(Auth::user()->canCetakBorangEpu())
     <div class="bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-3xl border border-amber-200/80 p-6 sm:p-7 shadow-xs">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-amber-200/60 gap-2">
             <div>
@@ -644,6 +651,7 @@
             </a>
         </div>
     </div>
+    @endif
 
     <!-- History of EPU Licenses & Inspections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -683,7 +691,7 @@
 
                         <div class="text-[11px] text-slate-500 flex justify-between items-center pt-1 border-t border-slate-200">
                             <span>Tempoh: {{ $permohonan->tarikh_mula_lesen ? $permohonan->tarikh_mula_lesen->format('d/m/Y') : '-' }} &rarr; {{ $permohonan->tarikh_tamat_lesen ? $permohonan->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</span>
-                            @if($permohonan->status === 'Diluluskan')
+                            @if($permohonan->status === 'Diluluskan' && Auth::user()->canCetakBorangEpu())
                                 <a href="{{ route('epu.cetak-lesen', $permohonan->id) }}" target="_blank" class="font-bold text-amber-700 hover:underline flex items-center gap-1">
                                     <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
                                 </a>

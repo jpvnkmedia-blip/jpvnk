@@ -325,7 +325,7 @@
                 @endif
                 @endif
 
-                @if(Auth::user()->isStaff() && !in_array(Auth::user()->role, ['admin_program', 'admin_eptr']))
+                @if(Auth::user()->isStaff() && !in_array(Auth::user()->role, ['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu']))
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     Pengurusan Pejabat &amp; Bekalan
                 </div>

@@ -89,6 +89,22 @@ class DashboardController extends Controller
             $totalPawahTernakanInduk = PawahTernakan::count();
             $totalEpuFarms = EpuLadang::count();
             $totalEpuLicenses = EpuPermohonan::where('status', 'Diluluskan')->count();
+            
+            $epuQuery = EpuPermohonan::query();
+            if ($user->role === 'pegawai_verifikasi_epu' && $user->jajahan) {
+                $epuQuery->whereHas('ladang', fn($q) => $q->where('jajahan', $user->jajahan));
+            }
+            $totalEpuPendingVerifikasi = (clone $epuQuery)->where(function ($q) {
+                $q->whereNull('status_verifikasi')
+                  ->orWhereIn('status_verifikasi', ['Belum Disemak', 'Tidak Lengkap', 'Tidak Patuh']);
+            })->where('status', '!=', 'Diluluskan')->count();
+
+            $totalEpuPendingPelesen = EpuPermohonan::where('status_penilaian_ladang', 'Dihantar ke Pegawai Pelesen')
+                ->where('status', 'Menunggu Kelulusan Pelesen')->count();
+
+            $totalEpuPendingBayaran = EpuPermohonan::where('status', 'Diluluskan')
+                ->where('status_bayaran_fi', 'Menunggu Pengesahan')->count();
+
             $totalCourses = Course::where('status', 'Buka')->count();
             $totalCourseApplications = CourseApplication::count();
             $totalClinicAppointments = KlinikTemujanji::count();
@@ -100,13 +116,16 @@ class DashboardController extends Controller
             $totalUsers = User::count();
 
             $recentPawah = PawahPerjanjian::with('peserta', 'ternakanList')->latest()->take(5)->get();
-            $recentEpu = EpuPermohonan::with('ladang')->latest()->take(5)->get();
+            $recentEpu = (clone $epuQuery)->with('ladang.pemilik', 'pegawaiVerifikasi')->latest()->take(8)->get();
             $recentTemujanji = KlinikTemujanji::with('pemilik')->latest()->take(5)->get();
             $recentTempahanKenderaan = KenderaanTempahan::with('pemohon', 'kenderaan')->latest()->take(5)->get();
             $recentSembelehan = PermitSembelihan::with('pemunya', 'ternakan')->latest()->take(5)->get();
             $recentInventory = InventoriItem::latest()->take(6)->get();
             $recentCourses = Course::withCount('applications')->latest()->take(6)->get();
         } else {
+            $totalEpuPendingVerifikasi = 0;
+            $totalEpuPendingPelesen = 0;
+            $totalEpuPendingBayaran = 0;
             // MAKLUMAT UNTUK PENGGUNA TERSEBUT SAHAJA (PENTERNAK / USAHAWAN / ORANG AWAM)
             $totalTernakanEptr = (clone $userTernakanQuery)->whereIn('status', ['Aktif', 'Pawah'])->count();
             $totalPendingTernakan = (clone $userTernakanQuery)->where('status_kelulusan', 'Menunggu')->count();
@@ -165,6 +184,9 @@ class DashboardController extends Controller
             'totalPawahTernakanInduk',
             'totalEpuFarms',
             'totalEpuLicenses',
+            'totalEpuPendingVerifikasi',
+            'totalEpuPendingPelesen',
+            'totalEpuPendingBayaran',
             'totalCourses',
             'totalCourseApplications',
             'totalClinicAppointments',

@@ -99,8 +99,12 @@ class EpuFlowchartWorkflowTest extends TestCase
         $permohonan->refresh();
         $this->assertEquals('Selesai Bayar', $permohonan->status_bayaran_fi);
 
-        // 8. Pemohon Mencetak Lesen Borang B
-        $printResponse = $this->actingAs($penternak)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak");
+        // 8. Pemohon Tidak Boleh Cetak (Hanya PPVJ / Admin Negeri / Super Admin)
+        $penternakPrintResponse = $this->actingAs($penternak)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak");
+        $penternakPrintResponse->assertStatus(403);
+
+        // 9. Pegawai Verifikasi / Admin EPU Negeri Boleh Mencetak Lesen Borang B
+        $printResponse = $this->actingAs($adminEpu)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak");
         $printResponse->assertStatus(200);
         $printResponse->assertSee('BORANG B');
         $printResponse->assertSee('LESEN PERLADANGAN UNGGAS');
@@ -305,5 +309,89 @@ class EpuFlowchartWorkflowTest extends TestCase
             'type' => 'epu',
             'title' => 'Penilaian Ladang EPU Memerlukan Semakan Kelulusan',
         ]);
+    }
+
+    public function test_epu_print_restricted_only_to_pegawai_verifikasi_and_admin_epu()
+    {
+        $penternak = User::where('role', 'penternak')->first();
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $pegawaiVerifikasi = User::where('role', 'pegawai_verifikasi_epu')->first();
+        $pegawaiPelesen = User::where('role', 'pegawai_pelesen')->first();
+        $staf = User::where('role', 'staf')->first();
+
+        $this->assertTrue($adminEpu->canCetakBorangEpu());
+        $this->assertTrue($pegawaiVerifikasi->canCetakBorangEpu());
+        $this->assertFalse($penternak->canCetakBorangEpu());
+        $this->assertFalse($pegawaiPelesen->canCetakBorangEpu());
+        $this->assertFalse($staf->canCetakBorangEpu());
+
+        // Cipta permohonan EPU yang diluluskan
+        $ladang = EpuLadang::create([
+            'user_id' => $penternak->id,
+            'nama_pemohon_atau_syarikat' => 'Syarikat Penternak Test',
+            'nama_ladang' => 'Ladang Cetak Test',
+            'jajahan' => 'Kota Bharu',
+            'kategori_unggas' => 'Ayam Pedaging',
+            'kapasiti_ternakan' => 5000,
+            'alamat_ladang' => 'Lot 123',
+            'status' => 'Aktif',
+        ]);
+
+        $permohonan = EpuPermohonan::create([
+            'epu_ladang_id' => $ladang->id,
+            'no_rujukan_permohonan' => 'EPU-TEST-PRINT-001',
+            'jenis_permohonan' => 'Baharu',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'kapasiti_ladang' => 5000,
+            'bilangan_semasa_unggas' => 4000,
+            'tarikh_mula_lesen' => now(),
+            'status' => 'Diluluskan',
+            'status_verifikasi' => 'Patuh',
+            'status_penilaian_ladang' => 'Dihantar ke Pegawai Pelesen',
+            'status_kelulusan_pelesen' => 'Lulus',
+            'status_bayaran_fi' => 'Selesai Bayar',
+            'no_resit_bayaran' => 'RES-9988',
+            'no_lesen_epu' => 'DVS/EPU/2026/001',
+            'tarikh_tamat_lesen' => now()->addYear(),
+        ]);
+
+        // 1. Admin EPU dan Pegawai Verifikasi BOLEH cetak
+        $this->actingAs($adminEpu)->get("/epu/cetak-borang-a/{$permohonan->id}")->assertStatus(200);
+        $this->actingAs($adminEpu)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak")->assertStatus(200);
+        $this->actingAs($pegawaiVerifikasi)->get("/epu/cetak-borang-a/{$permohonan->id}")->assertStatus(200);
+        $this->actingAs($pegawaiVerifikasi)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak")->assertStatus(200);
+
+        // 2. Penternak, Pegawai Pelesen, Staf TIDAK BOLEH cetak (403 Forbidden)
+        $this->actingAs($penternak)->get("/epu/cetak-borang-a/{$permohonan->id}")->assertStatus(403);
+        $this->actingAs($penternak)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak")->assertStatus(403);
+        $this->actingAs($pegawaiPelesen)->get("/epu/cetak-borang-a/{$permohonan->id}")->assertStatus(403);
+        $this->actingAs($pegawaiPelesen)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak")->assertStatus(403);
+        $this->actingAs($staf)->get("/epu/cetak-borang-a/{$permohonan->id}")->assertStatus(403);
+        $this->actingAs($staf)->get("/epu/lesen-borang-b/{$permohonan->id}/cetak")->assertStatus(403);
+    }
+
+    public function test_admin_epu_module_isolation_cannot_access_other_modules()
+    {
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $this->assertNotNull($adminEpu);
+
+        // Helper checks
+        $this->assertTrue($adminEpu->canAccessEpu());
+        $this->assertFalse($adminEpu->canAccessEptr());
+        $this->assertFalse($adminEpu->canAccessPawah());
+        $this->assertFalse($adminEpu->canAccessKursus());
+        $this->assertFalse($adminEpu->canAccessKlinik());
+        $this->assertFalse($adminEpu->canAccessKenderaan());
+        $this->assertFalse($adminEpu->canRequestInventori());
+        $this->assertFalse($adminEpu->canRequestAlatanPejabat());
+
+        // HTTP Routes isolation checks
+        $this->actingAs($adminEpu)->get('/epu')->assertStatus(200);
+        $this->actingAs($adminEpu)->get('/eptr')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/pawah')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/klinik')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/kenderaan')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/inventori/permohonan/saya')->assertStatus(403);
     }
 }

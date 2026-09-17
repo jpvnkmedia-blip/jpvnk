@@ -977,8 +977,8 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_sekatan_tempahan_kenderaan_mengikut_peranan()
     {
-        // 1. Peranan yang DIBENARKAN membuat tempahan: super_admin, admin_pejabat, admin_epu
-        $allowedRoles = ['super_admin', 'admin_pejabat', 'admin_epu'];
+        // 1. Peranan yang DIBENARKAN membuat tempahan: super_admin, admin_pejabat
+        $allowedRoles = ['super_admin', 'admin_pejabat'];
         foreach ($allowedRoles as $role) {
             $user = User::where('role', $role)->first();
             if ($user) {
@@ -997,8 +997,8 @@ class JpvnkUnifiedSystemTest extends TestCase
             }
         }
 
-        // 2. Peranan yang DISEKAT daripada modul Kenderaan Rasmi (admin_eptr, admin_program, admin_kursus, admin_jajahan, penternak, usahawan, orang_awam):
-        $blockedVehicleRoles = ['admin_eptr', 'admin_program', 'admin_kursus', 'admin_jajahan', 'penternak', 'usahawan', 'orang_awam'];
+        // 2. Peranan yang DISEKAT daripada modul Kenderaan Rasmi (admin_epu, admin_eptr, admin_program, admin_kursus, admin_jajahan, penternak, usahawan, orang_awam):
+        $blockedVehicleRoles = ['admin_epu', 'admin_eptr', 'admin_program', 'admin_kursus', 'admin_jajahan', 'penternak', 'usahawan', 'orang_awam'];
         foreach ($blockedVehicleRoles as $blockedRole) {
             $blockedUser = User::where('role', $blockedRole)->first();
             if ($blockedUser) {
@@ -1039,84 +1039,16 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_admin_epu_hanya_boleh_lihat_tempahan_dan_mohon_baru_disekat_fleet_dan_pemandu()
     {
-        $restrictedOfficerRoles = ['admin_epu'];
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $this->assertNotNull($adminEpu, "User with role admin_epu should exist.");
 
-        foreach ($restrictedOfficerRoles as $role) {
-            $officer = User::where('role', $role)->first();
-            $this->assertNotNull($officer, "User with role {$role} should exist.");
+        // Admin EPU disekat daripada modul kenderaan sepenuhnya
+        $this->actingAs($adminEpu)->get('/kenderaan')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/kenderaan/tempahan-baru')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/kenderaan/fleet')->assertStatus(403);
+        $this->actingAs($adminEpu)->get('/kenderaan/pemandu')->assertStatus(403);
 
-            // 1. BOLEH lihat senarai tempahan kenderaan
-            $getIndex = $this->actingAs($officer)->get('/kenderaan');
-            $getIndex->assertStatus(200);
-            $getIndex->assertDontSee('Status Fleet Kenderaan Jabatan');
-            $getIndex->assertDontSee('Maklumat Pemandu (');
-
-            // 2. BOLEH akses borang permohonan tempahan baru
-            $getCreate = $this->actingAs($officer)->get('/kenderaan/tempahan-baru');
-            $getCreate->assertStatus(200);
-
-            // 3. BOLEH hantar permohonan tempahan baru
-            $postStore = $this->actingAs($officer)->post('/kenderaan/tempahan-baru', [
-                'destinasi' => 'Pusat Operasi ' . $role,
-                'tujuan' => 'Tugasan rasmi lapangan bagi ' . $role,
-                'tarikh_keluar' => date('Y-m-d\TH:i'),
-                'tarikh_kembali' => date('Y-m-d\TH:i', strtotime('+3 hours')),
-                'bilangan_penumpang' => 2,
-            ]);
-            $postStore->assertRedirect(route('kenderaan.index'));
-
-            // 4. DISEKAT daripada melihat atau menguruskan Fleet Kenderaan (403 Forbidden)
-            $getFleet = $this->actingAs($officer)->get('/kenderaan/fleet');
-            $getFleet->assertStatus(403);
-
-            $postFleet = $this->actingAs($officer)->post('/kenderaan/kenderaan-baru', [
-                'no_pendaftaran' => 'TEST 123',
-                'jenis_kenderaan' => 'Van',
-                'model' => 'Toyota Hiace',
-                'kapasiti_penumpang' => 10,
-                'jajahan_penempatan' => 'Kota Bharu',
-                'status' => 'Sedia',
-            ]);
-            $postFleet->assertStatus(403);
-
-            // 5. DISEKAT daripada melihat atau menguruskan Maklumat Pemandu (403 Forbidden)
-            $getPemandu = $this->actingAs($officer)->get('/kenderaan/pemandu');
-            $getPemandu->assertStatus(403);
-
-            $postPemandu = $this->actingAs($officer)->post('/kenderaan/pemandu', [
-                'nama' => 'Pemandu Haram',
-                'no_kp' => '990101035599',
-                'no_telefon' => '019-9999999',
-                'kelas_lesen' => 'D',
-                'jajahan_penempatan' => 'Kota Bharu',
-                'status' => 'Aktif',
-            ]);
-            $postPemandu->assertStatus(403);
-
-            // 6. DISEKAT daripada mengubah atau meluluskan/menolak tempahan kenderaan (403 Forbidden)
-            $tempahan = \App\Models\KenderaanTempahan::where('user_id', $officer->id)->where('status', 'Menunggu')->latest()->first();
-            if ($tempahan) {
-                $getShow = $this->actingAs($officer)->get("/kenderaan/tempahan/{$tempahan->id}");
-                $getShow->assertStatus(200);
-                $getShow->assertSee('Menunggu Kelulusan Pegawai');
-                $getShow->assertSee('Permohonan ini sedang menunggu semakan dan pengesahan dari Admin Pejabat / Pegawai Bertugas.');
-                $getShow->assertDontSee('Sahkan Kelulusan');
-                $getShow->assertDontSee('Sahkan Penolakan');
-
-                // Percubaan luluskan secara terus -> 403 Forbidden
-                $this->actingAs($officer)->post("/kenderaan/tempahan/{$tempahan->id}/lulus", [
-                    'status' => 'Diluluskan',
-                    'kenderaan_id' => 1,
-                ])->assertStatus(403);
-
-                // Percubaan tolak secara terus -> 403 Forbidden
-                $this->actingAs($officer)->post("/kenderaan/tempahan/{$tempahan->id}/tolak", [
-                    'sebab_tolak' => 'Percubaan tolak oleh ' . $role,
-                ])->assertStatus(403);
-            }
-        }
-
-        // 6. Admin Pejabat & Super Admin BOLEH akses semua modul fleet dan pemandu
+        // Admin Pejabat & Super Admin BOLEH akses semua modul fleet dan pemandu
         $adminPejabat = User::where('role', 'admin_pejabat')->first();
         $this->actingAs($adminPejabat)->get('/kenderaan/fleet')->assertStatus(200);
         $this->actingAs($adminPejabat)->get('/kenderaan/pemandu')->assertStatus(200);

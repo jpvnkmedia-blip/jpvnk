@@ -23,7 +23,7 @@ class InventoriController extends Controller implements HasMiddleware
             function (Request $request, Closure $next) {
                 if (Auth::check()) {
                     $user = Auth::user();
-                    if (!$user->isStaff() || in_array($user->role, ['admin_program', 'admin_eptr'])) {
+                    if (!$user->isStaff() || in_array($user->role, ['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu'])) {
                         abort(403, 'Akses Ditolak: Peranan ' . ($user->role_label ?? $user->role) . ' tidak dibenarkan mengakses modul Inventori.');
                     }
                 }
