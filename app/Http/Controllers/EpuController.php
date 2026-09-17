@@ -155,6 +155,8 @@ class EpuController extends Controller implements HasMiddleware
             'dokumen_tanah' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'dokumen_pbt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'dokumen_ssm' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'resit_bayaran_fi' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'no_resit_bayaran' => 'nullable|string|max:50',
         ]);
 
         // Process Reban Data JSON
@@ -169,6 +171,7 @@ class EpuController extends Controller implements HasMiddleware
         $pathTanah = $this->uploadFileSafely($request->file('dokumen_tanah'), 'epu/dokumen');
         $pathPbt = $this->uploadFileSafely($request->file('dokumen_pbt'), 'epu/dokumen');
         $pathSsm = $this->uploadFileSafely($request->file('dokumen_ssm'), 'epu/dokumen');
+        $pathResitFi = $this->uploadFileSafely($request->file('resit_bayaran_fi'), 'epu/resit_bayaran');
 
         $namaLadang = $validated['nama_ladang'] ?? ('Ladang ' . $validated['jenis_unggas'] . ' - ' . $validated['nama_pemohon_atau_syarikat']);
         $idPremis = $validated['id_premis'] ?? ('PRM-' . strtoupper(substr($validated['jajahan'], 0, 3)) . '-' . rand(100, 999));
@@ -218,6 +221,8 @@ class EpuController extends Controller implements HasMiddleware
 
         $noRujukan = 'EPU/' . strtoupper(substr($validated['jajahan'], 0, 3)) . '/' . date('Y') . '/' . rand(1000, 9999);
         $noLesen = 'EPU-' . strtoupper(substr($validated['jajahan'], 0, 3)) . '-' . date('Y') . '-' . rand(1000, 9999);
+        $noResit = $request->input('no_resit_bayaran') ?? ($pathResitFi ? ('RES-EPU-' . date('Y') . '-' . rand(100, 999)) : null);
+        $statusBayaranFi = $isFree || $request->boolean('mohon_pengecualian') ? 'Dikecualikan' : ($pathResitFi ? 'Menunggu Pengesahan' : 'Belum Bayar');
 
         $permohonan = EpuPermohonan::create([
             'epu_ladang_id' => $ladang->id,
@@ -231,7 +236,7 @@ class EpuController extends Controller implements HasMiddleware
             'tarikh_mula_lesen' => Carbon::now()->toDateString(),
             'tarikh_tamat_lesen' => Carbon::now()->addYear()->toDateString(),
             'yuran_lesen' => $yuranLesen,
-            'no_resit_bayaran' => 'RES-EPU-' . date('Y') . '-' . rand(100, 999),
+            'no_resit_bayaran' => $noResit,
             'status' => $user->isStaff() ? 'Diluluskan' : 'Dihantar',
             'mohon_pengecualian' => $request->boolean('mohon_pengecualian'),
             'sebab_pengecualian' => $validated['sebab_pengecualian'] ?? null,
@@ -241,6 +246,9 @@ class EpuController extends Controller implements HasMiddleware
             'dokumen_tanah' => $pathTanah,
             'dokumen_pbt' => $pathPbt,
             'dokumen_ssm' => $pathSsm,
+            'resit_bayaran_fi' => $pathResitFi,
+            'tarikh_bayaran_fi' => $pathResitFi ? Carbon::now()->toDateString() : null,
+            'status_bayaran_fi' => $statusBayaranFi,
             'dokumen_sokongan' => $pathPelan ?? $pathTanah,
             'syarat_khas_lesen' => "1. Mematuhi Enakmen Perladangan Unggas 2005.\n2. Mengamalkan kawalan lalat dan bau secara berkala.\n3. Tiada pelepasan air basuhan ke saliran awam tanpa tapisan.",
             'diluluskan_oleh' => $user->isStaff() ? $user->id : null,
