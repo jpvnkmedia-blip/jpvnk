@@ -23,6 +23,395 @@
         </div>
     </div>
 
+    @php
+        $p = $permohonanUtama ?? $ladang->permohonanList()->latest()->first();
+        $user = Auth::user();
+        $isStaff = $user->isStaff();
+        $isOwner = $ladang->user_id === $user->id;
+    @endphp
+
+    <!-- Flowchart Workflow Progress Tracker (Enakmen Perladangan Unggas 2005) -->
+    @if($p)
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 uppercase tracking-wider">
+                            <i class="fa-solid fa-diagram-project mr-1"></i> Carta Alir Permohonan Lesen EPU
+                        </span>
+                        <span class="text-xs font-mono font-bold text-slate-500">No. Rujukan: {{ $p->no_rujukan_permohonan }}</span>
+                    </div>
+                    <h3 class="text-sm font-black text-slate-900 mt-1">Status Aliran Kerja Terkini</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-3 py-1 rounded-xl font-bold
+                        @if($p->status === 'Diluluskan') bg-emerald-100 text-emerald-800 border border-emerald-300
+                        @elseif($p->status === 'Ditolak') bg-rose-100 text-rose-800 border border-rose-300
+                        @elseif($p->status_verifikasi === 'Tidak Patuh') bg-amber-100 text-amber-800 border border-amber-300
+                        @elseif($p->status_verifikasi === 'Tidak Lengkap') bg-orange-100 text-orange-800 border border-orange-300
+                        @else bg-blue-100 text-blue-800 border border-blue-300 @endif">
+                        Status: {{ $p->status }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Stepper Steps -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 text-center text-xs">
+                
+                <!-- Step 1: Daftar Pemohon -->
+                <div class="p-3 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-950 flex flex-col justify-between">
+                    <div class="flex items-center justify-center gap-1.5 text-emerald-600 mb-1">
+                        <i class="fa-solid fa-circle-check text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 1</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Daftar Pengguna</div>
+                    <div class="text-[10px] text-emerald-700 mt-1">Selesai Berdaftar</div>
+                </div>
+
+                <!-- Step 2: Permohonan Lesen -->
+                <div class="p-3 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-950 flex flex-col justify-between">
+                    <div class="flex items-center justify-center gap-1.5 text-emerald-600 mb-1">
+                        <i class="fa-solid fa-circle-check text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 2</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Borang A Lesen</div>
+                    <div class="text-[10px] text-emerald-700 mt-1">{{ $p->jenis_permohonan }} ({{ $p->jenis_unggas }})</div>
+                </div>
+
+                <!-- Step 3: Verifikasi Jajahan PPVJ -->
+                <div class="p-3 rounded-2xl border flex flex-col justify-between
+                    @if(in_array($p->status_verifikasi, ['Patuh', 'Lengkap']) || $p->status === 'Diluluskan') bg-emerald-50 border-emerald-200 text-emerald-950
+                    @elseif($p->status_verifikasi === 'Tidak Lengkap') bg-orange-50 border-orange-200 text-orange-950
+                    @elseif($p->status_verifikasi === 'Tidak Patuh') bg-amber-50 border-amber-200 text-amber-950
+                    @else bg-blue-50 border-blue-200 text-blue-950 @endif">
+                    <div class="flex items-center justify-center gap-1.5 mb-1
+                        @if(in_array($p->status_verifikasi, ['Patuh', 'Lengkap']) || $p->status === 'Diluluskan') text-emerald-600
+                        @elseif($p->status_verifikasi === 'Tidak Lengkap') text-orange-600
+                        @elseif($p->status_verifikasi === 'Tidak Patuh') text-amber-600
+                        @else text-blue-600 @endif">
+                        <i class="fa-solid @if(in_array($p->status_verifikasi, ['Patuh', 'Lengkap']) || $p->status === 'Diluluskan') fa-circle-check @else fa-spinner fa-spin @endif text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 3</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Semakan PPVJ</div>
+                    <div class="text-[10px] mt-1 font-semibold">
+                        {{ $p->status_verifikasi ?? 'Menunggu Semakan' }}
+                    </div>
+                </div>
+
+                <!-- Step 4: Pemeriksaan Tapak (Borang D) -->
+                <div class="p-3 rounded-2xl border flex flex-col justify-between
+                    @if($p->status_verifikasi === 'Patuh' || $p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen' || $p->status === 'Diluluskan') bg-emerald-50 border-emerald-200 text-emerald-950
+                    @elseif($p->status_verifikasi === 'Tidak Patuh') bg-amber-50 border-amber-200 text-amber-950
+                    @else bg-slate-50 border-slate-200 text-slate-700 @endif">
+                    <div class="flex items-center justify-center gap-1.5 mb-1
+                        @if($p->status_verifikasi === 'Patuh' || $p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen' || $p->status === 'Diluluskan') text-emerald-600
+                        @elseif($p->status_verifikasi === 'Tidak Patuh') text-amber-600
+                        @else text-slate-400 @endif">
+                        <i class="fa-solid @if($p->status_verifikasi === 'Patuh' || $p->status === 'Diluluskan') fa-circle-check @else fa-clipboard-check @endif text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 4</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Verifikasi Tapak</div>
+                    <div class="text-[10px] mt-1">
+                        @if($p->status_verifikasi === 'Patuh') Patuh Piawaian
+                        @elseif($p->status_verifikasi === 'Tidak Patuh') Perlu Penambahbaikan
+                        @else {{ $ladang->pemeriksaanList->count() }} Laporan Tapak @endif
+                    </div>
+                </div>
+
+                <!-- Step 5: Keputusan Pelesen / Pengarah -->
+                <div class="p-3 rounded-2xl border flex flex-col justify-between
+                    @if($p->status === 'Diluluskan') bg-emerald-50 border-emerald-200 text-emerald-950
+                    @elseif($p->status === 'Ditolak') bg-rose-50 border-rose-200 text-rose-950
+                    @elseif($p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen') bg-blue-50 border-blue-200 text-blue-950
+                    @else bg-slate-50 border-slate-200 text-slate-700 @endif">
+                    <div class="flex items-center justify-center gap-1.5 mb-1
+                        @if($p->status === 'Diluluskan') text-emerald-600
+                        @elseif($p->status === 'Ditolak') text-rose-600
+                        @elseif($p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen') text-blue-600
+                        @else text-slate-400 @endif">
+                        <i class="fa-solid @if($p->status === 'Diluluskan') fa-circle-check @elseif($p->status === 'Ditolak') fa-circle-xmark @else fa-stamp @endif text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 5</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Pegawai Pelesen</div>
+                    <div class="text-[10px] mt-1 font-semibold">
+                        @if($p->status === 'Diluluskan') Lulus Lesen
+                        @elseif($p->status === 'Ditolak') Gagal / Rayuan
+                        @elseif($p->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen') Semakan Pengarah
+                        @else Menunggu Penilaian @endif
+                    </div>
+                </div>
+
+                <!-- Step 6: Fi & Pencetakan Lesen -->
+                <div class="p-3 rounded-2xl border flex flex-col justify-between
+                    @if($p->status === 'Diluluskan' && ($p->status_bayaran_fi === 'Selesai Bayar' || $p->mohon_pengecualian || $p->yuran_lesen <= 0)) bg-emerald-100 border-emerald-300 text-emerald-950
+                    @elseif($p->status === 'Diluluskan') bg-amber-50 border-amber-200 text-amber-950
+                    @else bg-slate-50 border-slate-200 text-slate-700 @endif">
+                    <div class="flex items-center justify-center gap-1.5 mb-1
+                        @if($p->status === 'Diluluskan' && ($p->status_bayaran_fi === 'Selesai Bayar' || $p->mohon_pengecualian || $p->yuran_lesen <= 0)) text-emerald-600
+                        @elseif($p->status === 'Diluluskan') text-amber-600
+                        @else text-slate-400 @endif">
+                        <i class="fa-solid @if($p->status === 'Diluluskan' && ($p->status_bayaran_fi === 'Selesai Bayar' || $p->mohon_pengecualian || $p->yuran_lesen <= 0)) fa-award @else fa-receipt @endif text-sm"></i>
+                        <span class="font-bold text-[11px]">Langkah 6</span>
+                    </div>
+                    <div class="font-bold text-[11px]">Bayaran & Cetak</div>
+                    <div class="text-[10px] mt-1 font-semibold">
+                        @if($p->status === 'Diluluskan')
+                            @if($p->status_bayaran_fi === 'Selesai Bayar' || $p->mohon_pengecualian || $p->yuran_lesen <= 0)
+                                Sedia Dicetak
+                            @else
+                                Sila Bayar Fi
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Dynamic Alert Banners for Applicant & Officials -->
+            @if($p->status_verifikasi === 'Tidak Lengkap')
+                <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200 text-orange-950 text-xs flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-orange-600 text-base mt-0.5"></i>
+                    <div>
+                        <div class="font-bold">Permohonan Tidak Lengkap (Tindakan Diperlukan)</div>
+                        <p class="mt-0.5 text-orange-800">{{ $p->catatan_verifikasi ?? 'Sila lengkapkan dokumen sokongan atau maklumat tanah perladangan yang diperlukan.' }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if($p->status_verifikasi === 'Tidak Patuh')
+                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex items-start gap-3">
+                    <i class="fa-solid fa-clipboard-question text-amber-600 text-base mt-0.5"></i>
+                    <div class="flex-1">
+                        <div class="font-bold">Makluman Ketidakpatuhan Ladang & Tindakan Penambahbaikan</div>
+                        <p class="mt-0.5 text-amber-900"><b>Arahan Penambahbaikan:</b> {{ $p->tindakan_penambahbaikan ?? 'Sila patuhi zon penampan dan tingkatkan sistem kawalan bau/lalat sebelum pemeriksaan ulangan.' }}</p>
+                        @if($p->catatan_verifikasi)
+                            <p class="mt-1 text-amber-800 text-[11px]"><b>Catatan Pegawai:</b> {{ $p->catatan_verifikasi }}</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            @if($p->status === 'Ditolak' || $p->status_kelulusan_pelesen === 'Gagal')
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 text-xs space-y-2">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-base mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="font-bold text-rose-900">Makluman Kegagalan Permohonan Lesen EPU</div>
+                            <p class="mt-0.5 text-rose-800">Alasan Penolakan: {{ $p->catatan_pegawai ?? 'Tidak memenuhi kriteria kelulusan Enakmen Perladangan Unggas.' }}</p>
+                            <p class="mt-1 text-rose-700 text-[11px]">Mengikut Enakmen, anda berhak mengemukakan <b>Rayuan kepada Pengarah Jabatan Perkhidmatan Veterinar Negeri Kelantan</b>. Pengarah akan meneliti dan memanjangkan rayuan kepada Pihak Berkuasa Negeri.</p>
+                        </div>
+                    </div>
+
+                    @if($p->status_rayuan === 'Tiada')
+                        <div class="pt-2 border-t border-rose-200 flex justify-end">
+                            <button type="button" onclick="document.getElementById('modalRayuan').classList.remove('hidden')" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-scale-balanced"></i> Kemukakan Rayuan kepada Pengarah
+                            </button>
+                        </div>
+                    @else
+                        <div class="p-2.5 rounded-xl bg-white/80 border border-rose-200 flex items-center justify-between text-[11px]">
+                            <span>Status Rayuan: <b class="text-rose-900">{{ $p->status_rayuan }}</b> (Tarikh: {{ $p->tarikh_rayuan ? $p->tarikh_rayuan->format('d/m/Y') : '-' }})</span>
+                            @if($p->catatan_keputusan_rayuan)
+                                <span class="text-slate-600">Catatan: {{ $p->catatan_keputusan_rayuan }}</span>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            @if($p->status === 'Diluluskan')
+                @if($p->status_bayaran_fi === 'Belum Bayar' && !$p->mohon_pengecualian && $p->yuran_lesen > 0)
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-receipt text-amber-600 text-base mt-0.5"></i>
+                            <div>
+                                <div class="font-bold">Makluman Kelulusan Lesen & Arahan Pembayaran Fi</div>
+                                <p class="text-amber-900 mt-0.5">Permohonan lesen anda telah diluluskan! Sila jelaskan fi lesen sebanyak <b>RM {{ number_format($p->yuran_lesen, 2) }}</b> untuk membolehkan pencetakan Lesen Borang B rasmi.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('modalBayarFi').classList.remove('hidden')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap self-start sm:self-auto">
+                            <i class="fa-solid fa-upload"></i> Bayar / Muat Naik Resit
+                        </button>
+                    </div>
+                @elseif($p->status_bayaran_fi === 'Menunggu Pengesahan')
+                    <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950 text-xs flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-hourglass-half text-blue-600"></i>
+                            <span>Resit pembayaran fi (No: <b>{{ $p->no_resit_bayaran ?? '-' }}</b>) telah dimuat naik dan sedang menunggu pengesahan pegawai.</span>
+                        </div>
+                        @if($isStaff)
+                            <form action="{{ route('epu.sahkan-bayaran', $p->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                                    <i class="fa-solid fa-check"></i> Sahkan Bayaran Fi
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                @else
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-award text-emerald-600 text-lg mt-0.5"></i>
+                            <div>
+                                <div class="font-bold text-emerald-900">Lesen Ladang Unggas (Borang B) Sah & Aktif</div>
+                                <p class="text-emerald-800 mt-0.5">No. Lesen: <b class="font-mono">{{ $p->no_lesen_epu }}</b> &bull; Sah laku: {{ $p->tarikh_mula_lesen ? $p->tarikh_mula_lesen->format('d/m/Y') : '-' }} sehingga {{ $p->tarikh_tamat_lesen ? $p->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('epu.cetak-lesen', $p->id) }}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto">
+                            <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
+                        </a>
+                    </div>
+                @endif
+            @endif
+
+        </div>
+    @endif
+
+    <!-- Official Actions Center (Berasaskan Peranan & Fasa Carta Alir) -->
+    @if($isStaff && $p)
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
+            
+            <!-- Panel 1: Tindakan Pegawai Verifikasi PPVJ (Jajahan) -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-user text-blue-600 text-base"></i>
+                        <h3 class="font-black text-slate-900">Tindakan Pegawai Verifikasi PPVJ ({{ $ladang->jajahan }})</h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">PPVJ</span>
+                </div>
+
+                <form action="{{ route('epu.verifikasi', $p->id) }}" method="POST" class="space-y-3">
+                    @csrf
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Status Verifikasi Ladang</label>
+                        <select name="status_verifikasi" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white font-medium">
+                            <option value="Lengkap" {{ $p->status_verifikasi === 'Lengkap' ? 'selected' : '' }}>Lengkap (Sedia untuk lawatan tapak)</option>
+                            <option value="Tidak Lengkap" {{ $p->status_verifikasi === 'Tidak Lengkap' ? 'selected' : '' }}>Tidak Lengkap (Perlu pembetulan dokumen)</option>
+                            <option value="Patuh" {{ $p->status_verifikasi === 'Patuh' ? 'selected' : '' }}>Patuh Piawaian (Sedia dimajukan ke Pegawai Pelesen)</option>
+                            <option value="Tidak Patuh" {{ $p->status_verifikasi === 'Tidak Patuh' ? 'selected' : '' }}>Tidak Patuh (Keluarkan Makluman & Penambahbaikan)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Catatan Verifikasi</label>
+                        <textarea name="catatan_verifikasi" rows="2" placeholder="Catatan semakan dokumen atau penemuan..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white">{{ old('catatan_verifikasi', $p->catatan_verifikasi) }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tindakan Penambahbaikan (Jika Tidak Patuh)</label>
+                        <textarea name="tindakan_penambahbaikan" rows="2" placeholder="Nyatakan tindakan yang perlu diambil oleh pemohon ladang..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white">{{ old('tindakan_penambahbaikan', $p->tindakan_penambahbaikan) }}</textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Status Verifikasi
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Sub-action: Hantar Penilaian ke Pegawai Pelesen -->
+                @if($p->status_verifikasi === 'Patuh' && $p->status_penilaian_ladang !== 'Dihantar ke Pegawai Pelesen')
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <form action="{{ route('epu.hantar-penilaian', $p->id) }}" method="POST" class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+                            @csrf
+                            <div class="font-bold text-emerald-950 flex items-center gap-1.5">
+                                <i class="fa-solid fa-paper-plane text-emerald-600"></i> Hantar Penilaian Ladang ke Pegawai Pelesen
+                            </div>
+                            <p class="text-[11px] text-emerald-800">Verifikasi tapak disahkan patuh. Klik butang di bawah untuk memanjangkan syor penilaian kepada Pegawai Pelesen / Pengarah.</p>
+                            <input type="text" name="catatan_penilaian_ladang" placeholder="Syor perakuan kelulusan lesen..." class="w-full px-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs focus:outline-none">
+                            <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition">
+                                Hantar Penilaian ke Pegawai Pelesen
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Panel 2: Tindakan Pegawai Pelesen / Pengarah & Proses Rayuan -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-stamp text-amber-600 text-base"></i>
+                        <h3 class="font-black text-slate-900">Keputusan Pegawai Pelesen / Pengarah</h3>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900">HQ / Pengarah</span>
+                </div>
+
+                <!-- Form Kelulusan / Penolakan Pelesen -->
+                <form action="{{ route('epu.keputusan-pelesen', $p->id) }}" method="POST" class="space-y-3">
+                    @csrf
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Keputusan Permohonan Lesen</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50 transition">
+                                <input type="radio" name="keputusan" value="Lulus" class="text-emerald-600 focus:ring-emerald-500" {{ $p->status === 'Diluluskan' ? 'checked' : '' }}>
+                                <span class="font-bold text-slate-900"><i class="fa-solid fa-check text-emerald-600 mr-1"></i> Luluskan Lesen</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-rose-50 transition">
+                                <input type="radio" name="keputusan" value="Gagal" class="text-rose-600 focus:ring-rose-500" {{ $p->status === 'Ditolak' ? 'checked' : '' }}>
+                                <span class="font-bold text-slate-900"><i class="fa-solid fa-xmark text-rose-600 mr-1"></i> Tolak / Gagal</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Syarat Khas Lesen (Jika Lulus)</label>
+                        <textarea name="syarat_khas_lesen" rows="2" placeholder="1. Kawalan lalat dan bau secara berkala..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white">{{ old('syarat_khas_lesen', $p->syarat_khas_lesen) }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Catatan Keputusan / Alasan Penolakan</label>
+                        <textarea name="catatan_pegawai" rows="2" placeholder="Catatan rasmi pegawai pelesen..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white">{{ old('catatan_pegawai', $p->catatan_pegawai) }}</textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xs transition">
+                        Rekod Keputusan Pegawai Pelesen
+                    </button>
+                </form>
+
+                <!-- Processing Appeal (If Appeal Submitted) -->
+                @if($p->status_rayuan !== 'Tiada')
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <form action="{{ route('epu.rayuan.proses', $p->id) }}" method="POST" class="p-3 bg-purple-50 border border-purple-200 rounded-2xl space-y-2">
+                            @csrf
+                            <div class="font-bold text-purple-950 flex items-center justify-between">
+                                <span><i class="fa-solid fa-scale-balanced text-purple-600 mr-1"></i> Proses Rayuan Pemohon</span>
+                                <span class="text-[10px] px-2 py-0.5 bg-white rounded-full font-mono">{{ $p->status_rayuan }}</span>
+                            </div>
+                            <div class="text-[11px] text-purple-900">
+                                <b>Alasan Rayuan:</b> {{ $p->alasan_rayuan }}
+                            </div>
+                            @if($p->dokumen_rayuan)
+                                <a href="{{ asset('storage/' . $p->dokumen_rayuan) }}" target="_blank" class="inline-block text-[11px] text-purple-700 font-bold hover:underline">
+                                    <i class="fa-solid fa-file-pdf"></i> Lihat Lampiran Rayuan
+                                </a>
+                            @endif
+
+                            <div class="space-y-1.5 pt-1">
+                                <label class="block font-bold text-purple-950 text-[11px]">Tindakan Pengarah DVS</label>
+                                <select name="tindakan_rayuan" class="w-full px-3 py-1.5 bg-white border border-purple-300 rounded-xl text-xs font-medium">
+                                    <option value="Panjangkan ke PBN">Panjangkan ke Pihak Berkuasa Negeri (PBN)</option>
+                                    <option value="Lulus Rayuan">Luluskan Rayuan (Keluarkan Lesen)</option>
+                                    <option value="Tolak Rayuan">Tolak Rayuan Muktamad</option>
+                                </select>
+                            </div>
+
+                            <input type="text" name="catatan_keputusan_rayuan" placeholder="Catatan keputusan rayuan..." class="w-full px-3 py-1.5 bg-white border border-purple-300 rounded-xl text-xs focus:outline-none">
+
+                            <button type="submit" class="w-full py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl shadow-xs transition">
+                                Rekod Keputusan Rayuan
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+
+        </div>
+    @endif
+
     <!-- Farm Overview Card -->
     <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-100 gap-4">
@@ -171,35 +560,46 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-certificate text-amber-500 text-base"></i>
-                    <h3 class="text-sm font-bold text-slate-900">Sejarah Lesen Perladangan Unggas</h3>
+                    <h3 class="text-sm font-bold text-slate-900">Sejarah Permohonan & Lesen Unggas</h3>
                 </div>
-                <span class="text-xs font-bold text-amber-800">{{ $ladang->permohonanList->count() }} Lesen</span>
+                <span class="text-xs font-bold text-amber-800">{{ $ladang->permohonanList->count() }} Rekod</span>
             </div>
 
             <div class="space-y-3">
                 @forelse($ladang->permohonanList as $permohonan)
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
                         <div class="flex items-center justify-between">
-                            <span class="font-mono font-bold text-amber-900">{{ $permohonan->no_lesen_epu ?? $permohonan->no_rujukan_permohonan }}</span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $permohonan->status === 'Diluluskan' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                            <div>
+                                <span class="font-mono font-bold text-amber-900 block">{{ $permohonan->no_lesen_epu ?? $permohonan->no_rujukan_permohonan }}</span>
+                                <span class="text-[10px] text-slate-400 font-mono">Ruj: {{ $permohonan->no_rujukan_permohonan }}</span>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold
+                                @if($permohonan->status === 'Diluluskan') bg-emerald-100 text-emerald-800
+                                @elseif($permohonan->status === 'Ditolak') bg-rose-100 text-rose-800
+                                @else bg-amber-100 text-amber-800 @endif">
                                 {{ $permohonan->status }}
                             </span>
                         </div>
+
                         <div class="text-slate-700">
                             Jenis: <b>{{ $permohonan->jenis_unggas }}</b> &bull; Bilangan: <b>{{ number_format($permohonan->bilangan_semasa_unggas) }} Ekor</b>
+                            @if($permohonan->pegawaiVerifikasi)
+                                &bull; <span class="text-blue-700 font-semibold">PPVJ: {{ $permohonan->pegawaiVerifikasi->name }}</span>
+                            @endif
                         </div>
+
                         <div class="text-[11px] text-slate-500 flex justify-between items-center pt-1 border-t border-slate-200">
                             <span>Tempoh: {{ $permohonan->tarikh_mula_lesen ? $permohonan->tarikh_mula_lesen->format('d/m/Y') : '-' }} &rarr; {{ $permohonan->tarikh_tamat_lesen ? $permohonan->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</span>
                             @if($permohonan->status === 'Diluluskan')
                                 <a href="{{ route('epu.cetak-lesen', $permohonan->id) }}" target="_blank" class="font-bold text-amber-700 hover:underline flex items-center gap-1">
-                                    <i class="fa-solid fa-print"></i> Cetak Lesen Borang B
+                                    <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
                                 </a>
                             @endif
                         </div>
                     </div>
                 @empty
                     <div class="py-6 text-center text-slate-400 text-xs">
-                        Tiada rekod lesen.
+                        Tiada rekod permohonan lesen.
                     </div>
                 @endforelse
             </div>
@@ -220,13 +620,14 @@
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-slate-900">Tarikh: {{ $pem->tarikh_pemeriksaan ? $pem->tarikh_pemeriksaan->format('d/m/Y') : '-' }}</span>
-                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold {{ $pem->status_keputusan === 'Lulus' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
                                 Skor: {{ $pem->skor_kebersihan_peratus }}% &bull; {{ $pem->status_keputusan }}
                             </span>
                         </div>
                         <p class="text-slate-700">{{ $pem->penemuan_pemeriksaan }}</p>
-                        <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
-                            Syor Pegawai: <b>{{ $pem->syor_dan_arahan }}</b> (Pegawai: {{ $pem->pegawai->name ?? '-' }})
+                        <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-200 flex items-center justify-between">
+                            <span>Syor: <b>{{ $pem->syor_dan_arahan }}</b></span>
+                            <span class="text-slate-400">Pegawai: {{ $pem->pegawai->name ?? '-' }}</span>
                         </div>
                     </div>
                 @empty
@@ -240,4 +641,78 @@
     </div>
 
 </div>
+
+<!-- Modal 1: Kemukakan Rayuan kepada Pengarah (Pemohon) -->
+@if($p)
+<div id="modalRayuan" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-scale-balanced text-rose-600 text-base"></i>
+                <h3 class="text-sm font-bold text-slate-900">Borang Rayuan kepada Pengarah DVS</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('modalRayuan').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <form action="{{ route('epu.rayuan.store', $p->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3 text-xs">
+            @csrf
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Alasan & Justifikasi Rayuan <span class="text-rose-500">*</span></label>
+                <textarea name="alasan_rayuan" rows="4" required placeholder="Nyatakan tindakan penambahbaikan dan justifikasi kukuh bagi permohonan semula lesen..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-rose-500"></textarea>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Lampiran Dokumen Sokongan Rayuan (PDF / Gambar)</label>
+                <input type="file" name="dokumen_rayuan" accept=".pdf,.jpg,.jpeg,.png" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                <span class="text-[10px] text-slate-400 mt-1 block">Contoh: Bukti gambar pembaikan reban, kelulusan jiran, atau surat sokongan rasmi.</span>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modalRayuan').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-xs transition">Hantar Rayuan ke Pengarah</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 2: Pembayaran Fi Lesen & Muat Naik Resit -->
+<div id="modalBayarFi" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-100">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-amber-600 text-base"></i>
+                <h3 class="text-sm font-bold text-slate-900">Pembayaran Fi Lesen EPU</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('modalBayarFi').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs">
+            <div class="flex justify-between font-bold text-amber-950">
+                <span>Jumlah Fi Ditetapkan:</span>
+                <span class="text-base font-black">RM {{ number_format($p->yuran_lesen, 2) }}</span>
+            </div>
+            <p class="text-[11px] text-amber-800 mt-1">Pembayaran boleh dibuat melalui kaunter PPVJ / DVS atau pindahan bank rasmi Kerajaan Negeri Kelantan.</p>
+        </div>
+
+        <form action="{{ route('epu.bayar-fi', $p->id) }}" method="POST" enctype="multipart/form-data" class="space-y-3 text-xs">
+            @csrf
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">No. Resit / No. Transaksi Bank</label>
+                <input type="text" name="no_resit_bayaran" placeholder="Contoh: RES-2026-9901 atau Ref Online Bank" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 font-mono">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Muat Naik Resit / Slip Bayaran (PDF / Gambar) <span class="text-rose-500">*</span></label>
+                <input type="file" name="resit_bayaran_fi" required accept=".pdf,.jpg,.jpeg,.png" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('modalBayarFi').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition">Hantar Bukti Pembayaran</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 @endsection

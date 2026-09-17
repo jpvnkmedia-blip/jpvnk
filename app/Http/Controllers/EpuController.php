@@ -265,8 +265,9 @@ class EpuController extends Controller implements HasMiddleware
     // Maklumat Ladang & Senarai Lesen
     public function show($id)
     {
-        $ladang = EpuLadang::with('pemilik', 'permohonanList.pelulus', 'pemeriksaanList.pegawai')->findOrFail($id);
-        return view('epu.show', compact('ladang'));
+        $ladang = EpuLadang::with('pemilik', 'permohonanList.pelulus', 'permohonanList.pegawaiVerifikasi', 'pemeriksaanList.pegawai')->findOrFail($id);
+        $permohonanUtama = $ladang->permohonanList()->latest()->first();
+        return view('epu.show', compact('ladang', 'permohonanUtama'));
     }
 
     protected function resolveLadangDanPermohonan($id)
@@ -398,6 +399,379 @@ class EpuController extends Controller implements HasMiddleware
         ]);
 
         return redirect()->route('epu.show', $ladang->id)->with('success', 'Laporan Pemeriksaan Tapak & Penguatkuasaan (EPU Borang D) telah direkodkan.');
+    }
+
+    // Step 3 & 4: Verifikasi Kelengkapan & Kepatuhan Tapak oleh PPVJ
+    public function verifikasiJajahan(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff()) {
+            abort(403, 'Hanya pegawai berdaftar dibenarkan melakukan verifikasi jajahan.');
+        }
+
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $validated = $request->validate([
+            'status_verifikasi' => 'required|in:Lengkap,Tidak Lengkap,Tidak Patuh,Patuh',
+            'catatan_verifikasi' => 'nullable|string',
+            'tindakan_penambahbaikan' => 'nullable|string',
+        ]);
+
+        $statusVerifikasi = $validated['status_verifikasi'];
+        $catatan = $validated['catatan_verifikasi'] ?? null;
+        $tindakan = $validated['tindakan_penambahbaikan'] ?? null;
+
+        $statusPermohonan = match($statusVerifikasi) {
+            'Lengkap' => 'Diterima PPVJ',
+            'Tidak Lengkap' => 'Tidak Lengkap',
+            'Tidak Patuh' => 'Tidak Patuh',
+            'Patuh' => 'Patuh / Disahkan',
+            default => $permohonan->status
+        };
+
+        $permohonan->update([
+            'status' => $statusPermohonan,
+            'status_verifikasi' => $statusVerifikasi,
+            'pegawai_verifikasi_id' => $user->id,
+            'tarikh_verifikasi' => Carbon::now()->toDateString(),
+            'catatan_verifikasi' => $catatan,
+            'tindakan_penambahbaikan' => $tindakan,
+        ]);
+
+        $ownerId = $permohonan->ladang->user_id;
+
+        if ($statusVerifikasi === 'Tidak Lengkap' && $ownerId) {
+            \App\Models\UserNotification::send(
+                $ownerId,
+                'Permohonan EPU: Dokumen / Maklumat Tidak Lengkap',
+                "Permohonan lesen unggas anda (No: {$permohonan->no_rujukan_permohonan}) memerlukan pembetulan dokumen: {$catatan}",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-triangle-exclamation',
+                'rose'
+            );
+        } elseif ($statusVerifikasi === 'Tidak Patuh' && $ownerId) {
+            \App\Models\UserNotification::send(
+                $ownerId,
+                'Makluman Ketidakpatuhan Ladang EPU & Tindakan Penambahbaikan',
+                "Pemeriksaan verifikasi mendapati premis ladang belum mematuhi syarat. Tindakan penambahbaikan diperlukan: {$tindakan}",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-clipboard-question',
+                'amber'
+            );
+        } elseif ($statusVerifikasi === 'Patuh' && $ownerId) {
+            \App\Models\UserNotification::send(
+                $ownerId,
+                'Verifikasi Ladang EPU: Patuh Piawaian',
+                "Verifikasi ladang ({$permohonan->ladang->nama_ladang}) telah disahkan PATUH oleh Pegawai Verifikasi PPVJ {$permohonan->ladang->jajahan}.",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-circle-check',
+                'emerald'
+            );
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Status verifikasi PPVJ telah dikemaskini kepada: {$statusVerifikasi}");
+    }
+
+    // Step 5: Pegawai Verifikasi Menghantar Penilaian Ladang kepada Pegawai Pelesen
+    public function hantarPenilaian(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff()) {
+            abort(403);
+        }
+
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $validated = $request->validate([
+            'catatan_penilaian_ladang' => 'nullable|string',
+        ]);
+
+        $permohonan->update([
+            'status' => 'Menunggu Kelulusan Pelesen',
+            'status_penilaian_ladang' => 'Dihantar ke Pegawai Pelesen',
+            'tarikh_hantar_penilaian' => Carbon::now()->toDateString(),
+            'catatan_penilaian_ladang' => $validated['catatan_penilaian_ladang'] ?? 'Laporan verifikasi dan penilaian tapak diperakukan untuk kelulusan Pegawai Pelesen.',
+        ]);
+
+        if ($permohonan->ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $permohonan->ladang->user_id,
+                'Penilaian Ladang EPU Dihantar ke Pegawai Pelesen',
+                "Penilaian ladang telah dihantar kepada Pegawai Pelesen / Pengarah untuk semakan kelulusan lesen.",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-paper-plane',
+                'blue'
+            );
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Penilaian ladang berjaya dimajukan kepada Pegawai Pelesen.');
+    }
+
+    // Step 6: Keputusan Pegawai Pelesen / Pengarah (Lulus / Gagal)
+    public function keputusanPelesen(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff()) {
+            abort(403);
+        }
+
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $validated = $request->validate([
+            'keputusan' => 'required|in:Lulus,Gagal',
+            'catatan_pegawai' => 'nullable|string',
+            'syarat_khas_lesen' => 'nullable|string',
+        ]);
+
+        $keputusan = $validated['keputusan'];
+        $ownerId = $permohonan->ladang->user_id;
+
+        if ($keputusan === 'Lulus') {
+            $isFree = $permohonan->mohon_pengecualian || $permohonan->yuran_lesen <= 0;
+            $permohonan->update([
+                'status' => 'Diluluskan',
+                'status_kelulusan_pelesen' => 'Lulus',
+                'diluluskan_oleh' => $user->id,
+                'tarikh_kelulusan' => Carbon::now()->toDateString(),
+                'catatan_pegawai' => $validated['catatan_pegawai'] ?? 'Permohonan lesen diluluskan oleh Pegawai Pelesen DVS.',
+                'syarat_khas_lesen' => $validated['syarat_khas_lesen'] ?? $permohonan->syarat_khas_lesen,
+                'status_bayaran_fi' => $isFree ? 'Dikecualikan' : ($permohonan->status_bayaran_fi === 'Selesai Bayar' ? 'Selesai Bayar' : 'Belum Bayar'),
+            ]);
+
+            // Makluman kelulusan lesen dan pembayaran fi kepada pemohon
+            if ($ownerId) {
+                $pesananFi = $isFree 
+                    ? "Permohonan lesen anda telah DILULUSKAN (Dikecualikan Bayaran). Anda kini boleh mencetak Lesen Borang B."
+                    : "Permohonan lesen anda telah DILULUSKAN. Sila jelaskan pembayaran fi lesen sebanyak RM " . number_format($permohonan->yuran_lesen, 2) . " untuk pencetakan lesen rasmi.";
+
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Permohonan Lesen EPU DILULUSKAN',
+                    $pesananFi,
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-award',
+                    'emerald'
+                );
+            }
+        } else {
+            // Gagal
+            $permohonan->update([
+                'status' => 'Ditolak',
+                'status_kelulusan_pelesen' => 'Gagal',
+                'diluluskan_oleh' => $user->id,
+                'tarikh_kelulusan' => Carbon::now()->toDateString(),
+                'catatan_pegawai' => $validated['catatan_pegawai'] ?? 'Permohonan lesen gagal memenuhi piawaian Enakmen Perladangan Unggas.',
+            ]);
+
+            // Makluman kegagalan lesen kepada pemohon & hak rayuan kepada Pengarah
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Makluman Kegagalan Permohonan Lesen EPU',
+                    "Permohonan lesen ladang tidak diluluskan. Alasan: " . ($validated['catatan_pegawai'] ?? 'Tidak memenuhi syarat.') . " Anda boleh mengemukakan Rayuan kepada Pengarah DVS melalui sistem.",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-circle-xmark',
+                    'rose'
+                );
+            }
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Keputusan Pegawai Pelesen ({$keputusan}) telah direkodkan dan makluman dihantar.");
+    }
+
+    // Step 6 (Sub-flow): Kemukakan Rayuan kepada Pengarah oleh Pemohon
+    public function hantarRayuan(Request $request, $id)
+    {
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $user = Auth::user();
+
+        // Pastikan hanya pemilik atau staf boleh hantar rayuan
+        if (!$user->isStaff() && $permohonan->ladang->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'alasan_rayuan' => 'required|string',
+            'dokumen_rayuan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+        ]);
+
+        $pathDokumenRayuan = $this->uploadFileSafely($request->file('dokumen_rayuan'), 'epu/rayuan');
+
+        $permohonan->update([
+            'status_rayuan' => 'Rayuan Dihantar',
+            'alasan_rayuan' => $validated['alasan_rayuan'],
+            'dokumen_rayuan' => $pathDokumenRayuan ?? $permohonan->dokumen_rayuan,
+            'tarikh_rayuan' => Carbon::now()->toDateString(),
+        ]);
+
+        if ($permohonan->ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $permohonan->ladang->user_id,
+                'Rayuan Lesen EPU Berjaya Dihantar',
+                "Rayuan anda bagi permohonan lesen '{$permohonan->ladang->nama_ladang}' telah dimajukan kepada Pengarah DVS.",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-scale-balanced',
+                'amber'
+            );
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Rayuan kepada Pengarah DVS telah berjaya dihantar.');
+    }
+
+    // Step 6 (Sub-flow): Pengarah Memproses Rayuan (Panjangkan ke Pihak Berkuasa Negeri / Lulus Rayuan / Tolak Rayuan)
+    public function prosesRayuan(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff()) {
+            abort(403);
+        }
+
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $validated = $request->validate([
+            'tindakan_rayuan' => 'required|in:Panjangkan ke PBN,Lulus Rayuan,Tolak Rayuan',
+            'catatan_keputusan_rayuan' => 'nullable|string',
+        ]);
+
+        $tindakan = $validated['tindakan_rayuan'];
+        $catatan = $validated['catatan_keputusan_rayuan'] ?? null;
+        $ownerId = $permohonan->ladang->user_id;
+
+        if ($tindakan === 'Panjangkan ke PBN') {
+            $permohonan->update([
+                'status_rayuan' => 'Dipanjangkan ke Pihak Berkuasa Negeri',
+                'catatan_keputusan_rayuan' => $catatan ?? 'Pengarah telah memanjangkan rayuan kepada Pihak Berkuasa Negeri untuk pertimbangan.',
+            ]);
+
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Rayuan EPU Dipanjangkan ke Pihak Berkuasa Negeri',
+                    "Pengarah DVS telah memanjangkan rayuan lesen ladang anda kepada Pihak Berkuasa Negeri untuk keputusan rasmi.",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-landmark',
+                    'blue'
+                );
+            }
+        } elseif ($tindakan === 'Lulus Rayuan') {
+            $isFree = $permohonan->mohon_pengecualian || $permohonan->yuran_lesen <= 0;
+            $permohonan->update([
+                'status' => 'Diluluskan',
+                'status_kelulusan_pelesen' => 'Lulus (Rayuan)',
+                'status_rayuan' => 'Lulus Rayuan',
+                'diluluskan_oleh' => $user->id,
+                'tarikh_kelulusan' => Carbon::now()->toDateString(),
+                'catatan_keputusan_rayuan' => $catatan ?? 'Rayuan telah diterima dan diluluskan oleh Pengarah / Pihak Berkuasa Negeri.',
+                'status_bayaran_fi' => $isFree ? 'Dikecualikan' : ($permohonan->status_bayaran_fi === 'Selesai Bayar' ? 'Selesai Bayar' : 'Belum Bayar'),
+            ]);
+
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Rayuan Lesen EPU DILULUSKAN',
+                    "Tahniah, rayuan lesen anda telah DILULUSKAN. Sila buat pembayaran fi lesen untuk mencetak Lesen Borang B.",
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-circle-check',
+                    'emerald'
+                );
+            }
+        } else {
+            // Tolak Rayuan
+            $permohonan->update([
+                'status' => 'Ditolak',
+                'status_rayuan' => 'Ditolak Rayuan',
+                'catatan_keputusan_rayuan' => $catatan ?? 'Rayuan permohonan lesen ditolak secara muktamad.',
+            ]);
+
+            if ($ownerId) {
+                \App\Models\UserNotification::send(
+                    $ownerId,
+                    'Keputusan Rayuan Lesen EPU Ditolak',
+                    "Rayuan permohonan lesen anda telah ditolak. Catatan: " . ($catatan ?? 'Tidak memenuhi syarat Enakmen.'),
+                    'epu',
+                    route('epu.show', $permohonan->ladang->id),
+                    'fa-solid fa-circle-xmark',
+                    'rose'
+                );
+            }
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Keputusan rayuan telah direkodkan: {$tindakan}");
+    }
+
+    // Step 7: Pembayaran Fi Lesen oleh Pemohon
+    public function bayarFiLesen(Request $request, $id)
+    {
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $user = Auth::user();
+
+        if (!$user->isStaff() && $permohonan->ladang->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'resit_bayaran_fi' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'no_resit_bayaran' => 'nullable|string|max:50',
+            'kaedah_bayaran' => 'nullable|string',
+        ]);
+
+        $pathResit = $this->uploadFileSafely($request->file('resit_bayaran_fi'), 'epu/resit_bayaran');
+        $noResit = $validated['no_resit_bayaran'] ?? ('RES-EPU-' . date('Y') . '-' . rand(1000, 9999));
+
+        $permohonan->update([
+            'status_bayaran_fi' => $user->isStaff() ? 'Selesai Bayar' : 'Menunggu Pengesahan',
+            'resit_bayaran_fi' => $pathResit ?? $permohonan->resit_bayaran_fi,
+            'no_resit_bayaran' => $noResit,
+            'tarikh_bayaran_fi' => Carbon::now()->toDateString(),
+        ]);
+
+        if ($permohonan->ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $permohonan->ladang->user_id,
+                'Pembayaran Fi Lesen EPU Diterima',
+                "Bukti pembayaran fi lesen (No. Resit: {$noResit}) telah dihantar dan direkodkan ke dalam sistem.",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-receipt',
+                'emerald'
+            );
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah berjaya direkodkan.');
+    }
+
+    // Pengesahan Bayaran Fi oleh Pegawai
+    public function sahkanBayaranFi(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff()) {
+            abort(403);
+        }
+
+        $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+        $permohonan->update([
+            'status_bayaran_fi' => 'Selesai Bayar',
+            'tarikh_bayaran_fi' => Carbon::now()->toDateString(),
+        ]);
+
+        if ($permohonan->ladang->user_id) {
+            \App\Models\UserNotification::send(
+                $permohonan->ladang->user_id,
+                'Pembayaran Fi Lesen EPU Disahkan',
+                "Pembayaran fi lesen anda telah DISAHKAN. Lesen Ladang Unggas (Borang B) kini boleh dicetak.",
+                'epu',
+                route('epu.show', $permohonan->ladang->id),
+                'fa-solid fa-file-circle-check',
+                'emerald'
+            );
+        }
+
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah disahkan.');
     }
 
     private function uploadFileSafely($file, $folder)

@@ -176,6 +176,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/cetak-borang-b-pengecualian/{id}', [EpuController::class, 'cetakBorangBPengecualian'])->name('cetak-borang-b-pengecualian');
         Route::get('/cetak-sijil-pengecualian-c/{id}', [EpuController::class, 'cetakSijilPengecualianC'])->name('cetak-sijil-pengecualian-c');
         Route::get('/cetak-salinan-pendua/{id}', [EpuController::class, 'cetakSalinanPendua'])->name('cetak-salinan-pendua');
+
+        // Aliran Kerja & Tindakan Berperingkat EPU
+        Route::post('/permohonan/{id}/verifikasi', [EpuController::class, 'verifikasiJajahan'])->name('verifikasi');
+        Route::post('/permohonan/{id}/hantar-penilaian', [EpuController::class, 'hantarPenilaian'])->name('hantar-penilaian');
+        Route::post('/permohonan/{id}/keputusan-pelesen', [EpuController::class, 'keputusanPelesen'])->name('keputusan-pelesen');
+        Route::post('/permohonan/{id}/rayuan', [EpuController::class, 'hantarRayuan'])->name('rayuan.store');
+        Route::post('/permohonan/{id}/proses-rayuan', [EpuController::class, 'prosesRayuan'])->name('rayuan.proses');
+        Route::post('/permohonan/{id}/bayar-fi', [EpuController::class, 'bayarFiLesen'])->name('bayar-fi');
+        Route::post('/permohonan/{id}/sahkan-bayaran', [EpuController::class, 'sahkanBayaranFi'])->name('sahkan-bayaran');
     });
 
     // 4. MODUL KURSUS TERNAKAN

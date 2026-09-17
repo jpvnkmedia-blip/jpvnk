@@ -85,10 +85,22 @@
                                 {{ number_format($ladang->kapasiti_maksimum_unggas) }} Ekor
                             </td>
                             <td class="px-4 py-3.5">
-                                @if($latestLesen && $latestLesen->no_lesen_epu)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                        <i class="fa-solid fa-certificate mr-1"></i> {{ $latestLesen->no_lesen_epu }}
-                                    </span>
+                                @if($latestLesen)
+                                    <div class="space-y-1">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold
+                                            @if($latestLesen->status === 'Diluluskan') bg-emerald-100 text-emerald-800
+                                            @elseif($latestLesen->status === 'Ditolak') bg-rose-100 text-rose-800
+                                            @elseif($latestLesen->status_verifikasi === 'Tidak Patuh') bg-amber-100 text-amber-800
+                                            @elseif($latestLesen->status_verifikasi === 'Tidak Lengkap') bg-orange-100 text-orange-800
+                                            @else bg-blue-100 text-blue-800 @endif">
+                                            {{ $latestLesen->status }}
+                                        </span>
+                                        @if($latestLesen->no_lesen_epu && $latestLesen->status === 'Diluluskan')
+                                            <div class="text-[10px] font-mono font-bold text-slate-600">{{ $latestLesen->no_lesen_epu }}</div>
+                                        @elseif($latestLesen->status_verifikasi)
+                                            <div class="text-[10px] text-slate-500">PPVJ: {{ $latestLesen->status_verifikasi }}</div>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-slate-400 text-[11px]">Belum Berlesen</span>
                                 @endif

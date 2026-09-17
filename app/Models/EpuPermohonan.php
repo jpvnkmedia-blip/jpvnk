@@ -38,6 +38,23 @@ class EpuPermohonan extends Model
         'dokumen_tanah',
         'dokumen_pbt',
         'dokumen_ssm',
+        'status_verifikasi',
+        'pegawai_verifikasi_id',
+        'tarikh_verifikasi',
+        'catatan_verifikasi',
+        'tindakan_penambahbaikan',
+        'status_penilaian_ladang',
+        'tarikh_hantar_penilaian',
+        'catatan_penilaian_ladang',
+        'status_kelulusan_pelesen',
+        'status_rayuan',
+        'alasan_rayuan',
+        'dokumen_rayuan',
+        'tarikh_rayuan',
+        'catatan_keputusan_rayuan',
+        'status_bayaran_fi',
+        'resit_bayaran_fi',
+        'tarikh_bayaran_fi',
     ];
 
     protected function casts(): array
@@ -46,6 +63,10 @@ class EpuPermohonan extends Model
             'tarikh_mula_lesen' => 'date',
             'tarikh_tamat_lesen' => 'date',
             'tarikh_kelulusan' => 'date',
+            'tarikh_verifikasi' => 'date',
+            'tarikh_hantar_penilaian' => 'date',
+            'tarikh_rayuan' => 'date',
+            'tarikh_bayaran_fi' => 'date',
             'yuran_lesen' => 'decimal:2',
             'mohon_pengecualian' => 'boolean',
         ];
@@ -61,8 +82,33 @@ class EpuPermohonan extends Model
         return $this->belongsTo(User::class, 'diluluskan_oleh');
     }
 
+    public function pegawaiVerifikasi()
+    {
+        return $this->belongsTo(User::class, 'pegawai_verifikasi_id');
+    }
+
     public function pemeriksaanList()
     {
         return $this->hasMany(EpuPemeriksaan::class);
+    }
+
+    public function getTahapWorkflowAttribute(): int
+    {
+        if ($this->status === 'Diluluskan') {
+            return ($this->status_bayaran_fi === 'Selesai Bayar' || $this->mohon_pengecualian || $this->yuran_lesen <= 0) ? 6 : 5;
+        }
+        if ($this->status === 'Ditolak' || $this->status_kelulusan_pelesen === 'Gagal') {
+            return 5;
+        }
+        if ($this->status_penilaian_ladang === 'Dihantar ke Pegawai Pelesen') {
+            return 4;
+        }
+        if ($this->pemeriksaanList()->exists() || in_array($this->status_verifikasi, ['Patuh', 'Tidak Patuh', 'Lengkap'])) {
+            return 3;
+        }
+        if ($this->status_verifikasi === 'Tidak Lengkap') {
+            return 2;
+        }
+        return 2; // Permohonan Dihantar
     }
 }
