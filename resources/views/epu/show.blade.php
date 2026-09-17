@@ -272,6 +272,15 @@
                             <div>
                                 <div class="font-bold text-emerald-900">Lesen Ladang Unggas (Borang B) Sah & Aktif</div>
                                 <p class="text-emerald-800 mt-0.5">No. Lesen: <b class="font-mono">{{ $p->no_lesen_epu }}</b> &bull; Sah laku: {{ $p->tarikh_mula_lesen ? $p->tarikh_mula_lesen->format('d/m/Y') : '-' }} sehingga {{ $p->tarikh_tamat_lesen ? $p->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</p>
+                                @if($p->resit_bayaran_fi)
+                                    <div class="mt-2">
+                                        <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] border border-emerald-300/80 transition">
+                                            <i class="fa-solid fa-receipt text-emerald-700"></i>
+                                            <span>Papar Fail Resit Pembayaran @if($p->no_resit_bayaran) (No: {{ $p->no_resit_bayaran }}) @endif</span>
+                                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                        </a>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         @if(Auth::user()->canCetakBorangEpu())
@@ -689,13 +698,20 @@
                             @endif
                         </div>
 
-                        <div class="text-[11px] text-slate-500 flex justify-between items-center pt-1 border-t border-slate-200">
+                        <div class="text-[11px] text-slate-500 flex flex-wrap justify-between items-center gap-2 pt-1 border-t border-slate-200">
                             <span>Tempoh: {{ $permohonan->tarikh_mula_lesen ? $permohonan->tarikh_mula_lesen->format('d/m/Y') : '-' }} &rarr; {{ $permohonan->tarikh_tamat_lesen ? $permohonan->tarikh_tamat_lesen->format('d/m/Y') : '-' }}</span>
-                            @if($permohonan->status === 'Diluluskan' && Auth::user()->canCetakBorangEpu())
-                                <a href="{{ route('epu.cetak-lesen', $permohonan->id) }}" target="_blank" class="font-bold text-amber-700 hover:underline flex items-center gap-1">
-                                    <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
-                                </a>
-                            @endif
+                            <div class="flex items-center gap-2.5">
+                                @if($permohonan->resit_bayaran_fi)
+                                    <a href="{{ asset('storage/' . $permohonan->resit_bayaran_fi) }}" target="_blank" class="font-bold text-blue-700 hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-receipt"></i> Resit ({{ $permohonan->no_resit_bayaran ?? 'Lihat' }})
+                                    </a>
+                                @endif
+                                @if($permohonan->status === 'Diluluskan' && Auth::user()->canCetakBorangEpu())
+                                    <a href="{{ route('epu.cetak-lesen', $permohonan->id) }}" target="_blank" class="font-bold text-amber-700 hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-print"></i> Cetak Lesen (Borang B)
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @empty
