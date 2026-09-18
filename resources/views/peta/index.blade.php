@@ -38,7 +38,7 @@
 @endpush
 
 @section('content')
-<div x-data="gisMapApp()" x-init="initMap()" class="space-y-4">
+<div x-data="gisMapApp()" x-init="initMap()" @keydown.escape.window="if(isFullscreen) toggleFullscreen()" class="space-y-4">
 
     <!-- Top Executive Header & Statistics Bar -->
     <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl border border-slate-800">
@@ -64,11 +64,15 @@
                 <button @click="resetFilters()" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-rotate-left text-amber-400"></i> Reset Penapis
                 </button>
-                <button @click="toggleLayer()" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-layer-group"></i> <span x-text="currentLayerName">Mod Satelit</span>
+                <button @click="toggleLayer()" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 shadow-md flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-layer-group text-sky-400"></i> <span x-text="currentLayerName">Mod Satelit</span>
                 </button>
                 <button @click="fitAllMarkers()" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-expand text-emerald-400"></i> Fokus Kelantan
+                    <i class="fa-solid fa-crosshairs text-emerald-400"></i> Fokus Kelantan
+                </button>
+                <button @click="toggleFullscreen()" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-1.5 transition hover:scale-102">
+                    <i :class="isFullscreen ? 'fa-solid fa-compress text-amber-300' : 'fa-solid fa-expand'"></i>
+                    <span x-text="isFullscreen ? 'Keluar Skrin Penuh' : 'Skrin Penuh'"></span>
                 </button>
             </div>
         </div>
@@ -300,16 +304,45 @@
             </div>
         </div>
 
-        <!-- Leaflet GIS Map Container (8 Cols on Desktop) -->
-        <div class="lg:col-span-8 bg-white rounded-2xl p-2 shadow-sm border border-slate-200 overflow-hidden relative">
+        <!-- Leaflet GIS Map Container (8 Cols on Desktop, Fullscreen Mode Support) -->
+        <div :class="isFullscreen ? 'fixed inset-0 z-[9999] bg-slate-950 p-3 flex flex-col h-screen w-screen overflow-hidden' : 'lg:col-span-8 bg-white rounded-2xl p-2 shadow-sm border border-slate-200 overflow-hidden relative'">
             
             <!-- Map Container -->
-            <div id="gisMap" class="w-full rounded-xl map-height z-10"></div>
+            <div id="gisMap" :class="isFullscreen ? 'w-full h-full flex-1 rounded-xl z-10' : 'w-full rounded-xl map-height z-10'"></div>
 
-            <!-- Floating Overlay Badge / Instructions -->
-            <div class="absolute top-5 right-5 z-[400] bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-2 pointer-events-none">
+            <!-- Floating Top Left Controls on Map (Fullscreen, Layer Switcher, Focus) -->
+            <div class="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2">
+                <button @click="toggleFullscreen()" type="button" class="px-3.5 py-2 bg-white/95 hover:bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition hover:scale-105 backdrop-blur-md">
+                    <i :class="isFullscreen ? 'fa-solid fa-compress text-rose-500' : 'fa-solid fa-expand text-emerald-600'"></i>
+                    <span x-text="isFullscreen ? 'Tutup Skrin Penuh (Esc)' : 'Skrin Penuh'"></span>
+                </button>
+                <button @click="toggleLayer()" type="button" class="px-3.5 py-2 bg-white/95 hover:bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition hover:scale-105 backdrop-blur-md">
+                    <i class="fa-solid fa-layer-group text-sky-600"></i>
+                    <span x-text="currentLayerName"></span>
+                </button>
+                <button @click="fitAllMarkers()" type="button" class="px-3.5 py-2 bg-white/95 hover:bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition hover:scale-105 backdrop-blur-md">
+                    <i class="fa-solid fa-crosshairs text-amber-500"></i>
+                    <span>Fokus</span>
+                </button>
+            </div>
+
+            <!-- Floating Top Right Info & Quick Filter Bar in Fullscreen Mode -->
+            <div x-show="isFullscreen" x-cloak class="absolute top-4 right-4 z-[400] flex items-center gap-2 bg-slate-900/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700 shadow-xl text-white text-xs">
+                <span class="font-extrabold text-emerald-400" x-text="filteredMarkers.length + ' Penternak'"></span>
+                <span class="text-slate-500">|</span>
+                <button @click="selectedModul = 'ALL'; applyFilters()" :class="selectedModul === 'ALL' ? 'text-white font-bold bg-slate-800 px-2 py-0.5 rounded' : 'text-slate-400 hover:text-white px-1'">Semua</button>
+                <button @click="selectedModul = 'EPU'; applyFilters()" :class="selectedModul === 'EPU' ? 'text-amber-400 font-bold bg-slate-800 px-2 py-0.5 rounded' : 'text-slate-400 hover:text-white px-1'">🐔 EPU</button>
+                <button @click="selectedModul = 'EPTR'; applyFilters()" :class="selectedModul === 'EPTR' ? 'text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded' : 'text-slate-400 hover:text-white px-1'">🐄 EPTR</button>
+                <span class="text-slate-500">|</span>
+                <button @click="toggleFullscreen()" type="button" class="text-rose-400 hover:text-rose-300 font-bold ml-1 flex items-center gap-1">
+                    <i class="fa-solid fa-xmark"></i> Keluar
+                </button>
+            </div>
+
+            <!-- Floating Overlay Badge / Instructions (Normal Mode) -->
+            <div x-show="!isFullscreen" class="absolute top-4 right-4 z-[400] bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-2 pointer-events-none">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                <span>Klik mana-mana pin untuk butiran penternak</span>
+                <span>Klik mana-mana pin untuk butiran</span>
             </div>
 
             <!-- Selected Farm / Breeder Quick Bottom Drawer (Shown when Marker is active) -->
@@ -389,11 +422,25 @@ function gisMapApp() {
         // Selected Item for Drawer
         selectedMarkerDetails: null,
 
+        // Fullscreen Mode State
+        isFullscreen: false,
+
         // Map Layers
         currentLayerIndex: 0,
         layers: [],
         layerNames: ['Satelit (Esri)', 'Peta Terang (Carto)', 'Peta Standard (OSM)'],
         currentLayerName: 'Mod Satelit',
+
+        toggleFullscreen() {
+            this.isFullscreen = !this.isFullscreen;
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (this.map) {
+                        this.map.invalidateSize();
+                    }
+                }, 200);
+            });
+        },
 
         initMap() {
             this.filteredMarkers = [...this.rawMarkers];

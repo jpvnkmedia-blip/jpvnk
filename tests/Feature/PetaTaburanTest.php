@@ -34,6 +34,7 @@ class PetaTaburanTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Peta Taburan Penternak', false);
         $response->assertSee('gisMap', false);
+        $response->assertSee('Skrin Penuh', false);
         $response->assertSee('Penapis Taburan Penternak', false);
         $response->assertViewHas(['allMarkers', 'availableLivestockTypes', 'jajahanList', 'stats', 'jajahanStats']);
     }
