@@ -334,6 +334,12 @@
                                         <i class="fa-solid fa-id-card text-amber-600"></i> Kad Kuning
                                     </a>
 
+                                    @if($t->resit_pembayaran)
+                                        <a href="{{ asset('storage/' . $t->resit_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition text-xs" title="Buka Gambar / Fail Resit Asal (Tab Baharu)">
+                                            <i class="fa-solid fa-file-invoice-dollar"></i> Resit
+                                        </a>
+                                    @endif
+
                                     <!-- Pindah Milik (Borang B) -->
                                     @if($t->no_tag && !$t->isDibatalkanAtauMatiAtauSembelih())
                                         <a href="{{ route('eptr.borang-b.create', ['ternakan_id' => $t->id]) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 transition" title="Pindah Milik Ternakan (Borang B)">

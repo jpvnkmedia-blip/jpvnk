@@ -165,6 +165,13 @@
                                 <span>Butiran</span>
                             </a>
 
+                            @if($pm->resit_pembayaran)
+                                <a href="{{ asset('storage/' . $pm->resit_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition" title="Buka Gambar / Fail Resit Asal (Tab Baharu)">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    <span>Resit</span>
+                                </a>
+                            @endif
+
                             @if(Auth::user()->isStaff())
                                 @if($pm->status_kelulusan === 'Menunggu')
                                     <form action="{{ route('eptr.borang-b.lulus', $pm->id) }}" method="POST" class="inline" onsubmit="return confirm('Luluskan pindah milik ini dan tukar hak milik ternakan secara rasmi?');">

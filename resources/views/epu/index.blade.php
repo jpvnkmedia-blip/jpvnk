@@ -109,6 +109,11 @@
                                 <a href="{{ route('epu.show', $ladang->id) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition" title="Lihat Ladang">
                                     <i class="fa-solid fa-eye"></i> Ladang
                                 </a>
+                                @if($latestLesen && $latestLesen->resit_bayaran_fi)
+                                    <a href="{{ asset('storage/' . $latestLesen->resit_bayaran_fi) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold transition" title="Buka Gambar / Fail Resit Asal (Tab Baharu)">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i> Resit
+                                    </a>
+                                @endif
                                 @if(Auth::user()->canCetakBorangEpu())
                                     <a href="{{ route('epu.cetak-borang-a', $ladang->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold transition" title="Cetak Borang A Rasmi (Warta)">
                                         <i class="fa-solid fa-print"></i> Borang A

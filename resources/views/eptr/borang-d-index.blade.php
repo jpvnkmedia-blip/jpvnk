@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'EPTR Borang D & SKV Sembelih - Permit Sembelihan Ternakan')
 @section('page_title', 'EPTR Borang D: Permit & Sijil SKV Sembelihan')
@@ -206,6 +206,12 @@
                                     <a href="{{ route('eptr.borang-d.show', $p->id) }}" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition" title="Lihat Butiran">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
+                                    @if($p->resit_pembayaran)
+                                        <a href="{{ asset('storage/' . $p->resit_pembayaran) }}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition flex items-center gap-1 text-xs border border-indigo-200" title="Buka Gambar / Fail Resit Asal (Tab Baharu)">
+                                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                                            <span>Resit</span>
+                                        </a>
+                                    @endif
                                     @if(Auth::user()->isStaff() && $p->status_kelulusan === 'Diluluskan')
                                         <a href="{{ route('eptr.borang-d.cetak-skv', $p->id) }}" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition flex items-center gap-1" title="Cetak Sijil SKV Sembelih (2 Halaman)">
                                             <i class="fa-solid fa-file-shield"></i>
