@@ -146,6 +146,19 @@
                     @endif
                 </a>
 
+                <!-- Peta Taburan Penternak GIS (Pengarah / Eksekutif / Staf) -->
+                @if(Auth::user()->isStaff() || Auth::user()->isSuperAdmin() || Auth::user()->role === 'pegawai_pelesen')
+                <a href="{{ route('peta.taburan') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('peta.*') || request()->routeIs('pengarah.peta') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-map-location-dot w-5 text-center text-base text-emerald-400"></i>
+                        <span>Peta Taburan (GIS)</span>
+                    </div>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-mono">
+                        PETA
+                    </span>
+                </a>
+                @endif
+
                 @if(Auth::user()->role !== 'admin_pejabat')
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     Perkhidmatan Veterinar

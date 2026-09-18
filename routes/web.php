@@ -13,6 +13,7 @@ use App\Http\Controllers\KenderaanController;
 use App\Http\Controllers\PemanduController;
 use App\Http\Controllers\PemindahanTernakanController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PetaTaburanController;
 
 // Laman Utama -> Redirect ke Dashboard atau Login
 Route::get('/', function () {
@@ -45,6 +46,10 @@ Route::middleware('auth')->group(function () {
 
     // Unified Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Peta Taburan Penternak GIS (Modul Pengarah & Eksekutif)
+    Route::get('/peta-taburan', [PetaTaburanController::class, 'index'])->name('peta.taburan');
+    Route::get('/pengarah/peta-taburan', [PetaTaburanController::class, 'index'])->name('pengarah.peta');
 
     // Pusat Notifikasi Aktiviti Pengguna
     Route::prefix('notifikasi')->name('notifications.')->group(function () {
