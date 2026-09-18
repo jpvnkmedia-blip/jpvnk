@@ -883,13 +883,17 @@ class EpuController extends Controller implements HasMiddleware
         ]);
 
         $pathResit = $this->uploadFileSafely($request->file('resit_bayaran_fi'), 'epu/resit_bayaran');
+        if (!$pathResit) {
+            return back()->with('error', 'Gagal memuat naik fail resit bayaran. Sila pastikan fail berformat JPG, PNG, atau PDF dan saiz tidak melebihi 10MB.');
+        }
+
         $noResit = !empty($validated['no_resit_bayaran']) 
             ? $validated['no_resit_bayaran'] 
             : ($permohonan->no_resit_bayaran ?: ('RES-EPU-' . date('Y') . '-' . str_pad($permohonan->id, 4, '0', STR_PAD_LEFT)));
 
         $permohonan->update([
             'status_bayaran_fi' => 'Menunggu Pengesahan',
-            'resit_bayaran_fi' => $pathResit ?? $permohonan->resit_bayaran_fi,
+            'resit_bayaran_fi' => $pathResit,
             'no_resit_bayaran' => $noResit,
             'tarikh_bayaran_fi' => Carbon::now()->toDateString(),
         ]);
@@ -1000,11 +1004,6 @@ class EpuController extends Controller implements HasMiddleware
     private function uploadFileSafely($file, $folder)
     {
         if (!$file || !$file->isValid()) {
-            return null;
-        }
-
-        $realPath = $file->getRealPath();
-        if (empty($realPath) || !file_exists($realPath)) {
             return null;
         }
 

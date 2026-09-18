@@ -2629,11 +2629,6 @@ class EptrController extends Controller implements HasMiddleware
             return null;
         }
 
-        $realPath = $file->getRealPath();
-        if (empty($realPath) || !file_exists($realPath)) {
-            return null;
-        }
-
         $extension = $file->getClientOriginalExtension() ?: 'pdf';
         $filename = time() . '_' . uniqid() . '.' . $extension;
 
