@@ -619,6 +619,39 @@ class EptrController extends Controller implements HasMiddleware
         return redirect()->route('eptr.index')->with('info', "Permohonan pendaftaran ternakan telah DITOLAK.");
     }
 
+    /**
+     * Muat Naik / Kemaskini Salinan Resit Pembayaran Ternakan
+     */
+    public function muatNaikResit(Request $request, $id)
+    {
+        $user = Auth::user();
+        $ternakan = Ternakan::findOrFail($id);
+
+        $isOwner = ($ternakan->pemunya && $ternakan->pemunya->user_id === $user->id) || ($ternakan->didaftar_oleh === $user->id);
+        if (!$isOwner && !$user->isStaff()) {
+            return back()->with('error', 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk memuat naik resit bagi ternakan ini.');
+        }
+
+        $request->validate([
+            'resit_pembayaran' => 'required|file|mimes:jpeg,png,jpg,pdf|max:10240',
+        ], [
+            'resit_pembayaran.required' => 'Sila pilih fail resit atau gambar slip bayaran.',
+            'resit_pembayaran.mimes' => 'Fail resit mestilah dalam format JPG, PNG, atau PDF.',
+            'resit_pembayaran.max' => 'Saiz fail resit tidak boleh melebihi 10MB.',
+        ]);
+
+        $resitPath = $this->uploadFileSafely($request->file('resit_pembayaran'), 'resit_eptr');
+
+        if (!$resitPath) {
+            return back()->with('error', 'Gagal memuat naik fail resit. Sila cuba lagi.');
+        }
+
+        $ternakan->resit_pembayaran = $resitPath;
+        $ternakan->save();
+
+        return back()->with('success', 'Gambar / fail resit pembayaran telah berjaya dimuat naik.');
+    }
+
     // Cetak Borang A Daftar (Format Asal) - Hanya Admin Jajahan / Staf yang telah Diluluskan
     public function cetakBorangA($id)
     {

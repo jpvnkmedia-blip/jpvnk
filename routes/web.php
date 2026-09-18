@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::match(['get', 'post'], '/cetak-pukal-borang-b', [EptrController::class, 'cetakPukalKadKuning'])->name('cetak-pukal-borang-b');
         Route::post('/ternakan/{id}/lulus', [EptrController::class, 'luluskanPendaftaran'])->name('lulus');
         Route::post('/ternakan/{id}/tolak', [EptrController::class, 'tolakPendaftaran'])->name('tolak');
+        Route::post('/ternakan/{id}/muat-naik-resit', [EptrController::class, 'muatNaikResit'])->name('muat-naik-resit');
 
         // Pengurusan Senarai Penternak / Pemunya Ternakan
         Route::get('/penternak', [EptrController::class, 'penternakIndex'])->name('penternak.index');

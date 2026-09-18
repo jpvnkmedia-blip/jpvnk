@@ -73,26 +73,35 @@
         </div>
     @elseif($ternakan->status_kelulusan === 'Menunggu')
         <!-- Status Alert Banner -->
-        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-300 text-amber-900 flex items-center justify-between">
+        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-300 text-amber-900 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-xs">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <div>
                     <div class="font-bold text-sm">Status: Menunggu Kelulusan Admin Jajahan EPTR</div>
-                    <p class="text-xs text-amber-800">
+                    <p class="text-xs text-amber-800 mt-0.5">
                         No. Tag Telinga Rasmi akan dijana secara automatik mengikut kod singkatan <b>Daerah {{ $ternakan->daerah }}</b> (contoh: <span class="font-mono font-bold">{{ config("kelantan.jajahan.{$ternakan->jajahan}.kod.{$ternakan->daerah}", 'PRG') }}-0001</span>) sebaik sahaja disahkan.
                     </p>
                 </div>
             </div>
-            @if(Auth::user()->isStaff())
-                <form action="{{ route('eptr.lulus', $ternakan->id) }}" method="POST" class="shrink-0" onsubmit="return confirm('Luluskan permohonan pendaftaran ternakan ini dan jana No. Tag Telinga rasmi?');">
-                    @csrf
-                    <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-check"></i> Lulus & Jana Tag
-                    </button>
-                </form>
-            @endif
+            <div class="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0">
+                @if($ternakan->resit_pembayaran)
+                    <a href="{{ asset('storage/' . $ternakan->resit_pembayaran) }}" target="_blank" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Buka Gambar / Fail Resit</span>
+                    </a>
+                @endif
+
+                @if(Auth::user()->isStaff())
+                    <form action="{{ route('eptr.lulus', $ternakan->id) }}" method="POST" class="shrink-0" onsubmit="return confirm('Luluskan permohonan pendaftaran ternakan ini dan jana No. Tag Telinga rasmi?');">
+                        @csrf
+                        <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> Lulus & Jana Tag
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
     @endif
 
@@ -224,14 +233,37 @@
                         <span class="text-[10px] font-black uppercase text-emerald-800">4. DOKUMEN RESIT PEMBAYARAN</span>
                         <div class="mt-1.5">
                             @if($ternakan->resit_pembayaran)
-                                <a href="{{ asset('storage/' . $ternakan->resit_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 transition">
-                                    <i class="fa-solid fa-receipt text-emerald-600"></i>
-                                    <span>Lihat Resit Pembayaran</span>
-                                </a>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a href="{{ asset('storage/' . $ternakan->resit_pembayaran) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                        <span>Buka Gambar / Fail Resit</span>
+                                    </a>
+                                    @if(Auth::user()->isStaff() || (Auth::user()->pemunya && Auth::user()->pemunya->id === $ternakan->pemunya_id) || Auth::user()->id === $ternakan->didaftar_oleh)
+                                        <form action="{{ route('eptr.muat-naik-resit', $ternakan->id) }}" method="POST" enctype="multipart/form-data" class="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
+                                            @csrf
+                                            <input type="file" name="resit_pembayaran" required accept="image/*,.pdf" class="text-[10px] text-slate-600 file:mr-1 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 file:text-slate-700 w-36">
+                                            <button type="submit" class="px-2 py-1 bg-slate-800 hover:bg-slate-900 text-white font-bold text-[10px] rounded transition" title="Tukar fail resit">
+                                                Tukar
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             @else
-                                <span class="inline-flex items-center gap-1 text-slate-400 italic text-xs">
-                                    <i class="fa-solid fa-circle-info"></i> Resit di Kaunter JPVNK
-                                </span>
+                                <div class="space-y-2">
+                                    @if(Auth::user()->isStaff() || (Auth::user()->pemunya && Auth::user()->pemunya->id === $ternakan->pemunya_id) || Auth::user()->id === $ternakan->didaftar_oleh)
+                                        <form action="{{ route('eptr.muat-naik-resit', $ternakan->id) }}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                                            @csrf
+                                            <input type="file" name="resit_pembayaran" required accept="image/*,.pdf" class="text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-900 hover:file:bg-emerald-200 bg-white p-1 rounded-xl border border-emerald-300">
+                                            <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 text-xs whitespace-nowrap">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i> Muat Naik Gambar / Resit
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-slate-400 italic text-xs">
+                                            <i class="fa-solid fa-circle-info"></i> Resit di Kaunter JPVNK (Belum Dimuat Naik)
+                                        </span>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     </div>
