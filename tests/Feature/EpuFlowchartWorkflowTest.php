@@ -461,7 +461,7 @@ class EpuFlowchartWorkflowTest extends TestCase
         $viewResponse = $this->actingAs($adminEpu)->get("/epu/ladang/{$ladang->id}");
         $viewResponse->assertStatus(200);
         $viewResponse->assertSee('RES-PENTERNAK-8899');
-        $viewResponse->assertSee('Buka Resit (PDF/Imej)');
+        $viewResponse->assertSee('Buka / Lihat Fail Resit');
         $viewResponse->assertDontSee('Bayar &amp; Muat Naik Resit', false);
 
         // 6. Admin EPU boleh mengesahkan bayaran

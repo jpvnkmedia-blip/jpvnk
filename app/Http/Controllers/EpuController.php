@@ -883,7 +883,9 @@ class EpuController extends Controller implements HasMiddleware
         ]);
 
         $pathResit = $this->uploadFileSafely($request->file('resit_bayaran_fi'), 'epu/resit_bayaran');
-        $noResit = $validated['no_resit_bayaran'] ?? ('RES-EPU-' . date('Y') . '-' . rand(1000, 9999));
+        $noResit = !empty($validated['no_resit_bayaran']) 
+            ? $validated['no_resit_bayaran'] 
+            : ($permohonan->no_resit_bayaran ?: ('RES-EPU-' . date('Y') . '-' . str_pad($permohonan->id, 4, '0', STR_PAD_LEFT)));
 
         $permohonan->update([
             'status_bayaran_fi' => 'Menunggu Pengesahan',
@@ -896,7 +898,7 @@ class EpuController extends Controller implements HasMiddleware
             \App\Models\UserNotification::send(
                 $permohonan->ladang->user_id,
                 'Pembayaran Fi Lesen EPU Diterima',
-                "Bukti pembayaran fi lesen (No. Resit: {$noResit}) telah dihantar dan direkodkan ke dalam sistem.",
+                "Fail resit bayaran fi lesen telah berjaya dimuat naik dan dihantar untuk pengesahan pegawai.",
                 'epu',
                 route('epu.show', $permohonan->ladang->id),
                 'fa-solid fa-receipt',
@@ -909,14 +911,14 @@ class EpuController extends Controller implements HasMiddleware
             ['admin_epu', 'pegawai_verifikasi_epu', 'pegawai_pelesen', 'super_admin'],
             $permohonan->ladang->jajahan,
             "Bukti Pembayaran Fi Lesen EPU Dimuat Naik (PPVJ {$permohonan->ladang->jajahan})",
-            "Pemohon '{$permohonan->ladang->nama_ladang}' telah memuat naik resit bayaran fi lesen (No. Resit: {$noResit}). Sila buat semakan dan pengesahan bayaran.",
+            "Pemohon '{$permohonan->ladang->nama_ladang}' telah memuat naik resit bayaran fi lesen. Sila buat semakan dan pengesahan bayaran.",
             route('epu.show', $permohonan->ladang->id),
             'fa-solid fa-money-check-dollar',
             'amber',
             $user->id
         );
 
-        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah berjaya direkodkan.');
+        return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Fail resit bayaran fi berjaya dimuat naik!');
     }
 
     // Pengesahan Bayaran Fi oleh Pegawai
