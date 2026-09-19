@@ -34,6 +34,24 @@
             height: 520px;
         }
     }
+    .leaflet-control-zoom {
+        border-radius: 0.75rem !important;
+        overflow: hidden;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-right: 1rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+    .leaflet-control-zoom a {
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        color: #1e293b !important;
+        font-weight: bold !important;
+        transition: all 0.15s ease-in-out;
+    }
+    .leaflet-control-zoom a:hover {
+        background-color: #f1f5f9 !important;
+        color: #059669 !important;
+    }
 </style>
 @endpush
 
@@ -449,8 +467,13 @@ function gisMapApp() {
             this.map = L.map('gisMap', {
                 center: [5.6500, 102.1500],
                 zoom: 9,
-                zoomControl: true,
+                zoomControl: false, // Dinyahaktifkan dari topleft agar tidak terlindung oleh butang skrin penuh
             });
+
+            // Letak butang zoom (+ / -) di sudut kanan bawah dengan reka bentuk kemas
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(this.map);
 
             // Definisi Base Tile Layers
             const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
