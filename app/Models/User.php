@@ -80,6 +80,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_eptr',
             'admin_program',
             'admin_epu_negeri',
@@ -324,6 +325,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_pejabat',
             'admin_stor_pejabat',
         ]);
@@ -333,6 +335,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_ubat',
         ]);
     }
@@ -340,7 +343,7 @@ class User extends Authenticatable
     public function canBookVehicle(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles)) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles)) {
             return true;
         }
         $blocked = [
@@ -372,6 +375,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_kenderaan',
         ]) || $this->canBookVehicle();
     }
@@ -385,6 +389,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_kenderaan',
         ]);
     }
@@ -392,7 +397,7 @@ class User extends Authenticatable
     public function canAccessEptr(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan', 'penternak', 'orang_awam'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan', 'penternak', 'orang_awam'], $roles))) {
             return true;
         }
         $blocked = [
@@ -415,7 +420,7 @@ class User extends Authenticatable
     public function canAccessPawah(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_program', 'penternak', 'orang_awam'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_program', 'penternak', 'orang_awam'], $roles))) {
             return true;
         }
         $blocked = [
@@ -438,7 +443,7 @@ class User extends Authenticatable
     public function canAccessEpu(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_epu', 'admin_epu_negeri', 'admin_epu_jajahan', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'usahawan', 'penternak', 'orang_awam'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_epu', 'admin_epu_negeri', 'admin_epu_jajahan', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'usahawan', 'penternak', 'orang_awam'], $roles))) {
             return true;
         }
         $blocked = [
@@ -457,7 +462,7 @@ class User extends Authenticatable
     public function canAccessKursus(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_kursus', 'penternak', 'usahawan', 'orang_awam', 'staf'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_kursus', 'penternak', 'usahawan', 'orang_awam', 'staf'], $roles))) {
             return true;
         }
         $blocked = [
@@ -479,7 +484,7 @@ class User extends Authenticatable
     public function canAccessKlinik(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_klinik', 'penternak', 'usahawan', 'orang_awam'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_klinik', 'penternak', 'usahawan', 'orang_awam'], $roles))) {
             return true;
         }
         $blocked = [
@@ -544,6 +549,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
+            'pengarah',
             'admin_pejabat',
             'admin_kenderaan',
             'admin_ubat',
@@ -583,6 +589,7 @@ class User extends Authenticatable
     {
         return match ($role) {
             'super_admin' => 'Super Admin',
+            'pengarah' => 'Pengarah Perkhidmatan Veterinar Negeri',
             'admin_pejabat', 'admin_stor_pejabat' => 'Admin Stor Pejabat',
             'admin_kenderaan' => 'Admin Kenderaan & Fleet',
             'admin_ubat' => 'Admin Stor Ubat & Farmasi Veterinar',
@@ -704,7 +711,7 @@ class User extends Authenticatable
     public function canAccessNaimbif(): bool
     {
         $roles = $this->getRolesList();
-        if (in_array('super_admin', $roles) || !empty(array_intersect(['admin_naimbif_negeri', 'admin_naimbif', 'admin_naimbif_jajahan', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan', 'penternak', 'orang_awam'], $roles))) {
+        if (in_array('super_admin', $roles) || in_array('pengarah', $roles) || !empty(array_intersect(['admin_naimbif_negeri', 'admin_naimbif', 'admin_naimbif_jajahan', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan', 'penternak', 'orang_awam'], $roles))) {
             return true;
         }
         $blocked = [

@@ -176,19 +176,37 @@ class DatabaseSeeder extends Seeder
             'password' => $password,
         ]);
 
-        // Pegawai Pelesen / Pengarah (EPU)
-        $pegawaiPelesen = User::firstOrCreate(
+        // Pengarah JPVNK (Ketua Eksekutif Jabatan & Pegawai Pelesen EPU)
+        $pengarah = User::updateOrCreate(
             ['ic_number' => '780410035123'],
             [
                 'name' => 'Dr. Roslan bin Abdul Wahid',
-                'email' => 'pelesen.epu@dvs.gov.my',
+                'email' => 'pengarah@dvs.gov.my',
                 'phone' => '019-9112233',
-                'address' => 'Pejabat Pengarah / Pegawai Pelesen EPU, Ibu Pejabat JPVNK Kota Bharu',
+                'address' => 'Pejabat Pengarah, Ibu Pejabat Perkhidmatan Veterinar Negeri Kelantan, Kota Bharu',
                 'jajahan' => 'Kota Bharu',
-                'role' => 'pegawai_pelesen',
+                'role' => 'pengarah',
+                'roles' => ['pengarah', 'pegawai_pelesen'],
                 'auth_provider' => 'manual',
                 'status' => 'Aktif',
                 'password' => bcrypt('super@DVS5123'),
+            ]
+        );
+
+        // Pegawai Pelesen EPU
+        $pegawaiPelesen = User::updateOrCreate(
+            ['ic_number' => '790515035124'],
+            [
+                'name' => 'Dr. Ahmad Fikri bin Mansor',
+                'email' => 'pelesen.epu@dvs.gov.my',
+                'phone' => '019-9114455',
+                'address' => 'Unit Regulatori Pelesenan EPU, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'pegawai_pelesen',
+                'roles' => ['pegawai_pelesen'],
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => bcrypt('super@DVS5124'),
             ]
         );
 

@@ -36,6 +36,12 @@ class UserController extends Controller implements HasMiddleware
                     'badge' => 'bg-purple-100 text-purple-800 border-purple-300',
                     'icon' => 'fa-crown text-purple-600',
                 ],
+                'pengarah' => [
+                    'label' => 'Pengarah Perkhidmatan Veterinar Negeri',
+                    'desc' => 'Pegawai tertinggi jabatan, pegawai pelulus lesen EPU (Enakmen Penternakan Unggas), rayuan, dan pemantauan analitik/laporan eksekutif semua modul.',
+                    'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    'icon' => 'fa-user-tie text-emerald-700',
+                ],
                 'admin_eptr' => [
                     'label' => 'Admin EPTR Negeri',
                     'desc' => 'Pengurusan pendaftaran ruminan, permit sembelihan & pemindahan peringkat negeri.',

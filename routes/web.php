@@ -46,8 +46,9 @@ Route::post('/auth/switch-role', [AuthController::class, 'switchRole'])->name('a
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Unified Dashboard
+    // Unified Dashboard & Modul Laporan Eksekutif Pengarah
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pengarah/laporan', [DashboardController::class, 'laporanPengarah'])->name('pengarah.laporan');
 
     // Peta Taburan Penternak GIS (Modul Pengarah & Eksekutif)
     Route::get('/peta-taburan', [PetaTaburanController::class, 'index'])->name('peta.taburan');

@@ -23,7 +23,9 @@
                 Selamat Datang, {{ $user->name }}!
             </h1>
             <p class="mt-2 text-sm text-slate-300 leading-relaxed">
-                @if($user->role === 'admin_pejabat')
+                @if($user->role === 'pengarah')
+                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Pengarah Perkhidmatan Veterinar Negeri Kelantan</span>. Anda memegang autoriti eksekutif meluluskan permohonan Lesen Enakmen Penternakan Unggas (EPU Borang B), menyemak rayuan lesen, dan memantau prestasi, statistik serta analitik bersepadu bagi kesemua 9 modul JPVNK.
+                @elseif($user->role === 'admin_pejabat')
                     Anda sedang mengakses sistem sebagai <span class="text-indigo-400 font-bold">Admin Stor Pejabat</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Inventori &amp; Stor Peralatan Pejabat</span> serta kelulusan permohonan bekalan staf JPVNK.
                 @elseif($user->role === 'admin_kenderaan')
                     Anda sedang mengakses sistem sebagai <span class="text-blue-400 font-bold">Admin Kenderaan &amp; Fleet</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Armada Kenderaan Rasmi</span>, jadual pemandu serta kelulusan tempahan kenderaan JPVNK.
@@ -54,6 +56,16 @@
 
             <!-- Quick Action Buttons -->
             <div class="mt-5 flex flex-wrap gap-2.5">
+                @if($user->role === 'pengarah')
+                    <a href="{{ route('pengarah.laporan') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition hover:scale-102">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Laporan &amp; Analitik Eksekutif</span>
+                    </a>
+                    <a href="{{ route('epu.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition hover:scale-102">
+                        <i class="fa-solid fa-stamp"></i>
+                        <span>Kelulusan Lesen EPU ({{ $totalEpuPendingPelesen }})</span>
+                    </a>
+                @endif
                 @if($user->canAccessPetaTaburan())
                     <a href="{{ route('peta.taburan') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition hover:scale-102">
                         <i class="fa-solid fa-map-location-dot"></i>

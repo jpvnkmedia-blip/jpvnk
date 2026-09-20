@@ -3,20 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Pemunya;
 use App\Models\Ternakan;
+use App\Models\PindahMilik;
+use App\Models\PembatalanTernakan;
+use App\Models\PermitSembelihan;
+use App\Models\ProgramKesihatan;
 use App\Models\PawahPerjanjian;
 use App\Models\PawahTernakan;
 use App\Models\PawahRekodKelahiran;
 use App\Models\PawahRekodKesihatan;
+use App\Models\PawahPenyelesaian;
 use App\Models\EpuLadang;
 use App\Models\EpuPermohonan;
 use App\Models\Course;
 use App\Models\CourseApplication;
 use App\Models\KlinikTemujanji;
+use App\Models\KlinikRawatan;
 use App\Models\InventoriItem;
+use App\Models\InventoriPermohonan;
 use App\Models\Kenderaan;
 use App\Models\KenderaanTempahan;
-use App\Models\PermitSembelihan;
+use App\Models\Pemandu;
+use App\Models\NaimbifPermohonan;
+use App\Models\NaimbifInventoriTernakan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -333,6 +343,244 @@ class DashboardController extends Controller
             'jajahanList',
             'chartEptrData',
             'chartPawahData'
+        ));
+    }
+
+    public function laporanPengarah()
+    {
+        $user = Auth::user();
+        if (!$user->isPengarah() && !$user->isSuperAdmin() && !$user->isStaff()) {
+            abort(403, 'Akses Ditolak: Hanya Pengarah dan Pentadbir Eksekutif yang dibenarkan melihat modul ini.');
+        }
+
+        $jajahanList = ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang'];
+
+        // 1. EPTR Ruminan
+        $totalTernakanEptr = Ternakan::count();
+        $totalTernakanAktif = Ternakan::where('status', 'Aktif')->count();
+        $totalTernakanPawah = Ternakan::where(function ($q) {
+            $q->whereNotNull('program')->where('program', '!=', 'Tiada')
+              ->orWhere('status', 'Pawah');
+        })->count();
+        $totalTernakanTagged = Ternakan::whereNotNull('no_tag')->where('no_tag', '!=', '')->count();
+        $totalTernakanUntagged = max(0, $totalTernakanEptr - $totalTernakanTagged);
+        $totalPendingTernakan = Ternakan::where('status_kelulusan', 'Menunggu')->count();
+        $totalPermitSembelihan = PermitSembelihan::count();
+        $totalPembatalanKematian = PembatalanTernakan::count();
+        $totalPindahMilik = PindahMilik::count();
+        $totalProgramKesihatan = ProgramKesihatan::count();
+
+        $eptrSpeciesRaw = Ternakan::select('jenis_ternakan', DB::raw('count(*) as total'))
+            ->groupBy('jenis_ternakan')->pluck('total', 'jenis_ternakan')->toArray();
+        $eptrSpeciesData = [
+            'Lembu' => $eptrSpeciesRaw['Lembu'] ?? 0,
+            'Kerbau' => $eptrSpeciesRaw['Kerbau'] ?? 0,
+            'Kambing' => $eptrSpeciesRaw['Kambing'] ?? 0,
+            'Biri-biri' => ($eptrSpeciesRaw['Biri-biri'] ?? 0) + ($eptrSpeciesRaw['Biri-Biri'] ?? 0) + ($eptrSpeciesRaw['Biri - Biri'] ?? 0),
+            'Rusa' => $eptrSpeciesRaw['Rusa'] ?? 0,
+            'Lain-lain' => 0
+        ];
+        foreach ($eptrSpeciesRaw as $sp => $cnt) {
+            if (!in_array($sp, ['Lembu', 'Kerbau', 'Kambing', 'Biri-biri', 'Biri-Biri', 'Biri - Biri', 'Rusa'])) {
+                $eptrSpeciesData['Lain-lain'] += $cnt;
+            }
+        }
+
+        $eptrJajahanRaw = Ternakan::whereNotNull('jajahan')
+            ->select('jajahan', DB::raw('count(*) as total'))
+            ->groupBy('jajahan')->pluck('total', 'jajahan')->toArray();
+        $eptrByJajahan = [];
+        foreach ($jajahanList as $j) {
+            $eptrByJajahan[$j] = (int) ($eptrJajahanRaw[$j] ?? 0);
+        }
+
+        // 2. Program Pawah
+        $totalPawahPerjanjian = PawahPerjanjian::count();
+        $totalPawahAktif = PawahPerjanjian::where('status', 'Aktif')->count();
+        $totalPawahMenunggu = PawahPerjanjian::where('status', 'Menunggu Kelulusan')->count();
+        $totalPawahSelesai = PawahPerjanjian::where('status', 'Selesai')->count();
+        $totalPawahInduk = PawahTernakan::count();
+        $totalPawahKelahiran = PawahRekodKelahiran::count();
+        $totalPawahKelahiranHidup = PawahRekodKelahiran::where('status_anak', 'Hidup')->count();
+        $totalPawahKesihatan = PawahRekodKesihatan::count();
+
+        $pawahJajahanRaw = PawahPerjanjian::whereNotNull('jajahan')
+            ->select('jajahan', DB::raw('count(*) as total'))
+            ->groupBy('jajahan')->pluck('total', 'jajahan')->toArray();
+        $pawahByJajahan = [];
+        foreach ($jajahanList as $j) {
+            $pawahByJajahan[$j] = (int) ($pawahJajahanRaw[$j] ?? 0);
+        }
+
+        // 3. EPU (Enakmen Penternakan Unggas)
+        $totalEpuLadang = EpuLadang::count();
+        $totalEpuPermohonan = EpuPermohonan::count();
+        $totalEpuLulus = EpuPermohonan::where('status', 'Diluluskan')->count();
+        $totalEpuPendingVerifikasi = EpuPermohonan::where(function ($q) {
+            $q->whereNull('status_verifikasi')->orWhereIn('status_verifikasi', ['Belum Disemak', 'Tidak Lengkap', 'Tidak Patuh']);
+        })->where('status', '!=', 'Diluluskan')->count();
+        $totalEpuPendingPelesen = EpuPermohonan::where('status_penilaian_ladang', 'Dihantar ke Pegawai Pelesen')
+            ->where('status', 'Menunggu Kelulusan Pelesen')->count();
+        $totalEpuRayuan = EpuPermohonan::where('status_rayuan', 'Menunggu Semakan Rayuan')
+            ->orWhere('status', 'Rayuan')->count();
+        $totalEpuDitolak = EpuPermohonan::where('status', 'Ditolak')->count();
+        $totalEpuKapasiti = (int) EpuPermohonan::sum('kapasiti_ladang');
+        $totalEpuSemasaUnggas = (int) EpuPermohonan::sum('bilangan_semasa_unggas');
+        $totalEpuFiKutipan = (float) EpuPermohonan::where('status', 'Diluluskan')->sum('yuran_lesen');
+
+        $epuSpeciesRaw = EpuPermohonan::select('jenis_unggas', DB::raw('sum(bilangan_semasa_unggas) as total'))
+            ->groupBy('jenis_unggas')->pluck('total', 'jenis_unggas')->toArray();
+        $epuJajahanRaw = EpuLadang::whereNotNull('jajahan')
+            ->select('jajahan', DB::raw('count(*) as total'))
+            ->groupBy('jajahan')->pluck('total', 'jajahan')->toArray();
+        $epuByJajahan = [];
+        foreach ($jajahanList as $j) {
+            $epuByJajahan[$j] = (int) ($epuJajahanRaw[$j] ?? 0);
+        }
+
+        $pendingEpuForDirector = EpuPermohonan::with(['ladang.pemilik', 'pegawaiVerifikasi'])
+            ->where(function ($q) {
+                $q->where(function ($sq) {
+                    $sq->where('status_penilaian_ladang', 'Dihantar ke Pegawai Pelesen')
+                       ->where('status', 'Menunggu Kelulusan Pelesen');
+                })->orWhere('status_rayuan', 'Menunggu Semakan Rayuan')
+                  ->orWhere('status', 'Rayuan');
+            })
+            ->latest()->take(10)->get();
+
+        // 4. Program NAIMbif (Ladang Bridlot)
+        $totalNaimbifApps = NaimbifPermohonan::count();
+        $totalNaimbifLulus = NaimbifPermohonan::where('status_negeri', 'Lulus')->count();
+        $totalNaimbifMenungguNegeri = NaimbifPermohonan::where('syor_permohonan', 'Disokong')->where('status_negeri', 'Menunggu Kelulusan')->count();
+        $totalNaimbifMenungguJajahan = NaimbifPermohonan::where('syor_permohonan', 'Belum Disemak')->count();
+        $totalNaimbifTolak = NaimbifPermohonan::where('status_negeri', 'Tolak')->orWhere('syor_permohonan', 'Tidak Disokong')->count();
+        $totalNaimbifPopulasi = (int) NaimbifInventoriTernakan::sum('jumlah_baka');
+
+        $naimbifBakaRaw = NaimbifInventoriTernakan::select('baka', DB::raw('sum(jumlah_baka) as total'))
+            ->groupBy('baka')->pluck('total', 'baka')->toArray();
+        
+        $naimbifJajahanRaw = NaimbifPermohonan::select(DB::raw('COALESCE(jajahan_ladang, jajahan) as jajahan_nama'), DB::raw('count(*) as total'))
+            ->groupBy('jajahan_nama')->pluck('total', 'jajahan_nama')->toArray();
+        $naimbifByJajahan = [];
+        foreach ($jajahanList as $j) {
+            $naimbifByJajahan[$j] = (int) ($naimbifJajahanRaw[$j] ?? 0);
+        }
+
+        // 5. Klinik Haiwan & Rawatan
+        $totalKlinikTemujanji = KlinikTemujanji::count();
+        $totalKlinikSelesai = KlinikTemujanji::where('status', 'Selesai')->count();
+        $totalKlinikDijadualkan = KlinikTemujanji::whereIn('status', ['Menunggu', 'Disahkan'])->count();
+        $totalKlinikRawatan = KlinikRawatan::count();
+
+        $klinikJajahanRaw = KlinikTemujanji::whereNotNull('klinik_jajahan')
+            ->select('klinik_jajahan', DB::raw('count(*) as total'))
+            ->groupBy('klinik_jajahan')->pluck('total', 'klinik_jajahan')->toArray();
+        $klinikByJajahan = [];
+        foreach ($jajahanList as $j) {
+            $klinikByJajahan[$j] = (int) ($klinikJajahanRaw[$j] ?? 0);
+        }
+
+        $klinikSpeciesRaw = KlinikTemujanji::whereNotNull('jenis_haiwan')
+            ->select('jenis_haiwan', DB::raw('count(*) as total'))
+            ->groupBy('jenis_haiwan')->pluck('total', 'jenis_haiwan')->toArray();
+
+        // 6. Kursus Penternakan
+        $totalCourses = Course::count();
+        $totalCoursesActive = Course::where('status', 'Buka')->count();
+        $totalCourseApplications = CourseApplication::count();
+        $totalCourseApproved = CourseApplication::whereIn('status', ['Lulus', 'Diluluskan'])->count();
+        $totalCourseGraduated = CourseApplication::whereNotNull('certificate_number')->orWhereIn('status', ['Lulus', 'Hadir', 'Selesai'])->count();
+
+        // 7. Stor & Inventori
+        $totalPejabatItems = InventoriItem::where('jenis_stor', 'pejabat')->count();
+        $totalUbatItems = InventoriItem::where('jenis_stor', 'ubat')->count();
+        $lowStockPejabat = InventoriItem::where('jenis_stor', 'pejabat')->whereIn('status', ['Stok Rendah', 'Habis Stok'])->count();
+        $lowStockUbat = InventoriItem::where('jenis_stor', 'ubat')->whereIn('status', ['Stok Rendah', 'Habis Stok'])->count();
+        $totalPermohonanPejabat = InventoriPermohonan::where('jenis_stor', 'pejabat')->count();
+        $totalPermohonanUbat = InventoriPermohonan::where('jenis_stor', 'ubat')->count();
+
+        // 8. Armada Kenderaan Rasmi
+        $totalVehicles = Kenderaan::count();
+        $availableVehicles = Kenderaan::where('status', 'Sedia')->count();
+        $inUseVehicles = Kenderaan::where('status', 'Sedang Digunakan')->count();
+        $inServiceVehicles = Kenderaan::whereIn('status', ['Dalam Servis', 'Rosak'])->count();
+        $totalVehicleBookings = KenderaanTempahan::count();
+        $totalPemandu = Pemandu::count();
+        $activePemandu = Pemandu::whereIn('status', ['Aktif', 'Bertugas'])->count();
+
+        // 9. GIS Data & Totals
+        $totalPremisGIS = $totalTernakanEptr + $totalEpuLadang + $totalNaimbifApps;
+
+        return view('pengarah.laporan', compact(
+            'user',
+            'jajahanList',
+            'totalTernakanEptr',
+            'totalTernakanAktif',
+            'totalTernakanPawah',
+            'totalTernakanTagged',
+            'totalTernakanUntagged',
+            'totalPendingTernakan',
+            'totalPermitSembelihan',
+            'totalPembatalanKematian',
+            'totalPindahMilik',
+            'totalProgramKesihatan',
+            'eptrSpeciesData',
+            'eptrByJajahan',
+            'totalPawahPerjanjian',
+            'totalPawahAktif',
+            'totalPawahMenunggu',
+            'totalPawahSelesai',
+            'totalPawahInduk',
+            'totalPawahKelahiran',
+            'totalPawahKelahiranHidup',
+            'totalPawahKesihatan',
+            'pawahByJajahan',
+            'totalEpuLadang',
+            'totalEpuPermohonan',
+            'totalEpuLulus',
+            'totalEpuPendingVerifikasi',
+            'totalEpuPendingPelesen',
+            'totalEpuRayuan',
+            'totalEpuDitolak',
+            'totalEpuKapasiti',
+            'totalEpuSemasaUnggas',
+            'totalEpuFiKutipan',
+            'epuSpeciesRaw',
+            'epuByJajahan',
+            'pendingEpuForDirector',
+            'totalNaimbifApps',
+            'totalNaimbifLulus',
+            'totalNaimbifMenungguNegeri',
+            'totalNaimbifMenungguJajahan',
+            'totalNaimbifTolak',
+            'totalNaimbifPopulasi',
+            'naimbifBakaRaw',
+            'naimbifByJajahan',
+            'totalKlinikTemujanji',
+            'totalKlinikSelesai',
+            'totalKlinikDijadualkan',
+            'totalKlinikRawatan',
+            'klinikByJajahan',
+            'klinikSpeciesRaw',
+            'totalCourses',
+            'totalCoursesActive',
+            'totalCourseApplications',
+            'totalCourseApproved',
+            'totalCourseGraduated',
+            'totalPejabatItems',
+            'totalUbatItems',
+            'lowStockPejabat',
+            'lowStockUbat',
+            'totalPermohonanPejabat',
+            'totalPermohonanUbat',
+            'totalVehicles',
+            'availableVehicles',
+            'inUseVehicles',
+            'inServiceVehicles',
+            'totalVehicleBookings',
+            'totalPemandu',
+            'activePemandu',
+            'totalPremisGIS'
         ));
     }
 }

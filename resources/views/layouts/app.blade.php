@@ -173,6 +173,19 @@
                 </a>
                 @endif
 
+                <!-- Laporan & Analitik Eksekutif (Pengarah & Super Admin) -->
+                @if(Auth::user()->isPengarah() || Auth::user()->isSuperAdmin())
+                <a href="{{ route('pengarah.laporan') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('pengarah.laporan') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-chart-pie w-5 text-center text-base text-emerald-400"></i>
+                        <span>Laporan Eksekutif</span>
+                    </div>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-mono">
+                        STATISTIK
+                    </span>
+                </a>
+                @endif
+
                 @if(Auth::user()->role !== 'admin_pejabat')
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     Perkhidmatan Veterinar
