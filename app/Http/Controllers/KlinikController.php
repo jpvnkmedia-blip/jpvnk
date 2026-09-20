@@ -499,20 +499,45 @@ class KlinikController extends Controller implements HasMiddleware
             ->orderBy('nama_item')
             ->get();
 
-        $klinikList = [
-            'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu',
-            'Pusat Veterinar Jajahan Pasir Mas',
-            'Pusat Veterinar Jajahan Bachok',
-            'Pusat Veterinar Jajahan Machang',
-            'Pusat Veterinar Jajahan Tanah Merah',
-            'Pusat Veterinar Jajahan Pasir Puteh',
-            'Pusat Veterinar Jajahan Tumpat',
-            'Pusat Veterinar Jajahan Kuala Krai',
-            'Pusat Veterinar Jajahan Gua Musang',
-            'Pusat Veterinar Jajahan Jeli'
-        ];
+        $userJajahan = $user->jajahan ?: 'Kota Bharu';
+        $klinikNama = (strcasecmp($userJajahan, 'Kota Bharu') === 0 || empty($user->jajahan))
+            ? 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu'
+            : 'Pusat Veterinar Jajahan ' . $userJajahan;
 
-        return view('klinik.ubat.create', compact('items', 'klinikList'));
+        // Senarai ubat yang telah ada / diterima di klinik haiwan jajahan tersebut
+        $stokKlinikJajahan = InventoriPermohonan::where('jenis_stor', 'ubat')
+            ->where(function($q) use ($user, $userJajahan, $klinikNama) {
+                $q->where('unit_bahagian', 'like', "%{$userJajahan}%")
+                  ->orWhere('unit_bahagian', $klinikNama)
+                  ->orWhere('user_id', $user->id);
+            })
+            ->whereIn('status', ['Telah Diambil / Diserahkan', 'Diluluskan'])
+            ->with(['item', 'pelulus'])
+            ->latest()
+            ->get();
+
+        // Ringkaskan kuantiti & maklumat ubat mengikut item
+        $ringkasanUbatKlinik = [];
+        foreach ($stokKlinikJajahan as $permohonan) {
+            $itemId = $permohonan->inventori_item_id;
+            if (!$permohonan->item) continue;
+
+            if (!isset($ringkasanUbatKlinik[$itemId])) {
+                $ringkasanUbatKlinik[$itemId] = [
+                    'item' => $permohonan->item,
+                    'jumlah_diterima' => 0,
+                    'tarikh_terakhir' => $permohonan->updated_at ?? $permohonan->created_at,
+                    'status_terkini' => $permohonan->status,
+                    'tujuan_terakhir' => $permohonan->tujuan_permohonan,
+                    'bilangan_pesanan' => 0,
+                ];
+            }
+            $kuantiti = $permohonan->kuantiti_diluluskan ?: $permohonan->kuantiti_dimohon;
+            $ringkasanUbatKlinik[$itemId]['jumlah_diterima'] += $kuantiti;
+            $ringkasanUbatKlinik[$itemId]['bilangan_pesanan']++;
+        }
+
+        return view('klinik.ubat.create', compact('items', 'klinikNama', 'userJajahan', 'ringkasanUbatKlinik'));
     }
 
     /**
@@ -525,14 +550,21 @@ class KlinikController extends Controller implements HasMiddleware
             abort(403, 'Akses Ditolak: Hanya staf klinik dan pegawai veterinar dibenarkan membuat permohonan bekalan ubat.');
         }
 
+        $userJajahan = $user->jajahan ?: 'Kota Bharu';
+        $defaultKlinik = (strcasecmp($userJajahan, 'Kota Bharu') === 0 || empty($user->jajahan))
+            ? 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu'
+            : 'Pusat Veterinar Jajahan ' . $userJajahan;
+
         $validated = $request->validate([
             'inventori_item_id' => 'required|exists:inventori_items,id',
             'kuantiti_dimohon' => 'required|integer|min:1',
-            'klinik_jajahan' => 'required|string|max:255',
+            'klinik_jajahan' => 'nullable|string|max:255',
             'tujuan_permohonan' => 'required|string|max:1000',
             'tarikh_diperlukan' => 'nullable|date',
             'catatan_pemohon' => 'nullable|string|max:500',
         ]);
+
+        $klinikJajahan = !empty($validated['klinik_jajahan']) ? $validated['klinik_jajahan'] : $defaultKlinik;
 
         $item = InventoriItem::findOrFail($validated['inventori_item_id']);
         if (!$item->isStorUbat()) {
@@ -547,7 +579,7 @@ class KlinikController extends Controller implements HasMiddleware
             'inventori_item_id' => $item->id,
             'jenis_stor' => 'ubat',
             'kuantiti_dimohon' => $validated['kuantiti_dimohon'],
-            'unit_bahagian' => $validated['klinik_jajahan'],
+            'unit_bahagian' => $klinikJajahan,
             'tujuan_permohonan' => $validated['tujuan_permohonan'],
             'tarikh_diperlukan' => $validated['tarikh_diperlukan'] ?? now()->toDateString(),
             'catatan_pemohon' => $validated['catatan_pemohon'] ?? null,

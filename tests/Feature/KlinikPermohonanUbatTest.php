@@ -74,6 +74,53 @@ class KlinikPermohonanUbatTest extends TestCase
         $response->assertOk();
         $response->assertSee('Vaksin Rabies &amp; Tricat Trio', false);
         $response->assertSee('UBT-VAK-001');
+        $response->assertSee('Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu');
+    }
+
+    public function test_clinic_column_is_locked_to_applicant_jajahan_and_displays_existing_medicines(): void
+    {
+        $adminBachok = User::factory()->create([
+            'name' => 'Dr. Zulkifli (Bachok)',
+            'role' => 'admin_klinik',
+            'email' => 'dr.zul@jpvnk.gov.my',
+            'jajahan' => 'Bachok',
+        ]);
+
+        // Cipta rekod bekalan ubat yang telah diterima oleh Klinik Bachok
+        $antibiotik = InventoriItem::create([
+            'kod_item' => 'UBT-ANT-002',
+            'nama_item' => 'Oxytetracycline LA 200mg',
+            'jenis_stor' => 'ubat',
+            'kategori' => 'Antibiotik & Kemoterapi',
+            'unit' => 'botol',
+            'kuantiti_semasa' => 30,
+            'kuantiti_minimum' => 5,
+            'status' => 'Mencukupi',
+        ]);
+
+        InventoriPermohonan::create([
+            'no_permohonan' => 'REQ-KLN-UBT-20260901-1111',
+            'user_id' => $adminBachok->id,
+            'inventori_item_id' => $antibiotik->id,
+            'jenis_stor' => 'ubat',
+            'kuantiti_dimohon' => 8,
+            'kuantiti_diluluskan' => 8,
+            'unit_bahagian' => 'Pusat Veterinar Jajahan Bachok',
+            'tujuan_permohonan' => 'Stok sedia ada klinik rawatan kambing',
+            'status' => 'Telah Diambil / Diserahkan',
+        ]);
+
+        $response = $this->actingAs($adminBachok)
+            ->get(route('klinik.permohonan_ubat.create'));
+
+        $response->assertOk();
+        $response->assertSee('Pusat Veterinar Jajahan Bachok');
+        $response->assertSee('Ditetapkan mengikut jajahan pemohon (tidak boleh diubah).');
+        // Senarai ubat sedia ada di klinik
+        $response->assertSee('Oxytetracycline LA 200mg');
+        $response->assertSee('UBT-ANT-002');
+        $response->assertSee('8');
+        $response->assertSee('botol');
     }
 
     public function test_admin_klinik_can_submit_medicine_request_to_pharmacy_store(): void
