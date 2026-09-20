@@ -6,6 +6,9 @@ use App\Models\User;
 use App\Models\Pemunya;
 use App\Models\KlinikTemujanji;
 use App\Models\KlinikRawatan;
+use App\Models\InventoriItem;
+use App\Models\InventoriPermohonan;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -409,5 +412,201 @@ class KlinikController extends Controller implements HasMiddleware
     {
         $temujanji = KlinikTemujanji::with('pemilik', 'rawatan')->findOrFail($id);
         return view('klinik.cetak-kad-rawatan', compact('temujanji'));
+    }
+
+    /**
+     * Senarai Permohonan Ubat & Farmasi dari Klinik Haiwan
+     */
+    public function permohonanUbatIndex(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff() || (!$user->canRequestUbat() && !$user->canAccessKlinik())) {
+            abort(403, 'Akses Ditolak: Hanya staf klinik dan pegawai veterinar dibenarkan mengakses pengurusan permohonan ubat klinik.');
+        }
+
+        $query = InventoriPermohonan::where('jenis_stor', 'ubat')
+            ->with(['pemohon', 'item', 'pelulus']);
+
+        // Jika bukan super_admin atau admin_ubat, paparkan permohonan dibuat oleh staf klinik/pengguna semasa
+        if (!$user->isSuperAdmin() && !$user->isAdminUbat()) {
+            $query->where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('unit_bahagian', 'like', '%Klinik%')
+                  ->orWhere('unit_bahagian', 'like', '%' . ($user->jajahan ?? 'Kota Bharu') . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('no_permohonan', 'like', "%{$search}%")
+                  ->orWhere('unit_bahagian', 'like', "%{$search}%")
+                  ->orWhere('tujuan_permohonan', 'like', "%{$search}%")
+                  ->orWhereHas('pemohon', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('item', function ($i) use ($search) {
+                      $i->where('nama_item', 'like', "%{$search}%")->orWhere('kod_item', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $permohonans = $query->latest()->paginate(15)->withQueryString();
+
+        // Base query for counts
+        $baseCountQuery = InventoriPermohonan::where('jenis_stor', 'ubat');
+        if (!$user->isSuperAdmin() && !$user->isAdminUbat()) {
+            $baseCountQuery->where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('unit_bahagian', 'like', '%Klinik%')
+                  ->orWhere('unit_bahagian', 'like', '%' . ($user->jajahan ?? 'Kota Bharu') . '%');
+            });
+        }
+
+        $totalPermohonan = (clone $baseCountQuery)->count();
+        $menungguCount = (clone $baseCountQuery)->where('status', 'Menunggu Kelulusan')->count();
+        $lulusCount = (clone $baseCountQuery)->where('status', 'Diluluskan')->count();
+        $selesaiCount = (clone $baseCountQuery)->where('status', 'Telah Diambil / Diserahkan')->count();
+        $ditolakCount = (clone $baseCountQuery)->where('status', 'Ditolak')->count();
+
+        return view('klinik.ubat.index', compact(
+            'permohonans',
+            'totalPermohonan',
+            'menungguCount',
+            'lulusCount',
+            'selesaiCount',
+            'ditolakCount'
+        ));
+    }
+
+    /**
+     * Borang Permohonan Ubat Baharu dari Klinik Haiwan ke Stor Farmasi
+     */
+    public function permohonanUbatCreate()
+    {
+        $user = Auth::user();
+        if (!$user->isStaff() || (!$user->canRequestUbat() && !$user->canAccessKlinik())) {
+            abort(403, 'Akses Ditolak: Hanya staf klinik dan pegawai veterinar dibenarkan membuat permohonan bekalan ubat.');
+        }
+
+        $items = InventoriItem::where('jenis_stor', 'ubat')
+            ->where('status', '!=', 'Habis Stok')
+            ->where('status', '!=', 'Luput')
+            ->orderBy('nama_item')
+            ->get();
+
+        $klinikList = [
+            'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu',
+            'Pusat Veterinar Jajahan Pasir Mas',
+            'Pusat Veterinar Jajahan Bachok',
+            'Pusat Veterinar Jajahan Machang',
+            'Pusat Veterinar Jajahan Tanah Merah',
+            'Pusat Veterinar Jajahan Pasir Puteh',
+            'Pusat Veterinar Jajahan Tumpat',
+            'Pusat Veterinar Jajahan Kuala Krai',
+            'Pusat Veterinar Jajahan Gua Musang',
+            'Pusat Veterinar Jajahan Jeli'
+        ];
+
+        return view('klinik.ubat.create', compact('items', 'klinikList'));
+    }
+
+    /**
+     * Simpan Permohonan Ubat dari Klinik Haiwan
+     */
+    public function permohonanUbatStore(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->isStaff() || (!$user->canRequestUbat() && !$user->canAccessKlinik())) {
+            abort(403, 'Akses Ditolak: Hanya staf klinik dan pegawai veterinar dibenarkan membuat permohonan bekalan ubat.');
+        }
+
+        $validated = $request->validate([
+            'inventori_item_id' => 'required|exists:inventori_items,id',
+            'kuantiti_dimohon' => 'required|integer|min:1',
+            'klinik_jajahan' => 'required|string|max:255',
+            'tujuan_permohonan' => 'required|string|max:1000',
+            'tarikh_diperlukan' => 'nullable|date',
+            'catatan_pemohon' => 'nullable|string|max:500',
+        ]);
+
+        $item = InventoriItem::findOrFail($validated['inventori_item_id']);
+        if (!$item->isStorUbat()) {
+            return back()->with('error', 'Item yang dipilih bukan daripada Stor Ubat & Farmasi Veterinar.');
+        }
+
+        $noPermohonan = 'REQ-KLN-UBT-' . date('Ymd') . '-' . rand(1000, 9999);
+
+        $permohonan = InventoriPermohonan::create([
+            'no_permohonan' => $noPermohonan,
+            'user_id' => $user->id,
+            'inventori_item_id' => $item->id,
+            'jenis_stor' => 'ubat',
+            'kuantiti_dimohon' => $validated['kuantiti_dimohon'],
+            'unit_bahagian' => $validated['klinik_jajahan'],
+            'tujuan_permohonan' => $validated['tujuan_permohonan'],
+            'tarikh_diperlukan' => $validated['tarikh_diperlukan'] ?? now()->toDateString(),
+            'catatan_pemohon' => $validated['catatan_pemohon'] ?? null,
+            'status' => 'Menunggu Kelulusan',
+        ]);
+
+        // Notifikasi kepada pemohon
+        UserNotification::send(
+            $user->id,
+            'Permohonan Ubat Klinik Dihantar',
+            "Permohonan bekalan ubat '{$item->nama_item}' ({$validated['kuantiti_dimohon']} {$item->unit}) bagi {$validated['klinik_jajahan']} telah berjaya dihantar ke Stor Ubat & Farmasi.",
+            'klinik',
+            route('klinik.permohonan_ubat.index'),
+            'fa-solid fa-pills',
+            'rose'
+        );
+
+        // Notifikasi kepada Admin Stor Ubat
+        $adminUbatList = User::where(function($q) {
+            $q->where('role', 'admin_ubat')
+              ->orWhere('role', 'super_admin')
+              ->orWhereJsonContains('roles', 'admin_ubat');
+        })->get();
+
+        foreach ($adminUbatList as $adminUbat) {
+            UserNotification::send(
+                $adminUbat->id,
+                'Permohonan Ubat Baharu Dari Klinik Haiwan',
+                "Permohonan ubat '{$item->nama_item}' ({$validated['kuantiti_dimohon']} {$item->unit}) diterima daripada {$user->name} ({$validated['klinik_jajahan']}).",
+                'inventori',
+                route('inventori.ubat.permohonan'),
+                'fa-solid fa-pills',
+                'rose'
+            );
+        }
+
+        return redirect()->route('klinik.permohonan_ubat.index')->with('success', "Permohonan ubat '{$item->nama_item}' ({$noPermohonan}) telah berjaya dihantar kepada Stor Ubat & Farmasi.");
+    }
+
+    /**
+     * Batal Permohonan Ubat dari Klinik
+     */
+    public function permohonanUbatBatal($id)
+    {
+        $permohonan = InventoriPermohonan::where('jenis_stor', 'ubat')->findOrFail($id);
+
+        if ($permohonan->user_id !== Auth::id() && !Auth::user()->isSuperAdmin() && !Auth::user()->isAdminKlinik()) {
+            abort(403, 'Akses Ditolak: Anda tidak dibenarkan membatalkan permohonan ini.');
+        }
+
+        if ($permohonan->status !== 'Menunggu Kelulusan') {
+            return back()->with('error', 'Hanya permohonan yang berstatus Menunggu Kelulusan sahaja boleh dibatalkan.');
+        }
+
+        $permohonan->update([
+            'status' => 'Dibatalkan',
+            'catatan_pegawai' => 'Permohonan dibatalkan oleh pemohon klinik pada ' . now()->format('d/m/Y H:i'),
+        ]);
+
+        return back()->with('success', "Permohonan {$permohonan->no_permohonan} telah berjaya dibatalkan.");
     }
 }

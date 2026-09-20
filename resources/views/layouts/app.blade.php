@@ -352,6 +352,11 @@
                         <a href="{{ route('klinik.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('klinik.create') ? 'text-rose-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Tempah Temujanji
                         </a>
+                        @if(Auth::user()->isStaff() && Auth::user()->canAccessKlinik())
+                        <a href="{{ route('klinik.permohonan_ubat.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('klinik.permohonan_ubat.*') ? 'text-rose-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            <i class="fa-solid fa-pills mr-1 text-rose-400"></i> Permohonan Ubat &amp; Farmasi
+                        </a>
+                        @endif
                     </div>
                 </div>
                 @endif

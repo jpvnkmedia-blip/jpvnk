@@ -230,6 +230,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'createRawatan'])->name('rawatan.create');
         Route::post('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'storeRawatan'])->name('rawatan.store');
         Route::get('/temujanji/{id}/kad-rawatan', [KlinikController::class, 'cetakKadRawatan'])->name('cetak-kad-rawatan');
+
+        // Permohonan Ubat & Farmasi dari Klinik Haiwan
+        Route::get('/permohonan-ubat', [KlinikController::class, 'permohonanUbatIndex'])->name('permohonan_ubat.index');
+        Route::get('/permohonan-ubat/baru', [KlinikController::class, 'permohonanUbatCreate'])->name('permohonan_ubat.create');
+        Route::post('/permohonan-ubat', [KlinikController::class, 'permohonanUbatStore'])->name('permohonan_ubat.store');
+        Route::post('/permohonan-ubat/{id}/batal', [KlinikController::class, 'permohonanUbatBatal'])->name('permohonan_ubat.batal');
     });
 
     // 6. MODUL INVENTORI (STOR PERALATAN PEJABAT & STOR UBAT VETERINAR)

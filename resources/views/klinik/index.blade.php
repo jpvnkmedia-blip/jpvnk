@@ -12,10 +12,18 @@
             <h2 class="text-xl font-extrabold text-slate-900">Perkhidmatan Klinik Veterinar & Temujanji</h2>
             <p class="text-xs text-slate-500 mt-0.5">Pemeriksaan kesihatan, diagnosis, rawatan penyakit, vaksinasi, pembedahan kembiri dan rawatan kecemasan</p>
         </div>
-        <a href="{{ route('klinik.create') }}" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-lg shadow-rose-700/30 transition flex items-center gap-2">
-            <i class="fa-solid fa-calendar-plus"></i>
-            <span>Daftar Temujanji Rawatan</span>
-        </a>
+        <div class="flex items-center gap-2.5">
+            @if(Auth::user()->isStaff() && Auth::user()->canAccessKlinik())
+            <a href="{{ route('klinik.permohonan_ubat.index') }}" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-rose-700 border border-rose-200 text-xs font-bold shadow-xs transition flex items-center gap-2">
+                <i class="fa-solid fa-pills text-rose-600"></i>
+                <span>Permohonan Ubat &amp; Farmasi</span>
+            </a>
+            @endif
+            <a href="{{ route('klinik.create') }}" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-lg shadow-rose-700/30 transition flex items-center gap-2">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <span>Daftar Temujanji Rawatan</span>
+            </a>
+        </div>
     </div>
 
     <!-- KPI Summary Pills -->
