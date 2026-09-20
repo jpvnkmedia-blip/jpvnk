@@ -108,8 +108,31 @@ class DashboardController extends Controller
             $totalCourses = Course::where('status', 'Buka')->count();
             $totalCourseApplications = CourseApplication::count();
             $totalClinicAppointments = KlinikTemujanji::count();
-            $totalInventoryItems = InventoriItem::count();
-            $lowStockInventoryCount = InventoriItem::where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok')->count();
+            
+            $totalPejabatItems = InventoriItem::where('jenis_stor', 'pejabat')->count();
+            $lowStockPejabatCount = InventoriItem::where('jenis_stor', 'pejabat')->where(function ($q) {
+                $q->where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok');
+            })->count();
+
+            $totalUbatItems = InventoriItem::where('jenis_stor', 'ubat')->count();
+            $lowStockUbatCount = InventoriItem::where('jenis_stor', 'ubat')->where(function ($q) {
+                $q->where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok');
+            })->count();
+
+            if ($user->role === 'admin_pejabat') {
+                $totalInventoryItems = $totalPejabatItems;
+                $lowStockInventoryCount = $lowStockPejabatCount;
+                $recentInventory = InventoriItem::where('jenis_stor', 'pejabat')->latest()->take(6)->get();
+            } elseif ($user->role === 'admin_ubat') {
+                $totalInventoryItems = $totalUbatItems;
+                $lowStockInventoryCount = $lowStockUbatCount;
+                $recentInventory = InventoriItem::where('jenis_stor', 'ubat')->latest()->take(6)->get();
+            } else {
+                $totalInventoryItems = InventoriItem::count();
+                $lowStockInventoryCount = InventoriItem::where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok')->count();
+                $recentInventory = InventoriItem::latest()->take(6)->get();
+            }
+
             $totalVehicles = Kenderaan::count();
             $availableVehicles = Kenderaan::where('status', 'Sedia')->count();
             $pendingVehicleBookings = KenderaanTempahan::where('status', 'Menunggu')->count();
@@ -120,7 +143,6 @@ class DashboardController extends Controller
             $recentTemujanji = KlinikTemujanji::with('pemilik')->latest()->take(5)->get();
             $recentTempahanKenderaan = KenderaanTempahan::with('pemohon', 'kenderaan')->latest()->take(5)->get();
             $recentSembelehan = PermitSembelihan::with('pemunya', 'ternakan')->latest()->take(5)->get();
-            $recentInventory = InventoriItem::latest()->take(6)->get();
             $recentCourses = Course::withCount('applications')->latest()->take(6)->get();
         } else {
             $totalEpuPendingVerifikasi = 0;
@@ -154,6 +176,10 @@ class DashboardController extends Controller
 
             $totalInventoryItems = 0;
             $lowStockInventoryCount = 0;
+            $totalPejabatItems = 0;
+            $lowStockPejabatCount = 0;
+            $totalUbatItems = 0;
+            $lowStockUbatCount = 0;
             $totalVehicles = 0;
             $availableVehicles = 0;
             $pendingVehicleBookings = 0;
@@ -192,6 +218,10 @@ class DashboardController extends Controller
             'totalClinicAppointments',
             'totalInventoryItems',
             'lowStockInventoryCount',
+            'totalPejabatItems',
+            'lowStockPejabatCount',
+            'totalUbatItems',
+            'lowStockUbatCount',
             'totalVehicles',
             'availableVehicles',
             'pendingVehicleBookings',

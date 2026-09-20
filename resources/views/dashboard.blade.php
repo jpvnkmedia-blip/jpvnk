@@ -1133,7 +1133,7 @@
                     <span class="text-xs font-bold text-slate-400 uppercase">Katalog Pejabat</span>
                 </div>
                 <div>
-                    <div class="text-3xl font-black text-slate-900">{{ $totalInventoryItems }}</div>
+                    <div class="text-3xl font-black text-slate-900">{{ $totalPejabatItems }}</div>
                     <div class="text-sm font-semibold text-slate-700">Barangan Stor Pejabat</div>
                     <div class="text-xs text-indigo-600 font-semibold mt-1">Kertas, Toner & Alat Tulis &rarr;</div>
                 </div>
