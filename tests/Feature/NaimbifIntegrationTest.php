@@ -199,7 +199,7 @@ class NaimbifIntegrationTest extends TestCase
         ]);
 
         // 1. Officer views list
-        $resList = $this->actingAs($officer)->get('/naimbif/urus');
+        $resList = $this->actingAs($officer)->get('/naimbif/urus?q=NB-2026-8888');
         $resList->assertStatus(200);
         $resList->assertSee('NB-2026-8888');
 
@@ -357,7 +357,7 @@ class NaimbifIntegrationTest extends TestCase
         ]);
 
         // State admin views list
-        $response = $this->actingAs($adminNegeri)->get('/naimbif/urus');
+        $response = $this->actingAs($adminNegeri)->get('/naimbif/urus?q=NB-2026-5555');
         $response->assertStatus(200);
         $response->assertSee('NB-2026-5555');
 

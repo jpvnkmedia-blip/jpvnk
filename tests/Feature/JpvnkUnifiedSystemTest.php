@@ -2996,8 +2996,10 @@ class JpvnkUnifiedSystemTest extends TestCase
         $respAdmin->assertStatus(200);
         $respAdmin->assertSee('Direktori Penternak');
         $respAdmin->assertSee('Haji Abdullah bin Ali');
-        $respAdmin->assertSee('Siti Aminah binti Yusof');
         $respAdmin->assertSee('700101035511');
+
+        $respAdminAminah = $this->actingAs($admin)->get('/eptr/penternak?search=Siti+Aminah');
+        $respAdminAminah->assertSee('Siti Aminah binti Yusof');
 
         // 3. Tapis mengikut Carian Nama
         $respSearch = $this->actingAs($admin)->get('/eptr/penternak?search=Abdullah');

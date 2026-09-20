@@ -22,7 +22,7 @@ return new class extends Migration
             // 1. MAKLUMAT PESERTA / PENTERNAK
             $table->string('nama');
             $table->string('no_kp', 20)->index();
-            $table->string('no_telefon', 30);
+            $table->string('no_telefon', 100);
             $table->text('alamat_tetap');
             $table->string('poskod', 10);
             $table->string('jajahan', 50)->index();

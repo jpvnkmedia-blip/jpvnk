@@ -1376,5 +1376,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'Bertugas',
             'catatan' => 'Pemandu operasi Pusat Veterinar Jajahan Pasir Mas.',
         ]);
+
+        $this->call(NaimbifPesertaSeeder::class);
     }
 }
