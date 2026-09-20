@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Pemunya;
 use App\Models\KlinikTemujanji;
 use App\Models\KlinikRawatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Closure;
@@ -159,10 +161,69 @@ class KlinikController extends Controller implements HasMiddleware
         return view('klinik.create', compact('klinikList', 'registeredClients'));
     }
 
+    /**
+     * API Semakan No. Kad Pengenalan Pemilik untuk Auto-fill
+     */
+    public function semakPemilik(Request $request)
+    {
+        $ic = preg_replace('/[^0-9]/', '', $request->get('no_kp', $request->get('ic', '')));
+        if (strlen($ic) < 6) {
+            return response()->json(['found' => false]);
+        }
+
+        // 1. Cari dalam User
+        $user = User::where('ic_number', $ic)
+            ->orWhereRaw("REPLACE(REPLACE(ic_number, '-', ''), ' ', '') = ?", [$ic])
+            ->first();
+
+        // 2. Jika tiada, cari dalam Pemunya
+        $pemunya = null;
+        if (!$user) {
+            $pemunya = Pemunya::where('no_kp', $ic)
+                ->orWhereRaw("REPLACE(REPLACE(no_kp, '-', ''), ' ', '') = ?", [$ic])
+                ->first();
+            if ($pemunya && $pemunya->user_id) {
+                $user = User::find($pemunya->user_id);
+            }
+        }
+
+        // 3. Jika masih tiada, cari dalam rekod klinik temujanji terdahulu
+        if (!$user && !$pemunya) {
+            $pastTemujanji = KlinikTemujanji::with('pemilik')
+                ->whereHas('pemilik', function($q) use ($ic) {
+                    $q->where('ic_number', $ic)
+                      ->orWhereRaw("REPLACE(REPLACE(ic_number, '-', ''), ' ', '') = ?", [$ic]);
+                })
+                ->latest()
+                ->first();
+            if ($pastTemujanji && $pastTemujanji->pemilik) {
+                $user = $pastTemujanji->pemilik;
+            }
+        }
+
+        if ($user || $pemunya) {
+            return response()->json([
+                'found' => true,
+                'user_id' => $user?->id,
+                'nama' => $user?->name ?? $pemunya?->nama,
+                'no_kp' => $user?->ic_number ?? $pemunya?->no_kp ?? $ic,
+                'no_telefon' => $user?->phone ?? $user?->no_telefon ?? $pemunya?->no_telefon ?? '',
+                'emel' => $user?->email ?? '',
+                'alamat' => $user?->address ?? $user?->alamat ?? $pemunya?->alamat ?? '',
+                'jajahan' => $user?->jajahan ?? $pemunya?->jajahan ?? '',
+                'role_label' => $user?->role_label ?? 'Pemilik / Penternak',
+            ]);
+        }
+
+        return response()->json([
+            'found' => false,
+            'no_kp' => $ic,
+        ]);
+    }
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
+        $rules = [
             'jenis_haiwan' => 'required|string',
             'nama_haiwan' => 'nullable|string|max:100',
             'baka' => 'nullable|string|max:100',
@@ -172,11 +233,88 @@ class KlinikController extends Controller implements HasMiddleware
             'tarikh_temujanji' => 'required|date|after_or_equal:today',
             'sesi' => 'required|string',
             'klinik_jajahan' => 'required|string',
-        ]);
+        ];
+
+        if (Auth::user()->isStaff()) {
+            $rules['user_id'] = 'nullable|exists:users,id';
+            $rules['no_kp_pemilik'] = 'nullable|string|max:30';
+            $rules['nama_pemilik'] = 'nullable|string|max:255';
+            $rules['no_telefon_pemilik'] = 'nullable|string|max:30';
+            $rules['emel_pemilik'] = 'nullable|string|max:255';
+            $rules['alamat_pemilik'] = 'nullable|string|max:500';
+            $rules['jajahan_pemilik'] = 'nullable|string|max:100';
+        }
+
+        $validated = $request->validate($rules);
 
         $userId = Auth::id();
-        if (Auth::user()->isStaff() && !empty($validated['user_id'])) {
-            $userId = $validated['user_id'];
+
+        if (Auth::user()->isStaff()) {
+            // 1. Jika admin pilih pengguna berdaftar sedia ada dari dropdown / user_id
+            if (!empty($validated['user_id'])) {
+                $userId = $validated['user_id'];
+            }
+            // 2. Jika admin masukkan No. Kad Pengenalan Pemilik
+            elseif (!empty($validated['no_kp_pemilik'])) {
+                $cleanIc = preg_replace('/[^0-9]/', '', $validated['no_kp_pemilik']);
+
+                // Cari pengguna sedia ada mengikut IC
+                $existingUser = User::where('ic_number', $cleanIc)
+                    ->orWhereRaw("REPLACE(REPLACE(ic_number, '-', ''), ' ', '') = ?", [$cleanIc])
+                    ->first();
+
+                if (!$existingUser) {
+                    $pemunya = Pemunya::where('no_kp', $cleanIc)
+                        ->orWhereRaw("REPLACE(REPLACE(no_kp, '-', ''), ' ', '') = ?", [$cleanIc])
+                        ->first();
+                    if ($pemunya && $pemunya->user_id) {
+                        $existingUser = User::find($pemunya->user_id);
+                    }
+                }
+
+                if (!$existingUser && !empty($validated['emel_pemilik'])) {
+                    $existingUser = User::where('email', $validated['emel_pemilik'])->first();
+                }
+
+                if ($existingUser) {
+                    $userId = $existingUser->id;
+                    // Kemaskini no telefon / alamat jika belum ada
+                    $updateData = [];
+                    if (empty($existingUser->phone) && !empty($validated['no_telefon_pemilik'])) {
+                        $updateData['phone'] = $validated['no_telefon_pemilik'];
+                    }
+                    if (empty($existingUser->address) && !empty($validated['alamat_pemilik'])) {
+                        $updateData['address'] = $validated['alamat_pemilik'];
+                    }
+                    if (!empty($updateData)) {
+                        $existingUser->update($updateData);
+                    }
+                } else {
+                    // Pendaftaran Pengguna Baharu Secara Automatik
+                    $namaPemilik = !empty($validated['nama_pemilik']) ? $validated['nama_pemilik'] : ('Pemilik ' . ($cleanIc ?: 'Awam'));
+                    $email = !empty($validated['emel_pemilik']) 
+                        ? $validated['emel_pemilik'] 
+                        : ('awam_' . ($cleanIc ?: rand(100000, 999999)) . '@awam.jpvnk.gov.my');
+
+                    if (User::where('email', $email)->exists()) {
+                        $email = 'awam_' . ($cleanIc ?: rand(100000, 999999)) . '_' . time() . '@awam.jpvnk.gov.my';
+                    }
+
+                    $newUser = User::create([
+                        'name' => $namaPemilik,
+                        'ic_number' => $cleanIc ?: null,
+                        'email' => $email,
+                        'password' => Hash::make(User::generateDefaultPassword($cleanIc)),
+                        'phone' => $validated['no_telefon_pemilik'] ?? null,
+                        'role' => 'orang_awam',
+                        'jajahan' => $validated['jajahan_pemilik'] ?? $validated['klinik_jajahan'] ?? 'Kota Bharu',
+                        'address' => $validated['alamat_pemilik'] ?? null,
+                        'status' => 'Aktif',
+                    ]);
+
+                    $userId = $newUser->id;
+                }
+            }
         }
 
         $noTemujanji = 'TJ-' . strtoupper(substr($validated['jenis_haiwan'], 0, 3)) . '-' . date('Ymd') . '-' . rand(100, 999);

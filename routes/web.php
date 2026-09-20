@@ -225,6 +225,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [KlinikController::class, 'index'])->name('index');
         Route::get('/temujanji-baru', [KlinikController::class, 'create'])->name('create');
         Route::post('/temujanji-baru', [KlinikController::class, 'store'])->name('store');
+        Route::get('/api/semak-pemilik', [KlinikController::class, 'semakPemilik'])->name('semak_pemilik');
         Route::get('/temujanji/{id}', [KlinikController::class, 'show'])->name('show');
         Route::get('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'createRawatan'])->name('rawatan.create');
         Route::post('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'storeRawatan'])->name('rawatan.store');
