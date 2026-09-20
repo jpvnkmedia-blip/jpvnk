@@ -51,7 +51,8 @@ class UserMultiRolesTest extends TestCase
         $this->assertTrue($user->isAdminPejabat());
         $this->assertTrue($user->canAccessEptr());
         $this->assertTrue($user->canAccessStorUbat());
-        $this->assertTrue($user->canAccessKenderaan());
+        $this->assertTrue($user->canAccessStorPejabat());
+        $this->assertFalse($user->canAccessKenderaan());
         $this->assertTrue($user->hasRole('admin_jajahan'));
         $this->assertTrue($user->hasRole('admin_ubat'));
         $this->assertTrue($user->hasRole('admin_pejabat'));

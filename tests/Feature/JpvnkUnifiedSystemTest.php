@@ -708,9 +708,9 @@ class JpvnkUnifiedSystemTest extends TestCase
         $getInventori = $this->actingAs($adminPejabat)->get('/inventori/pejabat');
         $getInventori->assertStatus(200);
 
-        // 2. Admin Pejabat Boleh Akses Kenderaan Rasmi
+        // 2. Admin Pejabat DISEKAT daripada Modul Kenderaan Rasmi
         $getKenderaan = $this->actingAs($adminPejabat)->get('/kenderaan');
-        $getKenderaan->assertStatus(200);
+        $getKenderaan->assertStatus(403);
 
         // 3. Admin Pejabat Disekat daripada Modul EPTR Ruminan
         $getEptr = $this->actingAs($adminPejabat)->get('/eptr');
@@ -742,15 +742,15 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_kenderaan_tempahan_create_store_show_flow()
     {
-        $adminPejabat = User::where('role', 'admin_pejabat')->first();
+        $staf = User::where('role', 'staf')->first();
 
         // 1. Buka borang tempahan kenderaan baharu
-        $getCreate = $this->actingAs($adminPejabat)->get('/kenderaan/tempahan-baru');
+        $getCreate = $this->actingAs($staf)->get('/kenderaan/tempahan-baru');
         $getCreate->assertStatus(200);
         $getCreate->assertSee('Borang Permohonan Penggunaan Kenderaan');
 
         // 2. Hantar borang tempahan kenderaan
-        $postStore = $this->actingAs($adminPejabat)->post('/kenderaan/tempahan-baru', [
+        $postStore = $this->actingAs($staf)->post('/kenderaan/tempahan-baru', [
             'destinasi' => 'Pusat Veterinar Jajahan Pasir Mas',
             'tujuan' => 'Operasi pemantauan ladang dan logistik veterinar',
             'tarikh_keluar' => date('Y-m-d\TH:i'),
@@ -977,8 +977,8 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_sekatan_tempahan_kenderaan_mengikut_peranan()
     {
-        // 1. Peranan yang DIBENARKAN membuat tempahan: super_admin, admin_pejabat
-        $allowedRoles = ['super_admin', 'admin_pejabat'];
+        // 1. Peranan yang DIBENARKAN membuat tempahan: super_admin, staf, admin_kenderaan
+        $allowedRoles = ['super_admin', 'staf', 'admin_kenderaan'];
         foreach ($allowedRoles as $role) {
             $user = User::where('role', $role)->first();
             if ($user) {
@@ -997,8 +997,8 @@ class JpvnkUnifiedSystemTest extends TestCase
             }
         }
 
-        // 2. Peranan yang DISEKAT daripada modul Kenderaan Rasmi (admin_epu, admin_eptr, admin_program, admin_kursus, admin_jajahan, penternak, usahawan, orang_awam):
-        $blockedVehicleRoles = ['admin_epu', 'admin_eptr', 'admin_program', 'admin_kursus', 'admin_jajahan', 'penternak', 'usahawan', 'orang_awam'];
+        // 2. Peranan yang DISEKAT daripada modul Kenderaan Rasmi (admin_pejabat, admin_epu, admin_eptr, admin_program, admin_kursus, admin_jajahan, penternak, usahawan, orang_awam):
+        $blockedVehicleRoles = ['admin_pejabat', 'admin_epu', 'admin_eptr', 'admin_program', 'admin_kursus', 'admin_jajahan', 'penternak', 'usahawan', 'orang_awam'];
         foreach ($blockedVehicleRoles as $blockedRole) {
             $blockedUser = User::where('role', $blockedRole)->first();
             if ($blockedUser) {

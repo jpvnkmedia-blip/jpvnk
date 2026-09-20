@@ -31,17 +31,19 @@ class StorPejabatKenderaanSeparationTest extends TestCase
         $this->actingAs($adminPejabat)->get(route('inventori.pejabat.create'))->assertStatus(200);
         $this->actingAs($adminPejabat)->get(route('inventori.pejabat.permohonan'))->assertStatus(200);
 
-        // 2. Admin Stor Pejabat boleh buat tempahan kenderaan untuk urusan sendiri, tetapi DISEKAT daripada urusan pengurusan fleet & pemandu
+        // 2. Helper check: Admin Stor Pejabat disekat daripada modul Kenderaan Rasmi
+        $this->assertFalse($adminPejabat->canAccessKenderaan());
+        $this->assertFalse($adminPejabat->canBookVehicle());
+        $this->assertFalse($adminPejabat->canManageKenderaanFleet());
+
+        // 3. Admin Stor Pejabat DISEKAT daripada kesemua laluan modul Kenderaan Rasmi (403 Forbidden)
+        $this->actingAs($adminPejabat)->get(route('kenderaan.index'))->assertStatus(403);
+        $this->actingAs($adminPejabat)->get(route('kenderaan.create'))->assertStatus(403);
         $this->actingAs($adminPejabat)->get(route('kenderaan.fleet'))->assertStatus(403);
         $this->actingAs($adminPejabat)->get(route('kenderaan.pemandu.index'))->assertStatus(403);
-        $this->actingAs($adminPejabat)->get(route('kenderaan.pemandu.create'))->assertStatus(403);
 
-        // 3. Admin Stor Pejabat disekat daripada meluluskan atau menolak tempahan kenderaan
-        $kenderaan = Kenderaan::first();
-        $tempahan = KenderaanTempahan::create([
-            'user_id' => $adminPejabat->id,
-            'no_tempahan' => 'KND-TEST-001',
-            'kenderaan_id' => $kenderaan->id,
+        // 4. Admin Stor Pejabat disekat daripada membuat permohonan tempahan kenderaan (403 Forbidden)
+        $this->actingAs($adminPejabat)->post(route('kenderaan.store'), [
             'destinasi' => 'Machang',
             'tujuan_perjalanan' => 'Urusan rasmi',
             'tarikh_mula' => now()->toDateString(),
@@ -49,16 +51,6 @@ class StorPejabatKenderaanSeparationTest extends TestCase
             'tarikh_tamat' => now()->toDateString(),
             'masa_tamat' => '17:00',
             'bilangan_penumpang' => 2,
-            'status' => 'Menunggu',
-        ]);
-
-        $this->actingAs($adminPejabat)->post(route('kenderaan.approve', $tempahan->id), [
-            'status' => 'Diluluskan',
-            'kenderaan_id' => $kenderaan->id,
-        ])->assertStatus(403);
-
-        $this->actingAs($adminPejabat)->post(route('kenderaan.tolak', $tempahan->id), [
-            'sebab_tolak' => 'Ujian tolak',
         ])->assertStatus(403);
     }
 
