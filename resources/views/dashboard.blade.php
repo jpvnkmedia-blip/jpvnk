@@ -2242,14 +2242,21 @@
             },
             series: [{
                 name: 'Ternakan EPTR',
-                data: [120, 95, 80, 110, 65, 88, 72, 45, 50, 40]
+                data: {!! json_encode($chartEptrData ?? []) !!}
             }, {
                 name: 'Lembu Pawah',
-                data: [35, 28, 20, 32, 18, 24, 20, 12, 15, 10]
+                data: {!! json_encode($chartPawahData ?? []) !!}
             }],
             xaxis: {
-                categories: ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang'],
+                categories: {!! json_encode($jajahanList ?? ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang']) !!},
                 labels: { style: { fontSize: '10px' } }
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(val) {
+                        return Math.floor(val);
+                    }
+                }
             },
             colors: ['#10b981', '#f59e0b'],
             plotOptions: {
@@ -2261,36 +2268,57 @@
             },
             legend: { position: 'top', fontSize: '11px' },
             dataLabels: { enabled: false },
-            grid: { borderColor: '#f1f5f9' }
+            grid: { borderColor: '#f1f5f9' },
+            noData: {
+                text: 'Tiada rekod ternakan ditemui',
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    color: '#94a3b8',
+                    fontSize: '12px'
+                }
+            }
         };
 
-        if (document.querySelector("#eptrChart")) {
-            var chartEptr = new ApexCharts(document.querySelector("#eptrChart"), optionsEptr);
+        document.querySelectorAll("#eptrChart").forEach(function (el) {
+            var chartEptr = new ApexCharts(el, optionsEptr);
             chartEptr.render();
-        }
+        });
 
         // Service Distribution Donut Chart
-        if (document.querySelector("#servicePieChart")) {
-            var optionsPie = {
-                chart: {
-                    type: 'donut',
-                    height: 230,
-                    fontFamily: 'Plus Jakarta Sans, sans-serif',
-                },
-                series: [{{ $totalTernakanEptr }}, {{ $totalPawahActive * 5 }}, {{ $totalEpuFarms * 10 }}, {{ $totalCourses * 8 }}, {{ $totalClinicAppointments * 6 }}],
-                labels: ['EPTR Ruminan', 'Program Pawah', 'EPU Unggas', 'Kursus Ternakan', 'Klinik Haiwan'],
-                colors: ['#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f43f5e'],
-                legend: { position: 'bottom', fontSize: '10px' },
-                dataLabels: { enabled: false },
-                responsive: [{
-                    breakpoint: 480,
-                    options: { chart: { width: 200 }, legend: { position: 'bottom' } }
-                }]
-            };
+        var totalServiceEngagement = {{ (int) ($totalTernakanEptr + $totalTernakanPawah + $totalEpuFarms + $totalCourses + $totalClinicAppointments) }};
+        var optionsPie = {
+            chart: {
+                type: 'donut',
+                height: 230,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+            },
+            series: totalServiceEngagement > 0 
+                ? [{{ (int)$totalTernakanEptr }}, {{ (int)$totalTernakanPawah }}, {{ (int)$totalEpuFarms }}, {{ (int)$totalCourses }}, {{ (int)$totalClinicAppointments }}] 
+                : [],
+            labels: ['EPTR Ruminan', 'Program Pawah', 'EPU Unggas', 'Kursus Ternakan', 'Klinik Haiwan'],
+            colors: ['#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f43f5e'],
+            legend: { position: 'bottom', fontSize: '10px' },
+            dataLabels: { enabled: false },
+            noData: {
+                text: 'Tiada data perkhidmatan aktif',
+                align: 'center',
+                verticalAlign: 'middle',
+                style: {
+                    color: '#94a3b8',
+                    fontSize: '11px'
+                }
+            },
+            responsive: [{
+                breakpoint: 480,
+                options: { chart: { width: 200 }, legend: { position: 'bottom' } }
+            }]
+        };
 
-            var chartPie = new ApexCharts(document.querySelector("#servicePieChart"), optionsPie);
+        document.querySelectorAll("#servicePieChart").forEach(function (el) {
+            var chartPie = new ApexCharts(el, optionsPie);
             chartPie.render();
-        }
+        });
     });
 </script>
 @endpush

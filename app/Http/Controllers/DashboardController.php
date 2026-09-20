@@ -19,6 +19,7 @@ use App\Models\KenderaanTempahan;
 use App\Models\PermitSembelihan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -144,7 +145,42 @@ class DashboardController extends Controller
             $recentTempahanKenderaan = KenderaanTempahan::with('pemohon', 'kenderaan')->latest()->take(5)->get();
             $recentSembelehan = PermitSembelihan::with('pemunya', 'ternakan')->latest()->take(5)->get();
             $recentCourses = Course::withCount('applications')->latest()->take(6)->get();
+
+            $jajahanList = ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang'];
+            $eptrByJajahan = Ternakan::whereNotNull('jajahan')
+                ->groupBy('jajahan')
+                ->select('jajahan', DB::raw('count(*) as total_count'))
+                ->pluck('total_count', 'jajahan')
+                ->toArray();
+
+            $pawahByJajahan = Ternakan::where(function ($q) {
+                    $q->whereNotNull('program')->where('program', '!=', 'Tiada')
+                      ->orWhere('status', 'Pawah');
+                })
+                ->whereNotNull('jajahan')
+                ->groupBy('jajahan')
+                ->select('jajahan', DB::raw('count(*) as total_count'))
+                ->pluck('total_count', 'jajahan')
+                ->toArray();
+
+            $pawahPerjanjianByJajahan = PawahPerjanjian::whereNotNull('jajahan')
+                ->groupBy('jajahan')
+                ->select('jajahan', DB::raw('count(*) as total_count'))
+                ->pluck('total_count', 'jajahan')
+                ->toArray();
+
+            $chartEptrData = [];
+            $chartPawahData = [];
+            foreach ($jajahanList as $j) {
+                $chartEptrData[] = (int) ($eptrByJajahan[$j] ?? 0);
+                $pCount = (int) ($pawahByJajahan[$j] ?? 0);
+                if ($pCount === 0 && isset($pawahPerjanjianByJajahan[$j])) {
+                    $pCount = (int) $pawahPerjanjianByJajahan[$j];
+                }
+                $chartPawahData[] = $pCount;
+            }
         } else {
+            $jajahanList = ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang'];
             $totalEpuPendingVerifikasi = 0;
             $totalEpuPendingPelesen = 0;
             $totalEpuPendingBayaran = 0;
@@ -158,6 +194,14 @@ class DashboardController extends Controller
             })->count();
             $totalKesihatan = $currentPemunya ? \App\Models\ProgramKesihatan::whereHas('ternakan', fn($q) => $q->where('pemunya_id', $currentPemunya->id))->count() : 0;
             $totalPermitSembelihan = $currentPemunya ? PermitSembelihan::where('pemunya_id', $currentPemunya->id)->count() : 0;
+
+            $chartEptrData = array_fill(0, count($jajahanList), 0);
+            $chartPawahData = array_fill(0, count($jajahanList), 0);
+            if ($user->jajahan && in_array($user->jajahan, $jajahanList)) {
+                $idx = array_search($user->jajahan, $jajahanList);
+                $chartEptrData[$idx] = $totalTernakanEptr;
+                $chartPawahData[$idx] = $totalTernakanPawah;
+            }
 
             $totalPawahActive = PawahPerjanjian::where('user_id', $user->id)->where('status', 'Aktif')->count();
             $totalPawahMenunggu = PawahPerjanjian::where('user_id', $user->id)->where('status', 'Menunggu Kelulusan')->count();
@@ -243,7 +287,10 @@ class DashboardController extends Controller
             'recentTempahanKenderaan',
             'recentSembelehan',
             'recentInventory',
-            'recentCourses'
+            'recentCourses',
+            'jajahanList',
+            'chartEptrData',
+            'chartPawahData'
         ));
     }
 }
