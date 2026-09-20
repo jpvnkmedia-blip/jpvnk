@@ -16,6 +16,11 @@ class NaimbifAdminController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+        if (!$user || !$user->canAccessNaimbif() || !$user->isStaff()) {
+            abort(403, 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk mengakses modul pengurusan NAIMbif.');
+        }
+
         $query = NaimbifPermohonan::forUser()->with(['inventoriTernakan', 'disemakOleh', 'diluluskanOleh', 'user', 'pemunya']);
 
         // Filter: Carian teks
@@ -215,6 +220,11 @@ class NaimbifAdminController extends Controller
      */
     public function exportCsv(Request $request)
     {
+        $user = Auth::user();
+        if (!$user || !$user->canAccessNaimbif() || !$user->isStaff()) {
+            abort(403, 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk mengeksport data NAIMbif.');
+        }
+
         $query = NaimbifPermohonan::forUser()->with(['inventoriTernakan', 'disemakOleh', 'diluluskanOleh']);
 
         if ($request->filled('jajahan')) {

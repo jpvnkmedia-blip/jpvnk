@@ -106,6 +106,29 @@ class StorPejabatKenderaanSeparationTest extends TestCase
             'kuantiti_semasa' => 10,
             'kuantiti_minimum' => 2,
         ])->assertStatus(403);
+
+        // 5. Admin Kenderaan DISEKAT daripada modul Program NAIMbif dan Permohonan Stor Staf
+        $this->assertFalse($adminKenderaan->canAccessNaimbif());
+        $this->assertFalse($adminKenderaan->canRequestInventori());
+        $this->assertFalse($adminKenderaan->canRequestAlatanPejabat());
+
+        // Laluan pentadbiran NAIMbif disekat (403)
+        $this->actingAs($adminKenderaan)->get(route('naimbif.admin.index'))->assertStatus(403);
+        $this->actingAs($adminKenderaan)->get(route('naimbif.admin.export'))->assertStatus(403);
+
+        // Laluan Permohonan Stor Staf disekat (403)
+        $this->actingAs($adminKenderaan)->get(route('inventori.permohonan.saya'))->assertStatus(403);
+        $this->actingAs($adminKenderaan)->get(route('inventori.permohonan.pejabat.mohon'))->assertStatus(403);
+        $this->actingAs($adminKenderaan)->get(route('inventori.permohonan.ubat.mohon'))->assertStatus(403);
+
+        // Semak sidebar & dashboard tidak memaparkan Program NAIMbif dan Permohonan Stor Staf
+        $dashboardResp = $this->actingAs($adminKenderaan)->get(route('dashboard'));
+        $dashboardResp->assertStatus(200);
+        $dashboardResp->assertDontSee('Program NAIMbif', false);
+        $dashboardResp->assertDontSee('Permohonan Stor Staf', false);
+        $dashboardResp->assertSee('Admin Kenderaan &amp; Fleet', false);
+        $dashboardResp->assertSee('Kelulusan Tempahan Kenderaan', false);
+        $dashboardResp->assertSee('Pengurusan Fleet Kenderaan', false);
     }
 
     public function test_super_admin_has_full_access_to_both_stor_pejabat_and_kenderaan()

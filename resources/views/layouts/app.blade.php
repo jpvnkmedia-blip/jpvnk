@@ -381,11 +381,16 @@
                 @endif
                 @endif
 
-                @if(Auth::user()->isStaff() && !in_array(Auth::user()->role, ['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu']))
+                @if(Auth::user()->canRequestInventori() || Auth::user()->canAccessStorPejabat() || Auth::user()->canAccessKenderaan())
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
-                    Pengurusan Pejabat &amp; Bekalan
+                    @if(Auth::user()->role === 'admin_kenderaan' && !Auth::user()->canAccessStorPejabat())
+                        Pengurusan Kenderaan &amp; Fleet
+                    @else
+                        Pengurusan Pejabat &amp; Bekalan
+                    @endif
                 </div>
 
+                @if(Auth::user()->canRequestInventori())
                 <!-- Modul Permohonan Bekalan Staf -->
                 <div x-data="{ open: {{ request()->routeIs('inventori.permohonan.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('inventori.permohonan.*') ? 'bg-slate-800 text-emerald-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -409,6 +414,7 @@
                         @endif
                     </div>
                 </div>
+                @endif
 
                 @if(Auth::user()->canAccessStorPejabat())
                 <!-- 6. Stor Peralatan Pejabat (Admin Pejabat & Super Admin) -->

@@ -234,11 +234,11 @@ class NaimbifPermohonan extends Model
     public function canBeAccessedBy(?User $user = null): bool
     {
         $user = $user ?: \Illuminate\Support\Facades\Auth::user();
-        if (!$user) {
+        if (!$user || !$user->canAccessNaimbif()) {
             return false;
         }
 
-        if ($user->isAdmin() || $user->isPengarah() || in_array($user->role, ['admin_eptr', 'admin_program', 'admin_naimbif_negeri', 'admin_naimbif'])) {
+        if ($user->isAdmin() || $user->isPengarah() || in_array($user->role, ['admin_eptr', 'admin_naimbif_negeri', 'admin_naimbif'])) {
             return true;
         }
 

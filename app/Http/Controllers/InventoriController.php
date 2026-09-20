@@ -329,6 +329,11 @@ class InventoriController extends Controller implements HasMiddleware
     public function permohonanSaya(Request $request)
     {
         $user = Auth::user();
+
+        if (!$user || (!$user->canRequestInventori() && !$user->canAccessStorPejabat() && !$user->canAccessStorUbat())) {
+            abort(403, 'Akses Ditolak: Modul Permohonan Stor Staf tidak dibenarkan bagi peranan anda.');
+        }
+
         $query = InventoriPermohonan::where('user_id', $user->id)->with(['item', 'pelulus']);
 
         if ($request->filled('jenis_stor')) {
@@ -356,12 +361,20 @@ class InventoriController extends Controller implements HasMiddleware
 
     public function createPermohonanPejabat()
     {
+        if (!Auth::user()->canRequestAlatanPejabat()) {
+            abort(403, 'Akses Ditolak: Permohonan alatan pejabat tidak dibenarkan bagi peranan anda.');
+        }
+
         $items = InventoriItem::where('jenis_stor', 'pejabat')->where('status', '!=', 'Habis Stok')->orderBy('nama_item')->get();
         return view('inventori.permohonan.create_pejabat', compact('items'));
     }
 
     public function storePermohonanPejabat(Request $request)
     {
+        if (!Auth::user()->canRequestAlatanPejabat()) {
+            abort(403, 'Akses Ditolak: Permohonan alatan pejabat tidak dibenarkan bagi peranan anda.');
+        }
+
         $validated = $request->validate([
             'inventori_item_id' => 'required|exists:inventori_items,id',
             'kuantiti_dimohon' => 'required|integer|min:1',

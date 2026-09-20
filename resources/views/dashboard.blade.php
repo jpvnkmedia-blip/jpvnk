@@ -137,8 +137,21 @@
                         <i class="fa-solid fa-boxes-stacked"></i>
                         <span>Stor Peralatan Pejabat</span>
                     </a>
-                    <a href="{{ route('kenderaan.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
+                @elseif($user->role === 'admin_kenderaan')
+                    <a href="{{ route('kenderaan.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>Kelulusan Tempahan Kenderaan</span>
+                    </a>
+                    <a href="{{ route('kenderaan.fleet') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
                         <i class="fa-solid fa-truck-pickup"></i>
+                        <span>Pengurusan Fleet Kenderaan</span>
+                    </a>
+                    <a href="{{ route('kenderaan.pemandu.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span>Maklumat Pemandu Rasmi</span>
+                    </a>
+                    <a href="{{ route('kenderaan.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow-lg transition">
+                        <i class="fa-solid fa-plus-circle"></i>
                         <span>Tempahan Kenderaan Baharu</span>
                     </a>
                 @elseif($user->role === 'admin_ubat')
@@ -243,7 +256,7 @@
                             <span>Mohon Lesen EPU Unggas</span>
                         </a>
                     @endif
-                    @if(Auth::user()->isStaff())
+                    @if(Auth::user()->canRequestInventori())
                         <a href="{{ route('inventori.permohonan.saya') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">
                             <i class="fa-solid fa-clipboard-list"></i>
                             <span>Permohonan Bekalan Stor</span>
