@@ -60,6 +60,18 @@ class UserController extends Controller implements HasMiddleware
                     'badge' => 'bg-orange-100 text-orange-800 border-orange-300',
                     'icon' => 'fa-feather text-orange-600',
                 ],
+                'admin_naimbif_negeri' => [
+                    'label' => 'Admin NAIMbif Negeri',
+                    'desc' => 'Kelulusan rasmi geran/program Ladang Bridlot Pedaging NAIMbif peringkat negeri.',
+                    'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    'icon' => 'fa-cow text-emerald-600',
+                ],
+                'admin_naimbif_jajahan' => [
+                    'label' => 'Admin NAIMbif Jajahan',
+                    'desc' => 'Siasatan premis, verifikasi ladang bridlot dan perakuan syor mengikut Jajahan.',
+                    'badge' => 'bg-teal-100 text-teal-800 border-teal-300',
+                    'icon' => 'fa-clipboard-check text-teal-600',
+                ],
                 'admin_kursus' => [
                     'label' => 'Admin Kursus',
                     'desc' => 'Penerbitan modul latihan, jadual kursus penternakan dan pengurusan peserta.',
@@ -135,6 +147,8 @@ class UserController extends Controller implements HasMiddleware
         if ($request->filled('role') && $request->role !== 'semua') {
             if ($request->role === 'admin_jajahan') {
                 $query->whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan']);
+            } elseif ($request->role === 'admin_naimbif_negeri') {
+                $query->whereIn('role', ['admin_naimbif_negeri', 'admin_naimbif']);
             } else {
                 $query->where('role', $request->role);
             }
@@ -157,7 +171,8 @@ class UserController extends Controller implements HasMiddleware
         $totalStaff = User::whereIn('role', [
             'super_admin', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
             'admin_program', 'admin_epu', 'admin_kursus', 'admin_ubat',
-            'admin_klinik', 'admin_pejabat', 'staf'
+            'admin_klinik', 'admin_pejabat', 'admin_naimbif_negeri', 'admin_naimbif',
+            'admin_naimbif_jajahan', 'staf'
         ])->count();
         $totalPenternak = User::where('role', 'penternak')->count();
         $totalUsahawan = User::where('role', 'usahawan')->count();

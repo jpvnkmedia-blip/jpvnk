@@ -216,7 +216,7 @@ class NaimbifPermohonan extends Model
     public function scopeForUser($query, ?User $user = null)
     {
         $user = $user ?: \Illuminate\Support\Facades\Auth::user();
-        if ($user && in_array($user->role, ['admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) && !empty($user->jajahan)) {
+        if ($user && in_array($user->role, ['admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan', 'admin_naimbif_jajahan']) && !empty($user->jajahan)) {
             return $query->where(function ($q) use ($user) {
                 $q->where('jajahan_ladang', $user->jajahan)
                   ->orWhere(function ($sq) use ($user) {
@@ -238,11 +238,11 @@ class NaimbifPermohonan extends Model
             return false;
         }
 
-        if ($user->isAdmin() || $user->isPengarah() || in_array($user->role, ['admin_eptr', 'admin_program'])) {
+        if ($user->isAdmin() || $user->isPengarah() || in_array($user->role, ['admin_eptr', 'admin_program', 'admin_naimbif_negeri', 'admin_naimbif'])) {
             return true;
         }
 
-        if (in_array($user->role, ['admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) && !empty($user->jajahan)) {
+        if (in_array($user->role, ['admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan', 'admin_naimbif_jajahan']) && !empty($user->jajahan)) {
             $appJajahan = $this->jajahan_ladang ?: $this->jajahan;
             return $appJajahan === $user->jajahan || $this->jajahan === $user->jajahan;
         }

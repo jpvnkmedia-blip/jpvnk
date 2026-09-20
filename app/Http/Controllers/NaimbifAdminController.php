@@ -160,8 +160,12 @@ class NaimbifAdminController extends Controller
     public function updateNegeri(Request $request, $id)
     {
         $user = Auth::user();
-        if (!$user->isAdmin() && !$user->isPengarah() && !in_array($user->role, ['admin_eptr', 'admin_program'])) {
-            return redirect()->back()->with('error', 'Akses Disekat: Ruangan Keputusan Negeri hanya boleh dikemaskini oleh Pegawai Ibu Pejabat / Pengarah.');
+        if (!$user->isPegawaiNegeri() && !$user->isAdminNaimbifNegeri()) {
+            return redirect()->back()->with('error', 'Akses Disekat: Ruangan Keputusan Negeri hanya boleh dikemaskini oleh Pegawai Ibu Pejabat / Admin Negeri / Pengarah.');
+        }
+
+        if (in_array($user->role, ['admin_naimbif_jajahan', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) && !$user->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'Akses Disekat: Pegawai Jajahan hanya dibenarkan membuat semakan dan syor jajahan sahaja.');
         }
 
         $application = NaimbifPermohonan::findOrFail($id);
@@ -294,8 +298,8 @@ class NaimbifAdminController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        if (!$user->isAdmin() && !$user->isPengarah()) {
-            return redirect()->back()->with('error', 'Akses Disekat: Hanya Pentadbir Utama dibenarkan memadam permohonan.');
+        if (!$user->isAdminNaimbifNegeri() && !$user->isAdmin() && !$user->isPengarah()) {
+            return redirect()->back()->with('error', 'Akses Disekat: Hanya Pentadbir Negeri / Super Admin dibenarkan memadam permohonan.');
         }
 
         $application = NaimbifPermohonan::findOrFail($id);

@@ -52,7 +52,16 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin_eptr', 'admin_program', 'admin_jajahan', 'admin_eptr_jajahan']);
+        return in_array($this->role, [
+            'super_admin',
+            'admin_eptr',
+            'admin_program',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+            'admin_naimbif_jajahan',
+        ]);
     }
 
     public function isPengarah(): bool
@@ -67,6 +76,7 @@ class User extends Authenticatable
             'pegawai_jajahan',
             'admin_jajahan',
             'admin_eptr_jajahan',
+            'admin_naimbif_jajahan',
         ]);
     }
 
@@ -77,6 +87,39 @@ class User extends Authenticatable
             'pengarah',
             'admin_eptr',
             'admin_program',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+        ]);
+    }
+
+    public function isAdminNaimbifNegeri(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pengarah',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+        ]);
+    }
+
+    public function isAdminNaimbifJajahan(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'admin_naimbif_jajahan',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+        ]);
+    }
+
+    public function isAdminNaimbif(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pengarah',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+            'admin_naimbif_jajahan',
         ]);
     }
 
@@ -197,6 +240,9 @@ class User extends Authenticatable
             'admin_ubat',
             'admin_jajahan',
             'admin_eptr_jajahan',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+            'admin_naimbif_jajahan',
             'penternak',
             'usahawan',
             'orang_awam'
@@ -351,6 +397,9 @@ class User extends Authenticatable
             'admin_kursus',
             'admin_jajahan',
             'admin_eptr_jajahan',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+            'admin_naimbif_jajahan',
             'staf',
         ]);
     }
@@ -382,6 +431,8 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu', 'admin_epu_jajahan' => 'Pegawai Verifikasi EPU (PPVJ ' . ($this->jajahan ?? 'Jajahan') . ')',
             'admin_kursus' => 'Admin Kursus',
             'admin_jajahan', 'admin_eptr_jajahan' => 'Admin EPTR Jajahan (' . ($this->jajahan ?? 'Kelantan') . ')',
+            'admin_naimbif_negeri', 'admin_naimbif' => 'Admin NAIMbif Negeri',
+            'admin_naimbif_jajahan' => 'Admin NAIMbif Jajahan (' . ($this->jajahan ?? 'Kelantan') . ')',
             'staf' => 'Kakitangan Jabatan (Staf Biasa)',
             'penternak' => 'Penternak Ruminan / Ternakan',
             'usahawan' => 'Usahawan Unggas & Ladang',

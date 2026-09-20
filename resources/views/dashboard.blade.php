@@ -37,6 +37,10 @@
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin EPTR Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Pendaftaran Ternakan Ruminan (EPTR)</span>, verifikasi &amp; kelulusan tag telinga, permit sembelihan, kelulusan permit pemindahan ternakan dan pengurusan kesihatan bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
                 @elseif($user->role === 'admin_program')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin Program Pawah</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Skim Bantuan Pawah Ternakan</span>, pendaftaran perjanjian pawah, kelulusan permohonan awam, pemantauan kelahiran anak, dan proses penyelesaian pawah JPVNK.
+                @elseif($user->role === 'admin_naimbif_negeri' || $user->role === 'admin_naimbif')
+                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin NAIMbif Negeri</span>. Anda bertanggungjawab menguruskan permohonan, semakan penilaian, dan kelulusan geran/bantuan <span class="text-white font-semibold">Program Ladang Bridlot Pedaging NAIMbif</span> peringkat Negeri Kelantan.
+                @elseif($user->role === 'admin_naimbif_jajahan')
+                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin NAIMbif Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab melaksanakan siasatan premis ternakan, verifikasi kandang &amp; padang ragut, penetapan ID premis, dan perakuan syor permohonan Ladang Bridlot bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
                 @else
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">{{ $user->role_label }}</span>. Sistem ini membolehkan pengurusan bersepadu bagi semua perkhidmatan veterinar di bawah satu akaun berpusat.
                 @endif
@@ -60,7 +64,33 @@
                         <span>Pengurusan Pengguna</span>
                     </a>
                 @endif
-                @if($user->role === 'admin_eptr' || $user->role === 'admin_jajahan' || $user->role === 'admin_eptr_jajahan')
+                @if($user->role === 'admin_naimbif_negeri' || $user->role === 'admin_naimbif')
+                    <a href="{{ route('naimbif.admin.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition">
+                        <i class="fa-solid fa-cow"></i>
+                        <span>Senarai Permohonan NAIMbif ({{ $totalNaimbifApps }})</span>
+                    </a>
+                    <a href="{{ route('naimbif.admin.index', ['status' => 'Disokong']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-900/40 transition">
+                        <i class="fa-solid fa-stamp"></i>
+                        <span>Menunggu Kelulusan Negeri ({{ $totalNaimbifMenungguNegeri }})</span>
+                    </a>
+                    <a href="{{ route('naimbif.admin.index', ['status' => 'Lulus']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Permohonan Lulus ({{ $totalNaimbifLulus }})</span>
+                    </a>
+                @elseif($user->role === 'admin_naimbif_jajahan')
+                    <a href="{{ route('naimbif.admin.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition">
+                        <i class="fa-solid fa-cow"></i>
+                        <span>Permohonan Jajahan {{ $user->jajahan }} ({{ $totalNaimbifApps }})</span>
+                    </a>
+                    <a href="{{ route('naimbif.admin.index', ['status' => 'Dalam Semakan']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
+                        <i class="fa-solid fa-clipboard-question"></i>
+                        <span>Perlu Siasatan Premis ({{ $totalNaimbifMenungguJajahan }})</span>
+                    </a>
+                    <a href="{{ route('naimbif.public.apply') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>Borang Permohonan Awam</span>
+                    </a>
+                @elseif($user->role === 'admin_eptr' || $user->role === 'admin_jajahan' || $user->role === 'admin_eptr_jajahan')
                     <a href="{{ route('eptr.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition">
                         <i class="fa-solid fa-cow"></i>
                         <span>Senarai Ternakan (EPTR)</span>

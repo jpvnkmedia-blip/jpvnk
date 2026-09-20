@@ -139,6 +139,13 @@ class DashboardController extends Controller
             $pendingVehicleBookings = KenderaanTempahan::where('status', 'Menunggu')->count();
             $totalUsers = User::count();
 
+            // NAIMbif Program Metrics (Staff / Admin)
+            $totalNaimbifApps = \App\Models\NaimbifPermohonan::forUser()->count();
+            $totalNaimbifLulus = \App\Models\NaimbifPermohonan::forUser()->where('status_negeri', 'Lulus')->count();
+            $totalNaimbifMenungguJajahan = \App\Models\NaimbifPermohonan::forUser()->where('syor_permohonan', 'Belum Disemak')->count();
+            $totalNaimbifMenungguNegeri = \App\Models\NaimbifPermohonan::forUser()->where('syor_permohonan', 'Disokong')->where('status_negeri', 'Menunggu Kelulusan')->count();
+            $recentNaimbif = \App\Models\NaimbifPermohonan::forUser()->with('inventoriTernakan')->latest()->take(6)->get();
+
             $recentPawah = PawahPerjanjian::with('peserta', 'ternakanList')->latest()->take(5)->get();
             $recentEpu = (clone $epuQuery)->with('ladang.pemilik', 'pegawaiVerifikasi')->latest()->take(8)->get();
             $recentTemujanji = KlinikTemujanji::with('pemilik')->latest()->take(5)->get();
@@ -220,6 +227,8 @@ class DashboardController extends Controller
 
             $totalInventoryItems = 0;
             $lowStockInventoryCount = 0;
+            $totalInventoryItems = 0;
+            $lowStockInventoryCount = 0;
             $totalPejabatItems = 0;
             $lowStockPejabatCount = 0;
             $totalUbatItems = 0;
@@ -228,6 +237,12 @@ class DashboardController extends Controller
             $availableVehicles = 0;
             $pendingVehicleBookings = 0;
             $totalUsers = 1;
+
+            $totalNaimbifApps = \App\Models\NaimbifPermohonan::forUser()->count();
+            $totalNaimbifLulus = \App\Models\NaimbifPermohonan::forUser()->where('status_negeri', 'Lulus')->count();
+            $totalNaimbifMenungguJajahan = \App\Models\NaimbifPermohonan::forUser()->where('syor_permohonan', 'Belum Disemak')->count();
+            $totalNaimbifMenungguNegeri = \App\Models\NaimbifPermohonan::forUser()->where('syor_permohonan', 'Disokong')->where('status_negeri', 'Menunggu Kelulusan')->count();
+            $recentNaimbif = \App\Models\NaimbifPermohonan::forUser()->with('inventoriTernakan')->latest()->take(6)->get();
 
             $recentTernakan = $myTernakan;
             $recentPawah = $myPawah;
@@ -270,6 +285,11 @@ class DashboardController extends Controller
             'availableVehicles',
             'pendingVehicleBookings',
             'totalUsers',
+            'totalNaimbifApps',
+            'totalNaimbifLulus',
+            'totalNaimbifMenungguJajahan',
+            'totalNaimbifMenungguNegeri',
+            'recentNaimbif',
             'myTernakan',
             'myPawah',
             'myFarms',

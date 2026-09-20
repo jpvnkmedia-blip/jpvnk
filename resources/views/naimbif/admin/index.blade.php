@@ -1,10 +1,63 @@
 @extends('layouts.app')
 
-@section('title', Auth::user()->role === 'pegawai_jajahan' ? 'Permohonan JPV ' . Auth::user()->jajahan : 'Senarai Permohonan')
-@section('page-title', Auth::user()->role === 'pegawai_jajahan' ? 'Pengurusan Permohonan Ladang Bridlot (Pejabat JPV Jajahan ' . Auth::user()->jajahan . ')' : 'Pengurusan Permohonan Ladang Bridlot')
+@section('title', in_array(Auth::user()->role, ['admin_naimbif_jajahan', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) ? 'Permohonan Ladang JPV ' . (Auth::user()->jajahan ?? 'Jajahan') : 'Pengurusan Program NAIMbif Negeri')
+@section('page-title', in_array(Auth::user()->role, ['admin_naimbif_jajahan', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) ? 'Pengurusan Permohonan Ladang Bridlot (Pejabat JPV Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') . ')' : 'Pengurusan Program NAIMbif (Ladang Bridlot Pedaging)')
 
 @section('content')
 <div class="space-y-6">
+
+    <!-- Top Role Banner & Quick Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Metric 1: Jumlah Permohonan -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Jumlah Permohonan</span>
+                <span class="text-2xl font-black text-slate-900 mt-1 block font-mono">{{ $totalApps }}</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 block">
+                    {{ in_array(Auth::user()->role, ['admin_naimbif_jajahan', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) ? 'Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') : 'Seluruh Negeri Kelantan' }}
+                </span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner">
+                <i class="fa-solid fa-cow"></i>
+            </div>
+        </div>
+
+        <!-- Metric 2: Menunggu Siasatan Jajahan -->
+        <a href="{{ route('naimbif.admin.index', ['status' => 'Dalam Semakan']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between hover:border-amber-400 hover:shadow-md transition group">
+            <div>
+                <span class="text-xs font-bold text-amber-700 uppercase tracking-wider block">Menunggu Siasatan Jajahan</span>
+                <span class="text-2xl font-black text-amber-600 mt-1 block font-mono">{{ $totalMenungguJajahan }}</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 block group-hover:text-amber-600 transition">Perlu siasatan premis &amp; syor</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition">
+                <i class="fa-solid fa-clipboard-question"></i>
+            </div>
+        </a>
+
+        <!-- Metric 3: Menunggu Kelulusan Negeri -->
+        <a href="{{ route('naimbif.admin.index', ['status' => 'Disokong']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between hover:border-blue-400 hover:shadow-md transition group">
+            <div>
+                <span class="text-xs font-bold text-blue-700 uppercase tracking-wider block">Disokong (Menunggu HQ)</span>
+                <span class="text-2xl font-black text-blue-600 mt-1 block font-mono">{{ $totalMenungguNegeri }}</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 block group-hover:text-blue-600 transition">Tindakan kelulusan Negeri</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition">
+                <i class="fa-solid fa-stamp"></i>
+            </div>
+        </a>
+
+        <!-- Metric 4: Permohonan Diluluskan -->
+        <a href="{{ route('naimbif.admin.index', ['status' => 'Lulus']) }}" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between hover:border-emerald-400 hover:shadow-md transition group">
+            <div>
+                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block">Permohonan Lulus</span>
+                <span class="text-2xl font-black text-emerald-600 mt-1 block font-mono">{{ $totalLulus }}</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 block group-hover:text-emerald-600 transition">Peserta rasmi ladang bridlot</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-inner group-hover:scale-105 transition">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+        </a>
+    </div>
 
     <!-- Filters & Actions Header -->
     <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
@@ -22,12 +75,15 @@
             <!-- Jajahan Filter -->
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Jajahan</label>
-                @if(Auth::user()->role === 'pegawai_jajahan')
-                    <input type="text" value="Jajahan {{ Auth::user()->jajahan }}" readonly
-                           class="w-full px-3 py-2 text-xs rounded-xl border border-emerald-300 bg-emerald-50 font-bold text-emerald-800 cursor-not-allowed">
+                @if(in_array(Auth::user()->role, ['admin_naimbif_jajahan', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) && Auth::user()->jajahan)
+                    <div class="relative">
+                        <input type="text" value="Jajahan {{ Auth::user()->jajahan }} (Terkunci)" readonly
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-emerald-300 bg-emerald-50 font-bold text-emerald-800 cursor-not-allowed">
+                        <i class="fas fa-lock absolute right-3 top-2.5 text-emerald-600 text-xs"></i>
+                    </div>
                 @else
                     <select name="jajahan" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-emerald-500">
-                        <option value="">-- Semua Jajahan --</option>
+                        <option value="">-- Semua Jajahan (Negeri) --</option>
                         @foreach($jajahans as $j)
                             <option value="{{ $j }}" {{ request('jajahan') == $j ? 'selected' : '' }}>{{ $j }}</option>
                         @endforeach
@@ -41,16 +97,16 @@
                 <select name="status" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-emerald-500">
                     <option value="">-- Semua Status --</option>
                     <option value="Dalam Semakan" {{ request('status') == 'Dalam Semakan' ? 'selected' : '' }}>Dalam Semakan (Jajahan)</option>
-                    <option value="Disokong" {{ request('status') == 'Disokong' ? 'selected' : '' }}>Disokong (Menunggu Jabatan)</option>
+                    <option value="Disokong" {{ request('status') == 'Disokong' ? 'selected' : '' }}>Disokong (Menunggu HQ Negeri)</option>
                     <option value="Tidak Disokong" {{ request('status') == 'Tidak Disokong' ? 'selected' : '' }}>Tidak Disokong Jajahan</option>
-                    <option value="Lulus" {{ request('status') == 'Lulus' ? 'selected' : '' }}>Lulus Jabatan</option>
+                    <option value="Lulus" {{ request('status') == 'Lulus' ? 'selected' : '' }}>Lulus Jabatan (Negeri)</option>
                     <option value="Gagal" {{ request('status') == 'Gagal' ? 'selected' : '' }}>Ditolak Jabatan</option>
                 </select>
             </div>
 
             <!-- Filter Buttons -->
             <div class="flex items-end space-x-2">
-                <button type="submit" class="flex-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center">
+                <button type="submit" class="flex-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center shadow-sm">
                     <i class="fas fa-filter mr-1.5"></i> Tapis Rekod
                 </button>
                 <a href="{{ route('naimbif.admin.index') }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200">

@@ -307,4 +307,168 @@ class NaimbifIntegrationTest extends TestCase
         $response->assertSee('Latif Bin Yusof');
         $response->assertSee('NAIMbif (Ladang Bridlot)');
     }
+
+    public function test_admin_naimbif_negeri_can_view_all_and_approve_state_decision()
+    {
+        $adminNegeri = User::where('role', 'admin_naimbif_negeri')->first();
+        if (!$adminNegeri) {
+            $adminNegeri = User::create([
+                'name' => 'Dr. Noor Azlina binti Mat Zin',
+                'email' => 'adminnaimbif.test@veterinar.kelantan.gov.my',
+                'ic_number' => '840505036677',
+                'phone' => '019-9554433',
+                'address' => 'Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_naimbif_negeri',
+                'status' => 'Aktif',
+                'password' => bcrypt('password'),
+            ]);
+        }
+
+        $app = NaimbifPermohonan::create([
+            'no_rujukan' => 'NB-2026-5555',
+            'nama' => 'Mustafa Bin Hassan',
+            'no_kp' => '800505034444',
+            'no_telefon' => '0139991122',
+            'alamat_tetap' => 'Pasir Puteh',
+            'poskod' => '16800',
+            'jajahan' => 'Pasir Puteh',
+            'pengalaman_menternak' => 7,
+            'status_penternakan' => 'Sepenuh Masa',
+            'pernah_kursus' => true,
+            'nama_kursus' => 'Pembiakan Lembu Pedaging',
+            'anjuran_kursus' => 'JPVNK',
+            'alamat_ladang' => 'Gong Kulim, Pasir Puteh',
+            'poskod_ladang' => '16800',
+            'jajahan_ladang' => 'Pasir Puteh',
+            'keluasan_tanah' => 20,
+            'status_tanah' => 'Sendiri',
+            'padang_ragut' => 'Ada',
+            'bilangan_pekerja' => 3,
+            'punca_ternakan' => 'Beli',
+            'kaedah_pembiakan' => 'Permanian Beradas',
+            'syor_permohonan' => 'Disokong',
+            'status_kelengkapan' => 'Lengkap',
+            'pegawai_penyiasat' => 'Pegawai Jajahan Pasir Puteh',
+            'tarikh_siasatan' => '2026-09-20',
+            'status_negeri' => 'Menunggu Kelulusan',
+            'pengakuan_benar' => true,
+            'tarikh_permohonan' => '2026-09-20',
+        ]);
+
+        // State admin views list
+        $response = $this->actingAs($adminNegeri)->get('/naimbif/urus');
+        $response->assertStatus(200);
+        $response->assertSee('NB-2026-5555');
+
+        // State admin approves application
+        $resApprove = $this->actingAs($adminNegeri)->put('/naimbif/urus/' . $app->id . '/negeri', [
+            'status_negeri' => 'Lulus',
+            'ulasan_negeri' => 'Diluluskan oleh Jawatankuasa NAIMbif Negeri.',
+        ]);
+        $resApprove->assertRedirect();
+
+        $app->refresh();
+        $this->assertEquals('Lulus', $app->status_negeri);
+        $this->assertEquals($adminNegeri->id, $app->diluluskan_oleh_user_id);
+    }
+
+    public function test_admin_naimbif_jajahan_scoped_to_district_and_blocked_from_state_approval()
+    {
+        $adminPasirPuteh = User::where('role', 'admin_naimbif_jajahan')->where('jajahan', 'Pasir Puteh')->first();
+        if (!$adminPasirPuteh) {
+            $adminPasirPuteh = User::create([
+                'name' => 'En. Khairul Anuar bin Mohd Zain',
+                'email' => 'naimbif.pp@veterinar.kelantan.gov.my',
+                'ic_number' => '860202035588',
+                'phone' => '019-9665544',
+                'address' => 'PPVJ Pasir Puteh',
+                'jajahan' => 'Pasir Puteh',
+                'role' => 'admin_naimbif_jajahan',
+                'status' => 'Aktif',
+                'password' => bcrypt('password'),
+            ]);
+        }
+
+        // Permohonan Jajahan Pasir Puteh
+        $appPasirPuteh = NaimbifPermohonan::create([
+            'no_rujukan' => 'NB-2026-1111',
+            'nama' => 'Penternak Pasir Puteh',
+            'no_kp' => '850101031111',
+            'no_telefon' => '0191112233',
+            'alamat_tetap' => 'Cherang Ruku, Pasir Puteh',
+            'poskod' => '16800',
+            'jajahan' => 'Pasir Puteh',
+            'pengalaman_menternak' => 5,
+            'status_penternakan' => 'Sepenuh Masa',
+            'pernah_kursus' => false,
+            'alamat_ladang' => 'Cherang Ruku, Pasir Puteh',
+            'poskod_ladang' => '16800',
+            'jajahan_ladang' => 'Pasir Puteh',
+            'keluasan_tanah' => 10,
+            'status_tanah' => 'Sendiri',
+            'padang_ragut' => 'Ada',
+            'bilangan_pekerja' => 1,
+            'punca_ternakan' => 'Beli',
+            'kaedah_pembiakan' => 'Asli',
+            'syor_permohonan' => 'Belum Disemak',
+            'status_negeri' => 'Menunggu Kelulusan',
+            'pengakuan_benar' => true,
+            'tarikh_permohonan' => '2026-09-20',
+        ]);
+
+        // Permohonan Jajahan Machang (Lain Jajahan)
+        $appMachang = NaimbifPermohonan::create([
+            'no_rujukan' => 'NB-2026-2222',
+            'nama' => 'Penternak Machang',
+            'no_kp' => '850202032222',
+            'no_telefon' => '0192223344',
+            'alamat_tetap' => 'Ulu Sat, Machang',
+            'poskod' => '18500',
+            'jajahan' => 'Machang',
+            'pengalaman_menternak' => 3,
+            'status_penternakan' => 'Sepenuh Masa',
+            'pernah_kursus' => false,
+            'alamat_ladang' => 'Ulu Sat, Machang',
+            'poskod_ladang' => '18500',
+            'jajahan_ladang' => 'Machang',
+            'keluasan_tanah' => 8,
+            'status_tanah' => 'Sendiri',
+            'padang_ragut' => 'Ada',
+            'bilangan_pekerja' => 1,
+            'punca_ternakan' => 'Beli',
+            'kaedah_pembiakan' => 'Asli',
+            'syor_permohonan' => 'Belum Disemak',
+            'status_negeri' => 'Menunggu Kelulusan',
+            'pengakuan_benar' => true,
+            'tarikh_permohonan' => '2026-09-20',
+        ]);
+
+        // 1. Admin Pasir Puteh sees Pasir Puteh app but NOT Machang app
+        $resList = $this->actingAs($adminPasirPuteh)->get('/naimbif/urus');
+        $resList->assertStatus(200);
+        $resList->assertSee('NB-2026-1111');
+        $resList->assertDontSee('NB-2026-2222');
+
+        // 2. Admin Pasir Puteh can verify their district application
+        $resVerify = $this->actingAs($adminPasirPuteh)->put('/naimbif/urus/' . $appPasirPuteh->id . '/jajahan', [
+            'id_premis' => 'PRM-PP-005',
+            'syor_permohonan' => 'Disokong',
+            'status_kelengkapan' => 'Lengkap',
+            'pegawai_penyiasat' => $adminPasirPuteh->name,
+            'catatan_jajahan' => 'Kandang dan pagar sangat selamat.',
+        ]);
+        $resVerify->assertRedirect();
+
+        $appPasirPuteh->refresh();
+        $this->assertEquals('Disokong', $appPasirPuteh->syor_permohonan);
+        $this->assertEquals('PRM-PP-005', $appPasirPuteh->id_premis);
+
+        // 3. Admin Pasir Puteh is BLOCKED from making state decision
+        $resState = $this->actingAs($adminPasirPuteh)->put('/naimbif/urus/' . $appPasirPuteh->id . '/negeri', [
+            'status_negeri' => 'Lulus',
+            'ulasan_negeri' => 'Cuba luluskan sebagai pegawai jajahan.',
+        ]);
+        $resState->assertSessionHas('error');
+    }
 }

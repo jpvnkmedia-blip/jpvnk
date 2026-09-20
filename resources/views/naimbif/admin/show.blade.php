@@ -31,17 +31,19 @@
 
         <div class="flex items-center space-x-3">
             <a href="{{ route('naimbif.public.print', $application->no_rujukan) }}" target="_blank"
-               class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors flex items-center">
+               class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors flex items-center shadow-sm">
                 <i class="fas fa-print mr-2 text-slate-600"></i> Cetak Borang A4 Rasmi
             </a>
             
+            @if(Auth::user()->isSuperAdmin() || Auth::user()->isAdminNaimbifNegeri())
             <form action="{{ route('naimbif.admin.destroy', $application->id) }}" method="POST" onsubmit="return confirm('Adakah anda pasti ingin memadam rekod permohonan ini? Tindakan ini tidak boleh diundur.')">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors">
+                <button type="submit" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors shadow-sm" title="Padam Permohonan">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </form>
+            @endif
         </div>
     </div>
 

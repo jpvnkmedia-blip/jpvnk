@@ -119,6 +119,48 @@ class DatabaseSeeder extends Seeder
             'password' => $password,
         ]);
 
+        // Admin NAIMbif Negeri (Ibu Pejabat JPVNK)
+        $adminNaimbifNegeri = User::create([
+            'name' => 'Dr. Noor Azlina binti Mat Zin',
+            'email' => 'adminnaimbif@veterinar.kelantan.gov.my',
+            'ic_number' => '840505036677',
+            'phone' => '019-9554433',
+            'address' => 'Unit Pembangunan Komoditi Pedaging & Ladang Bridlot NAIMbif, Ibu Pejabat JPVNK Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'role' => 'admin_naimbif_negeri',
+            'auth_provider' => 'manual',
+            'status' => 'Aktif',
+            'password' => $password,
+        ]);
+
+        // Admin NAIMbif Jajahan (Pasir Puteh)
+        $adminNaimbifPasirPuteh = User::create([
+            'name' => 'En. Khairul Anuar bin Mohd Zain',
+            'email' => 'naimbif.pasirputeh@veterinar.kelantan.gov.my',
+            'ic_number' => '860202035588',
+            'phone' => '019-9665544',
+            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh, 16800 Pasir Puteh',
+            'jajahan' => 'Pasir Puteh',
+            'role' => 'admin_naimbif_jajahan',
+            'auth_provider' => 'manual',
+            'status' => 'Aktif',
+            'password' => $password,
+        ]);
+
+        // Admin NAIMbif Jajahan (Kota Bharu)
+        $adminNaimbifKotaBharu = User::create([
+            'name' => 'Pn. Norazila binti Hassan',
+            'email' => 'naimbif.kotabharu@veterinar.kelantan.gov.my',
+            'ic_number' => '870303035599',
+            'phone' => '019-9776655',
+            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu, 15200 Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'role' => 'admin_naimbif_jajahan',
+            'auth_provider' => 'manual',
+            'status' => 'Aktif',
+            'password' => $password,
+        ]);
+
         // Pegawai Pelesen / Pengarah (EPU)
         $pegawaiPelesen = User::firstOrCreate(
             ['ic_number' => '780410035123'],
