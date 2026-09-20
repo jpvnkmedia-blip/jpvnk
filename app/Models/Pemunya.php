@@ -37,4 +37,9 @@ class Pemunya extends Model
     {
         return $this->hasMany(PermitSembelihan::class);
     }
+
+    public function naimbifPermohonan()
+    {
+        return $this->hasMany(NaimbifPermohonan::class);
+    }
 }

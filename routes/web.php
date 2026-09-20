@@ -14,6 +14,8 @@ use App\Http\Controllers\PemanduController;
 use App\Http\Controllers\PemindahanTernakanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PetaTaburanController;
+use App\Http\Controllers\NaimbifPublicController;
+use App\Http\Controllers\NaimbifAdminController;
 
 // Laman Utama -> Redirect ke Dashboard atau Login
 Route::get('/', function () {
@@ -309,4 +311,33 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/toggle-status', [\App\Http\Controllers\UserController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/{id}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('destroy');
     });
+
+    // 9. MODUL PENGURUSAN PROGRAM NAIMbif (LADANG BRIDLOT)
+    Route::prefix('naimbif/urus')->name('naimbif.admin.')->group(function () {
+        Route::get('/', [NaimbifAdminController::class, 'index'])->name('index');
+        Route::get('/eksport', [NaimbifAdminController::class, 'exportCsv'])->name('export');
+        Route::get('/{id}', [NaimbifAdminController::class, 'show'])->name('show');
+        Route::post('/{id}/jajahan', [NaimbifAdminController::class, 'updateJajahan'])->name('update_jajahan');
+        Route::put('/{id}/jajahan', [NaimbifAdminController::class, 'updateJajahan'])->name('update_jajahan_put');
+        Route::post('/{id}/negeri', [NaimbifAdminController::class, 'updateNegeri'])->name('update_negeri');
+        Route::put('/{id}/negeri', [NaimbifAdminController::class, 'updateNegeri'])->name('update_negeri_put');
+        Route::delete('/{id}', [NaimbifAdminController::class, 'destroy'])->name('destroy');
+    });
 });
+
+// ==========================================
+// PORTAL PROGRAM NAIMbif (LADANG BRIDLOT PEDAGING)
+// ==========================================
+Route::prefix('naimbif')->name('naimbif.public.')->group(function () {
+    Route::get('/', [NaimbifPublicController::class, 'index'])->name('home');
+    Route::get('/permohonan', [NaimbifPublicController::class, 'create'])->name('apply');
+    Route::post('/permohonan', [NaimbifPublicController::class, 'store'])->name('store');
+    Route::match(['get', 'post'], '/semakan', [NaimbifPublicController::class, 'checkStatus'])->name('check_status');
+    Route::get('/berjaya/{no_rujukan}', [NaimbifPublicController::class, 'success'])->name('success');
+    Route::get('/cetak/{no_rujukan}', [NaimbifPublicController::class, 'printForm'])->name('print');
+    Route::get('/kemaskini/{no_rujukan}', [NaimbifPublicController::class, 'edit'])->name('edit');
+    Route::match(['post', 'put'], '/kemaskini/{no_rujukan}', [NaimbifPublicController::class, 'update'])->name('update');
+    Route::match(['get', 'post'], '/sahkan-kemaskini/{no_rujukan}', [NaimbifPublicController::class, 'verifyEdit'])->name('verify_edit');
+    Route::get('/api/semak-kp', [NaimbifPublicController::class, 'checkExistingIc'])->name('check_ic');
+});
+

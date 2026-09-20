@@ -100,6 +100,7 @@
             </div>
 
             <!-- Current User Badge (Clickable to Profile) -->
+            @auth
             <a href="{{ route('profile.show') }}" class="block p-4 mx-3 my-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-emerald-500/40 transition group">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold group-hover:scale-105 transition-transform">
@@ -114,10 +115,23 @@
                     <i class="fa-solid fa-chevron-right text-slate-500 group-hover:text-emerald-400 text-xs transition-colors"></i>
                 </div>
             </a>
+            @else
+            <a href="{{ route('login') }}" class="block p-4 mx-3 my-3 rounded-xl bg-emerald-900/40 hover:bg-emerald-900/60 border border-emerald-700/50 transition group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white">Log Masuk</p>
+                        <span class="text-[11px] text-emerald-300">Penternak & Pegawai</span>
+                    </div>
+                </div>
+            </a>
+            @endauth
 
             <!-- Navigation Links -->
             <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 text-sm">
-                
+                @auth
                 <!-- Dashboard -->
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('dashboard') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <i class="fa-solid fa-gauge-high w-5 text-center text-base"></i>
@@ -238,6 +252,35 @@
                             Mohon Program Pawah
                         </a>
                         @endif
+                    </div>
+                </div>
+                @endif
+
+                @if(Auth::user()->canAccessNaimbif())
+                <!-- 2.1 Program NAIMbif (Ladang Bridlot Pedaging) -->
+                <div x-data="{ open: {{ request()->routeIs('naimbif.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('naimbif.*') ? 'bg-slate-800 text-emerald-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-cow w-5 text-center text-base text-amber-400"></i>
+                            <span>Program NAIMbif</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak class="pl-9 pr-2 py-1 space-y-1 text-xs">
+                        @if(Auth::user()->isStaff())
+                        <a href="{{ route('naimbif.admin.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.admin.*') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            Senarai Permohonan Ladang
+                        </a>
+                        @endif
+                        <a href="{{ route('naimbif.public.home') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.home') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            Portal &amp; Info Program
+                        </a>
+                        <a href="{{ route('naimbif.public.apply') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.apply') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            <i class="fa-solid fa-file-signature mr-1 text-emerald-400"></i> Borang Permohonan Baru
+                        </a>
+                        <a href="{{ route('naimbif.public.check_status') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.check_status') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            <i class="fa-solid fa-magnifying-glass mr-1 text-teal-400"></i> Semak Status Permohonan
+                        </a>
                     </div>
                 </div>
                 @endif
@@ -447,6 +490,27 @@
                     </div>
                 </div>
                 @endif
+                @else
+                <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                    Portal Awam & Pemohon
+                </div>
+                <a href="{{ route('naimbif.public.home') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('naimbif.public.home') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <i class="fa-solid fa-house w-5 text-center text-base text-emerald-400"></i>
+                    <span>Portal NAIMbif</span>
+                </a>
+                <a href="{{ route('naimbif.public.apply') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('naimbif.public.apply') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <i class="fa-solid fa-file-pen w-5 text-center text-base text-amber-400"></i>
+                    <span>Borang Permohonan</span>
+                </a>
+                <a href="{{ route('naimbif.public.check_status') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('naimbif.public.check_status') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <i class="fa-solid fa-magnifying-glass w-5 text-center text-base text-blue-400"></i>
+                    <span>Semakan Permohonan</span>
+                </a>
+                <a href="{{ route('login') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-right-to-bracket w-5 text-center text-base text-teal-400"></i>
+                    <span>Log Masuk Staf / Penternak</span>
+                </a>
+                @endauth
             </nav>
         </aside>
 
@@ -465,6 +529,7 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
+                    @auth
                     <!-- Notification Bell Dropdown -->
                     <div x-data="{
                         notifOpen: false,
@@ -563,7 +628,7 @@
                                     <div @click="markRead(item.id, item.action_url)"
                                          :class="!item.is_read ? 'bg-emerald-50/40 hover:bg-emerald-50/70 font-medium' : 'bg-white hover:bg-slate-50'"
                                          class="p-3.5 transition cursor-pointer flex items-start gap-3">
-                                        <div :class="{
+                                         <div :class="{
                                             'bg-emerald-100 text-emerald-700 border-emerald-200': item.color === 'emerald',
                                             'bg-amber-100 text-amber-700 border-amber-200': item.color === 'amber',
                                             'bg-blue-100 text-blue-700 border-blue-200': item.color === 'blue',
@@ -611,6 +676,12 @@
                             <span class="hidden sm:inline">Log Keluar</span>
                         </button>
                     </form>
+                    @else
+                    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>Log Masuk Sistem</span>
+                    </a>
+                    @endauth
                 </div>
             </header>
 

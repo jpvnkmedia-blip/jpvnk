@@ -50,6 +50,36 @@ class User extends Authenticatable
         return $this->role === 'super_admin';
     }
 
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['super_admin', 'admin_eptr', 'admin_program', 'admin_jajahan', 'admin_eptr_jajahan']);
+    }
+
+    public function isPengarah(): bool
+    {
+        return $this->role === 'pengarah' || $this->role === 'super_admin';
+    }
+
+    public function isPegawaiJajahan(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pegawai_jajahan',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+        ]);
+    }
+
+    public function isPegawaiNegeri(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pengarah',
+            'admin_eptr',
+            'admin_program',
+        ]);
+    }
+
     public function isAdminPejabat(): bool
     {
         return in_array($this->role, ['super_admin', 'admin_pejabat']);
@@ -409,6 +439,25 @@ class User extends Authenticatable
     public function permohonanInventori()
     {
         return $this->hasMany(InventoriPermohonan::class);
+    }
+
+    public function canAccessNaimbif(): bool
+    {
+        return !in_array($this->role, [
+            'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
+            'admin_kursus',
+            'admin_pejabat',
+            'admin_ubat',
+            'admin_klinik',
+            'staf',
+        ]);
+    }
+
+    public function naimbifPermohonan()
+    {
+        return $this->hasMany(NaimbifPermohonan::class);
     }
 
     public function userNotifications()

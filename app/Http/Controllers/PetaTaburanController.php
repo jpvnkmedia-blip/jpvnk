@@ -168,8 +168,60 @@ class PetaTaburanController extends Controller
             ];
         }
 
+        // 3. Dapatkan Data Penternak & Ladang NAIMbif (Bridlot Pedaging)
+        $naimbifQuery = \App\Models\NaimbifPermohonan::with(['inventoriTernakan', 'user', 'pemunya']);
+        $naimbifList = $naimbifQuery->get();
+
+        $naimbifMarkers = [];
+        $totalNaimbifLembu = 0;
+
+        foreach ($naimbifList as $naimbif) {
+            $jajahan = trim($naimbif->jajahan_ladang ?: ($naimbif->jajahan ?: 'Kota Bharu'));
+            $lat = is_numeric($naimbif->gps_latitud) ? (float)$naimbif->gps_latitud : null;
+            $lng = is_numeric($naimbif->gps_longitud) ? (float)$naimbif->gps_longitud : null;
+            $coords = $this->resolveCoordinates($lat, $lng, $jajahan, 'naimbif', $naimbif->id);
+
+            $inventories = $naimbif->inventoriTernakan ?: collect();
+            $jumlahEkor = $inventories->sum('jumlah_baka');
+            $totalNaimbifLembu += $jumlahEkor;
+
+            $bakaList = [];
+            $jenisList = ['Lembu Pedaging' => $jumlahEkor];
+
+            foreach ($inventories as $inv) {
+                $bName = ucfirst(strtolower(trim($inv->display_name ?: $inv->baka)));
+                $bCount = (int)$inv->jumlah_baka;
+                $bakaList[$bName] = ($bakaList[$bName] ?? 0) + $bCount;
+            }
+
+            $naimbifMarkers[] = [
+                'id' => 'naimbif_' . $naimbif->id,
+                'raw_id' => $naimbif->id,
+                'modul' => 'NAIMbif',
+                'modul_label' => 'NAIMbif (Ladang Bridlot)',
+                'kategori' => 'naimbif',
+                'nama_penternak' => $naimbif->nama,
+                'nama_premis' => 'Ladang NAIMbif (' . ($naimbif->id_premis ?: $naimbif->no_rujukan) . ')',
+                'no_kp' => $naimbif->no_kp ?? '-',
+                'no_telefon' => $naimbif->no_telefon ?? '-',
+                'jajahan' => $jajahan,
+                'daerah' => '-',
+                'mukim' => '-',
+                'alamat' => $naimbif->alamat_ladang ?: ($naimbif->alamat_tetap ?: ($jajahan . ', Kelantan')),
+                'lat' => $coords['lat'],
+                'lng' => $coords['lng'],
+                'jenis_ternakan_list' => ['Lembu Pedaging', 'Lembu'],
+                'pecahan_ternakan' => $jenisList,
+                'pecahan_baka' => $bakaList,
+                'jumlah_ternakan' => $jumlahEkor,
+                'kapasiti_ladang' => $jumlahEkor,
+                'status' => $naimbif->status_negeri ?: $naimbif->status_permohonan,
+                'url' => route('naimbif.admin.show', $naimbif->id),
+            ];
+        }
+
         // Gabungkan semua penanda lokasi
-        $allMarkers = array_merge($epuMarkers, $eptrMarkers);
+        $allMarkers = array_merge($epuMarkers, $eptrMarkers, $naimbifMarkers);
 
         // Kumpul senarai unik jenis ternakan untuk dropdown filter
         $availableLivestockTypes = [
