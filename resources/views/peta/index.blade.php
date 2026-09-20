@@ -25,14 +25,28 @@
     .leaflet-container {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
+    #gisMap {
+        width: 100% !important;
+        height: 650px !important;
+        min-height: 550px !important;
+        position: relative;
+    }
+    .fixed #gisMap {
+        height: 100% !important;
+        min-height: 100% !important;
+    }
     .map-height {
-        height: calc(100vh - 13.5rem);
-        min-height: 580px;
+        height: 650px !important;
+        min-height: 550px !important;
     }
     @media (max-width: 1024px) {
-        .map-height {
-            height: 520px;
+        #gisMap, .map-height {
+            height: 540px !important;
+            min-height: 500px !important;
         }
+    }
+    .leaflet-tile {
+        visibility: inherit !important;
     }
     .leaflet-control-zoom {
         border-radius: 0.75rem !important;
@@ -497,6 +511,38 @@ function gisMapApp() {
             this.markersGroup = L.featureGroup().addTo(this.map);
 
             this.renderMarkers();
+
+            // Paksa Leaflet mengira semula saiz bekas (invalidateSize) secara bersiri agar peta dipaparkan 100% penuh pada kali pertama dimuatkan
+            this.$nextTick(() => {
+                const forceRedraw = () => {
+                    if (this.map) {
+                        this.map.invalidateSize();
+                    }
+                };
+
+                forceRedraw();
+                setTimeout(forceRedraw, 50);
+                setTimeout(forceRedraw, 200);
+                setTimeout(forceRedraw, 500);
+                setTimeout(forceRedraw, 1000);
+            });
+
+            // Pasang ResizeObserver agar peta mengikut saiz bekas sebenar secara automatik apabila susun atur berubah
+            const mapContainer = document.getElementById('gisMap');
+            if (mapContainer && window.ResizeObserver) {
+                const ro = new ResizeObserver(() => {
+                    if (this.map) {
+                        this.map.invalidateSize();
+                    }
+                });
+                ro.observe(mapContainer);
+            }
+
+            window.addEventListener('resize', () => {
+                if (this.map) {
+                    this.map.invalidateSize();
+                }
+            });
         },
 
         toggleLayer() {
