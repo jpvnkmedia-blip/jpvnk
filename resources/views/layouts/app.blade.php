@@ -495,7 +495,6 @@
                     </button>
                     <div>
                         <h2 class="text-lg sm:text-xl font-bold text-slate-800">@yield('page_title', 'Jabatan Perkhidmatan Veterinar Negeri Kelantan')</h2>
-                        <p class="text-xs text-slate-500 hidden sm:block">Sistem Pengurusan Sepunya: EPTR • Pawah • EPU • Kursus • Klinik • Inventori • Kenderaan</p>
                     </div>
                 </div>
 

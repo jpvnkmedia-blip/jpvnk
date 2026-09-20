@@ -49,9 +49,6 @@
         <p class="mt-1 sm:mt-2 text-xs sm:text-sm text-emerald-300/90 font-medium">
             Jabatan Perkhidmatan Veterinar Negeri Kelantan
         </p>
-        <p class="text-xs text-slate-400 mt-1">
-            Pangkalan Data Sepunya • EPTR • Pawah • EPU • Kursus • Klinik • Inventori • Kenderaan
-        </p>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl px-4">
