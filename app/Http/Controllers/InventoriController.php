@@ -330,7 +330,7 @@ class InventoriController extends Controller implements HasMiddleware
     {
         $user = Auth::user();
 
-        if (!$user || (!$user->canRequestInventori() && !$user->canAccessStorPejabat() && !$user->canAccessStorUbat())) {
+        if (!$user || (!$user->canRequestInventori() && !$user->canAccessStorPejabat())) {
             abort(403, 'Akses Ditolak: Modul Permohonan Stor Staf tidak dibenarkan bagi peranan anda.');
         }
 

@@ -185,4 +185,40 @@ class StorPejabatKenderaanSeparationTest extends TestCase
         $dashboardResp->assertSee('Daftar Temujanji Rawatan', false);
         $dashboardResp->assertSee('Senarai Semua Temujanji', false);
     }
+
+    public function test_admin_ubat_can_manage_stor_ubat_but_blocked_from_permohonan_stor_staf()
+    {
+        $adminUbat = User::where('role', 'admin_ubat')->first();
+        if (!$adminUbat) {
+            $adminUbat = User::factory()->create(['role' => 'admin_ubat', 'name' => 'Dr. Faridah Mat Zin']);
+        }
+        $this->assertNotNull($adminUbat);
+
+        // 1. Admin Stor Ubat boleh akses modul Stor Ubat & Farmasi
+        $this->assertTrue($adminUbat->canAccessStorUbat());
+        $this->actingAs($adminUbat)->get(route('inventori.ubat.index'))->assertStatus(200);
+        $this->actingAs($adminUbat)->get(route('inventori.ubat.create'))->assertStatus(200);
+        $this->actingAs($adminUbat)->get(route('inventori.ubat.permohonan'))->assertStatus(200);
+
+        // 2. Admin Stor Ubat DISEKAT daripada Permohonan Stor Staf
+        $this->assertFalse($adminUbat->canRequestInventori());
+        $this->assertFalse($adminUbat->canRequestAlatanPejabat());
+        $this->actingAs($adminUbat)->get(route('inventori.permohonan.saya'))->assertStatus(403);
+        $this->actingAs($adminUbat)->get(route('inventori.permohonan.pejabat.mohon'))->assertStatus(403);
+        $this->actingAs($adminUbat)->get(route('inventori.permohonan.ubat.mohon'))->assertStatus(403);
+
+        // 3. Admin Stor Ubat DISEKAT daripada mentadbir Stor Peralatan Pejabat
+        $this->assertFalse($adminUbat->canAccessStorPejabat());
+        $this->actingAs($adminUbat)->get(route('inventori.pejabat.index'))->assertStatus(403);
+        $this->actingAs($adminUbat)->get(route('inventori.pejabat.create'))->assertStatus(403);
+
+        // 4. Semak Dashboard & Sidebar tiada menu/butang Permohonan Stor Staf
+        $dashboardResp = $this->actingAs($adminUbat)->get(route('dashboard'));
+        $dashboardResp->assertStatus(200);
+        $dashboardResp->assertDontSee('Permohonan Stor Staf', false);
+        $dashboardResp->assertDontSee('Permohonan Stor Saya', false);
+        $dashboardResp->assertSee('Admin Stor Ubat &amp; Farmasi', false);
+        $dashboardResp->assertSee('Kelulusan Permohonan Ubat/Vaksin', false);
+        $dashboardResp->assertSee('Pengurusan Stor Ubat &amp; Vaksin', false);
+    }
 }

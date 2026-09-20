@@ -45,6 +45,8 @@
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin NAIMbif Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab melaksanakan siasatan premis ternakan, verifikasi kandang &amp; padang ragut, penetapan ID premis, dan perakuan syor permohonan Ladang Bridlot bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
                 @elseif($user->role === 'admin_klinik')
                     Anda sedang mengakses sistem sebagai <span class="text-rose-400 font-bold">Admin Klinik Haiwan &amp; Rawatan</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Temujanji Rawatan Haiwan</span>, rekod rawatan klinikal, surgeri/pembedahan serta pengeluaran kad rawatan pesakit veterinar.
+                @elseif($user->role === 'admin_ubat')
+                    Anda sedang mengakses sistem sebagai <span class="text-rose-400 font-bold">Admin Stor Ubat &amp; Farmasi</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Katalog Ubat &amp; Vaksin Veterinar</span> serta kelulusan permohonan bekalan farmasi veterinar JPVNK.
                 @else
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">{{ $user->role_label }}</span>. Sistem ini membolehkan pengurusan bersepadu bagi semua perkhidmatan veterinar di bawah satu akaun berpusat.
                 @endif
