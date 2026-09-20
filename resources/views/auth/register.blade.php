@@ -58,12 +58,7 @@
         icNumber: '{{ old('ic_number', '') }}',
         showPass: false,
         showConfirmPass: false,
-        hasSyarikat: {{ old('nama_syarikat') || old('no_ssm') ? 'true' : 'false' }},
-        get defaultPasswordPreview() {
-            const clean = (this.icNumber || '').replace(/[^0-9]/g, '');
-            const last4 = clean.length >= 4 ? clean.slice(-4) : (clean.length > 0 ? clean.padStart(4, '0') : 'XXXX');
-            return 'super@DVS' + last4;
-        }
+        hasSyarikat: {{ old('nama_syarikat') || old('no_ssm') ? 'true' : 'false' }}
     }">
         <div class="bg-white py-6 px-4 shadow-2xl rounded-2xl sm:rounded-3xl sm:py-8 sm:px-10 border border-slate-100">
             
@@ -199,10 +194,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block font-bold text-slate-700 uppercase mb-1">
-                                Kata Laluan (Pilihan)
+                                Kata Laluan
                             </label>
                             <div class="relative">
-                                <input :type="showPass ? 'text' : 'password'" name="password" placeholder="Kosongkan untuk kata laluan lalai" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-10">
+                                <input :type="showPass ? 'text' : 'password'" name="password" placeholder="Masukkan kata laluan" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-10">
                                 <button type="button" @click="showPass = !showPass" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none">
                                     <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                                 </button>
@@ -213,20 +208,11 @@
                                 Sahkan Kata Laluan
                             </label>
                             <div class="relative">
-                                <input :type="showConfirmPass ? 'text' : 'password'" name="password_confirmation" placeholder="Ulang kata laluan di atas" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-10">
+                                <input :type="showConfirmPass ? 'text' : 'password'" name="password_confirmation" placeholder="Ulang kata laluan" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-10">
                                 <button type="button" @click="showConfirmPass = !showConfirmPass" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none">
                                     <i class="fa-solid" :class="showConfirmPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                                 </button>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Default Password Helper Note -->
-                    <div class="mt-2.5 p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-2.5 text-[11.5px] text-emerald-900">
-                        <i class="fa-solid fa-key text-emerald-600 mt-0.5 shrink-0"></i>
-                        <div>
-                            <span>Jika dikosongkan, kata laluan lalai sistem adalah: </span>
-                            <span class="font-mono font-bold text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-200" x-text="defaultPasswordPreview">super@DVSXXXX</span>
                         </div>
                     </div>
                 </div>
