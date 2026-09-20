@@ -63,11 +63,13 @@ class PengarahExecutiveReportTest extends TestCase
         $this->assertTrue($this->pengarah->canAccessPawah());
         $this->assertTrue($this->pengarah->canAccessEpu());
         $this->assertTrue($this->pengarah->canAccessNaimbif());
-        $this->assertTrue($this->pengarah->canAccessKlinik());
-        $this->assertTrue($this->pengarah->canAccessKursus());
-        $this->assertTrue($this->pengarah->canAccessStorPejabat());
-        $this->assertTrue($this->pengarah->canAccessStorUbat());
-        $this->assertTrue($this->pengarah->canManageKenderaanFleet());
+
+        // Pengarah does not manage operational sub-modules (menus hidden from sidebar)
+        $this->assertFalse($this->pengarah->canAccessKlinik());
+        $this->assertFalse($this->pengarah->canAccessKursus());
+        $this->assertFalse($this->pengarah->canAccessStorPejabat());
+        $this->assertFalse($this->pengarah->canAccessStorUbat());
+        $this->assertFalse($this->pengarah->canManageKenderaanFleet());
     }
 
     public function test_pengarah_can_access_executive_reports(): void
@@ -82,10 +84,11 @@ class PengarahExecutiveReportTest extends TestCase
         $response->assertSee('EPU Unggas', false);
         $response->assertSee('NAIMbif Bridlot', false);
         $response->assertSee('Program Pawah', false);
-        $response->assertSee('Klinik Veterinar', false);
-        $response->assertSee('Kursus Penternakan', false);
+        $response->assertSee('Kursus Ternakan', false);
         $response->assertSee('Stor &amp; Farmasi', false);
         $response->assertSee('Armada Fleet', false);
+        $response->assertDontSee('Beban Temujanji &amp; Kes Rawatan Klinik Haiwan', false);
+        $response->assertDontSee('chart-klinik-jajahan', false);
     }
 
     public function test_pengarah_can_approve_epu_license(): void

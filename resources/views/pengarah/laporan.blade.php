@@ -26,7 +26,7 @@
                     Laporan Statistik &amp; Analitik Bersepadu
                 </h1>
                 <p class="mt-2 text-sm text-slate-300 leading-relaxed">
-                    Ringkasan data masa nyata merangkumi 9 modul utama: Pendaftaran Ruminan (EPTR), Skim Bantuan Pawah, Pelesenan Ladang Unggas (EPU), Program Ladang Bridlot Pedaging NAIMbif, Temujanji &amp; Rawatan Klinik, Kursus Penternakan, Stor &amp; Farmasi, Armada Kenderaan serta Taburan GIS 10 Jajahan Negeri Kelantan.
+                    Ringkasan data masa nyata merangkumi modul-modul eksekutif: Pendaftaran Ruminan (EPTR), Skim Bantuan Pawah, Pelesenan Ladang Unggas (EPU), Program Ladang Bridlot Pedaging NAIMbif, Kursus Penternakan, Stor &amp; Farmasi, Armada Kenderaan serta Taburan GIS 10 Jajahan Negeri Kelantan.
                 </p>
             </div>
 
@@ -71,264 +71,226 @@
     </div>
     @endif
 
-    <!-- 8 Executive KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 7 Executive KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <!-- KPI 1: EPTR Ruminan -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">1. EPTR Ruminan</span>
-                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">1. EPTR Ruminan</span>
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-cow"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalTernakanEptr) }}</div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Ber-Tag: <strong class="text-emerald-600">{{ number_format($totalTernakanTagged) }}</strong></span>
-                    <span>Aktif: <strong class="text-slate-700">{{ number_format($totalTernakanAktif) }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalTernakanEptr) }}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Ber-Tag: <strong class="text-emerald-600">{{ number_format($totalTernakanTagged) }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Permit Sembelih: <strong>{{ $totalPermitSembelihan }}</strong></span>
-                <span>Kesihatan: <strong>{{ $totalProgramKesihatan }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Permit: <strong>{{ $totalPermitSembelihan }}</strong></span>
+                <span>Aktif: <strong class="text-slate-700">{{ number_format($totalTernakanAktif) }}</strong></span>
             </div>
         </div>
 
         <!-- KPI 2: EPU Unggas -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">2. EPU Unggas</span>
-                <div class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">2. EPU Unggas</span>
+                <div class="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-feather-pointed"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalEpuSemasaUnggas) }} <span class="text-xs font-normal text-slate-500">ekor</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Ladang: <strong class="text-slate-700">{{ $totalEpuLadang }}</strong></span>
-                    <span>Lesen Lulus: <strong class="text-emerald-600">{{ $totalEpuLulus }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalEpuSemasaUnggas) }} <span class="text-[10px] font-normal text-slate-500">ekor</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Ladang: <strong class="text-slate-700">{{ $totalEpuLadang }}</strong> | Lulus: <strong class="text-emerald-600">{{ $totalEpuLulus }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
                 <span>Kapasiti: <strong>{{ number_format($totalEpuKapasiti) }}</strong></span>
-                <span>Kutipan: <strong class="text-emerald-600">RM {{ number_format($totalEpuFiKutipan, 2) }}</strong></span>
+                <span>RM <strong>{{ number_format($totalEpuFiKutipan, 0) }}</strong></span>
             </div>
         </div>
 
         <!-- KPI 3: Program NAIMbif -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">3. NAIMbif Bridlot</span>
-                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">3. NAIMbif Bridlot</span>
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-wheat-awn"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalNaimbifPopulasi) }} <span class="text-xs font-normal text-slate-500">ekor</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Permohonan: <strong class="text-slate-700">{{ $totalNaimbifApps }}</strong></span>
-                    <span>Lulus Negeri: <strong class="text-emerald-600">{{ $totalNaimbifLulus }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalNaimbifPopulasi) }} <span class="text-[10px] font-normal text-slate-500">ekor</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Permohonan: <strong class="text-slate-700">{{ $totalNaimbifApps }}</strong> | Lulus: <strong class="text-emerald-600">{{ $totalNaimbifLulus }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Siasatan Jajahan: <strong>{{ $totalNaimbifMenungguJajahan }}</strong></span>
-                <span>Menunggu HQ: <strong>{{ $totalNaimbifMenungguNegeri }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Siasatan: <strong>{{ $totalNaimbifMenungguJajahan }}</strong></span>
+                <span>HQ: <strong>{{ $totalNaimbifMenungguNegeri }}</strong></span>
             </div>
         </div>
 
         <!-- KPI 4: Skim Bantuan Pawah -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">4. Program Pawah</span>
-                <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">4. Program Pawah</span>
+                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-handshake-angle"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalPawahAktif) }} <span class="text-xs font-normal text-slate-500">perjanjian</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Induk Diagih: <strong class="text-slate-700">{{ $totalPawahInduk }}</strong></span>
-                    <span>Kelahiran: <strong class="text-emerald-600">{{ $totalPawahKelahiran }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalPawahAktif) }} <span class="text-[10px] font-normal text-slate-500">perjanjian</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Induk: <strong class="text-slate-700">{{ $totalPawahInduk }}</strong> | Lahir: <strong class="text-emerald-600">{{ $totalPawahKelahiran }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Anak Hidup: <strong>{{ $totalPawahKelahiranHidup }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Hidup: <strong>{{ $totalPawahKelahiranHidup }}</strong></span>
                 <span>Selesai: <strong>{{ $totalPawahSelesai }}</strong></span>
             </div>
         </div>
 
-        <!-- KPI 5: Klinik Haiwan -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <!-- KPI 5: Kursus & Latihan -->
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">5. Klinik Veterinar</span>
-                <div class="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center text-base">
-                    <i class="fa-solid fa-stethoscope"></i>
-                </div>
-            </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalKlinikTemujanji) }} <span class="text-xs font-normal text-slate-500">kes</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Rawatan Selesai: <strong class="text-emerald-600">{{ $totalKlinikSelesai }}</strong></span>
-                    <span>Dijadualkan: <strong class="text-slate-700">{{ $totalKlinikDijadualkan }}</strong></span>
-                </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Rekod Rawatan: <strong>{{ $totalKlinikRawatan }}</strong></span>
-                <span>10 Jajahan Beroperasi</span>
-            </div>
-        </div>
-
-        <!-- KPI 6: Kursus & Latihan -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">6. Kursus Penternakan</span>
-                <div class="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">5. Kursus Ternakan</span>
+                <div class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalCourses) }} <span class="text-xs font-normal text-slate-500">kursus</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Permohonan: <strong class="text-slate-700">{{ $totalCourseApplications }}</strong></span>
-                    <span>Diluluskan: <strong class="text-emerald-600">{{ $totalCourseApproved }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalCourses) }} <span class="text-[10px] font-normal text-slate-500">kursus</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Mohon: <strong class="text-slate-700">{{ $totalCourseApplications }}</strong> | Lulus: <strong class="text-emerald-600">{{ $totalCourseApproved }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Kursus Buka: <strong>{{ $totalCoursesActive }}</strong></span>
-                <span>Peserta Hadir: <strong>{{ $totalCourseGraduated }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Buka: <strong>{{ $totalCoursesActive }}</strong></span>
+                <span>Hadir: <strong>{{ $totalCourseGraduated }}</strong></span>
             </div>
         </div>
 
-        <!-- KPI 7: Stor Ubat & Pejabat -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <!-- KPI 6: Stor Ubat & Pejabat -->
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">7. Stor &amp; Farmasi</span>
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">6. Stor &amp; Farmasi</span>
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalUbatItems + $totalPejabatItems) }} <span class="text-xs font-normal text-slate-500">SKU</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Ubat/Vaksin: <strong class="text-slate-700">{{ $totalUbatItems }}</strong></span>
-                    <span>Alat Pejabat: <strong class="text-slate-700">{{ $totalPejabatItems }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalUbatItems + $totalPejabatItems) }} <span class="text-[10px] font-normal text-slate-500">SKU</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Ubat: <strong class="text-slate-700">{{ $totalUbatItems }}</strong> | Pejabat: <strong class="text-slate-700">{{ $totalPejabatItems }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Stok Rendah Ubat: <strong class="{{ $lowStockUbat > 0 ? 'text-rose-600 font-bold' : 'text-slate-700' }}">{{ $lowStockUbat }}</strong></span>
-                <span>Permohonan: <strong>{{ $totalPermohonanUbat + $totalPermohonanPejabat }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Stok Rendah: <strong class="{{ $lowStockUbat > 0 ? 'text-rose-600 font-bold' : 'text-slate-700' }}">{{ $lowStockUbat }}</strong></span>
+                <span>Mohon: <strong>{{ $totalPermohonanUbat + $totalPermohonanPejabat }}</strong></span>
             </div>
         </div>
 
-        <!-- KPI 8: Armada Kenderaan Rasmi -->
-        <div class="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs hover:shadow-md transition">
+        <!-- KPI 7: Armada Kenderaan Rasmi -->
+        <div class="rounded-2xl bg-white p-4 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">8. Armada Fleet</span>
-                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">7. Armada Fleet</span>
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-truck-pickup"></i>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="text-2xl font-black text-slate-900">{{ number_format($totalVehicles) }} <span class="text-xs font-normal text-slate-500">unit</span></div>
-                <div class="text-xs text-slate-500 mt-1 flex items-center justify-between">
-                    <span>Sedia: <strong class="text-emerald-600">{{ $availableVehicles }}</strong></span>
-                    <span>Bergerak: <strong class="text-blue-600">{{ $inUseVehicles }}</strong></span>
+            <div class="mt-2.5">
+                <div class="text-xl font-black text-slate-900">{{ number_format($totalVehicles) }} <span class="text-[10px] font-normal text-slate-500">unit</span></div>
+                <div class="text-[11px] text-slate-500 mt-0.5">
+                    Sedia: <strong class="text-emerald-600">{{ $availableVehicles }}</strong> | Bergerak: <strong class="text-blue-600">{{ $inUseVehicles }}</strong>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Dalam Servis: <strong>{{ $inServiceVehicles }}</strong></span>
-                <span>Pemandu Bertugas: <strong>{{ $activePemandu }}</strong></span>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Servis: <strong>{{ $inServiceVehicles }}</strong></span>
+                <span>Pemandu: <strong>{{ $activePemandu }}</strong></span>
             </div>
         </div>
     </div>
 
-    <!-- Section: 6 Interactive Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <!-- Chart 1: EPTR & Pawah by Jajahan -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Taburan Populasi Ruminan (EPTR &amp; Pawah) Mengikut 10 Jajahan</h3>
-                    <p class="text-xs text-slate-500">Bilangan ternakan ruminan berdaftar di setiap daerah negeri Kelantan</p>
+    <!-- Section: 5 Interactive Charts -->
+    <div class="space-y-6">
+        <!-- Top Row: Bar/Column Comparisons (EPTR & EPU by Jajahan) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 1: EPTR & Pawah by Jajahan -->
+            <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Taburan Populasi Ruminan (EPTR &amp; Pawah) Mengikut 10 Jajahan</h3>
+                        <p class="text-xs text-slate-500">Bilangan ternakan ruminan berdaftar di setiap daerah negeri Kelantan</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-amber-50 text-amber-600 text-sm">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </span>
                 </div>
-                <span class="p-2 rounded-xl bg-amber-50 text-amber-600 text-sm">
-                    <i class="fa-solid fa-chart-column"></i>
-                </span>
+                <div id="chart-eptr-jajahan" class="w-full min-h-[300px]"></div>
             </div>
-            <div id="chart-eptr-jajahan" class="w-full min-h-[300px]"></div>
+
+            <!-- Chart 2: EPU Poultry Population by Jajahan -->
+            <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Taburan Ladang &amp; Populasi Unggas (EPU) Mengikut Jajahan</h3>
+                        <p class="text-xs text-slate-500">Bilangan ladang berdaftar di bawah Enakmen Penternakan Unggas</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-orange-50 text-orange-600 text-sm">
+                        <i class="fa-solid fa-chart-bar"></i>
+                    </span>
+                </div>
+                <div id="chart-epu-jajahan" class="w-full min-h-[300px]"></div>
+            </div>
         </div>
 
-        <!-- Chart 2: EPU Poultry Population by Jajahan -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Taburan Ladang &amp; Populasi Unggas (EPU) Mengikut Jajahan</h3>
-                    <p class="text-xs text-slate-500">Bilangan ladang berdaftar di bawah Enakmen Penternakan Unggas</p>
+        <!-- Bottom Row: 3 Donut Distributions (EPTR Spesis, NAIMbif Baka, EPU Status) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Chart 3: Ruminant Species Donut -->
+            <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Pecahan Spesis Ternakan Ruminan</h3>
+                        <p class="text-xs text-slate-500">Peratusan populasi mengikut jenis spesis (EPTR)</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </span>
                 </div>
-                <span class="p-2 rounded-xl bg-orange-50 text-orange-600 text-sm">
-                    <i class="fa-solid fa-chart-bar"></i>
-                </span>
+                <div id="chart-eptr-spesis" class="w-full min-h-[280px]"></div>
             </div>
-            <div id="chart-epu-jajahan" class="w-full min-h-[300px]"></div>
-        </div>
 
-        <!-- Chart 3: Ruminant Species Donut -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Pecahan Spesis Ternakan Ruminan (EPTR)</h3>
-                    <p class="text-xs text-slate-500">Peratusan populasi mengikut jenis spesis ternakan</p>
+            <!-- Chart 4: NAIMbif Breeds Donut -->
+            <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Populasi NAIMbif Mengikut Baka</h3>
+                        <p class="text-xs text-slate-500">Pecahan baka lembu pedaging premium</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-teal-50 text-teal-600 text-sm">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </span>
                 </div>
-                <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm">
-                    <i class="fa-solid fa-chart-pie"></i>
-                </span>
+                <div id="chart-naimbif-baka" class="w-full min-h-[280px]"></div>
             </div>
-            <div id="chart-eptr-spesis" class="w-full min-h-[280px]"></div>
-        </div>
 
-        <!-- Chart 4: NAIMbif Breeds Donut -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Populasi Lembu Bridlot NAIMbif Mengikut Baka</h3>
-                    <p class="text-xs text-slate-500">Pecahan baka lembu pedaging kacukan berkualiti tinggi</p>
+            <!-- Chart 5: EPU Licensing Pipeline Status -->
+            <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Status Aliran Pelesenan EPU</h3>
+                        <p class="text-xs text-slate-500">Perincian status permohonan lesen ladang</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-sm">
+                        <i class="fa-solid fa-bars-progress"></i>
+                    </span>
                 </div>
-                <span class="p-2 rounded-xl bg-teal-50 text-teal-600 text-sm">
-                    <i class="fa-solid fa-chart-pie"></i>
-                </span>
+                <div id="chart-epu-status" class="w-full min-h-[280px]"></div>
             </div>
-            <div id="chart-naimbif-baka" class="w-full min-h-[280px]"></div>
         </div>
-
-        <!-- Chart 5: Clinic Appointments by Jajahan -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Beban Temujanji &amp; Kes Rawatan Klinik Haiwan</h3>
-                    <p class="text-xs text-slate-500">Agihan perkhidmatan rawatan veterinar mengikut jajahan</p>
-                </div>
-                <span class="p-2 rounded-xl bg-pink-50 text-pink-600 text-sm">
-                    <i class="fa-solid fa-hospital-user"></i>
-                </span>
-            </div>
-            <div id="chart-klinik-jajahan" class="w-full min-h-[280px]"></div>
-        </div>
-
-        <!-- Chart 6: EPU Licensing Pipeline Status -->
-        <div class="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900">Status Aliran Kerja Pelesenan EPU</h3>
-                    <p class="text-xs text-slate-500">Perincian status permohonan lesen ladang unggas</p>
-                </div>
-                <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600 text-sm">
-                    <i class="fa-solid fa-bars-progress"></i>
-                </span>
-            </div>
-            <div id="chart-epu-status" class="w-full min-h-[280px]"></div>
-        </div>
-
     </div>
 
     <!-- Section: Permohonan EPU Menunggu Tindakan Pengarah (Anchor link target) -->
@@ -436,7 +398,7 @@
             </button>
             <button @click="activeTab = 'sokongan'" :class="activeTab === 'sokongan' ? 'bg-white text-emerald-600 border-b-2 border-emerald-600 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900 font-medium'" class="px-4 py-2.5 rounded-t-xl text-xs transition flex items-center gap-2">
                 <i class="fa-solid fa-cubes text-blue-500"></i>
-                <span>5. Klinik, Kursus, Stor &amp; Fleet</span>
+                <span>5. Kursus, Stor &amp; Fleet</span>
             </button>
         </div>
 
@@ -594,15 +556,10 @@
         <div x-show="activeTab === 'sokongan'" class="p-6 space-y-6" x-cloak>
             <div>
                 <h4 class="text-sm font-bold text-slate-900 mb-1">Perkhidmatan Sokongan, Latihan &amp; Logistik Jabatan</h4>
-                <p class="text-xs text-slate-500">Prestasi klinik veterinar jajahan, kursus penternakan, stor farmasi &amp; pergerakan kenderaan rasmi</p>
+                <p class="text-xs text-slate-500">Prestasi kursus penternakan, stor farmasi &amp; peralatan pejabat serta pengurusan armada kenderaan rasmi</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="p-4 rounded-xl bg-pink-50 border border-pink-100">
-                    <div class="text-xs font-bold text-pink-800">Klinik Haiwan</div>
-                    <div class="text-lg font-black text-pink-900 mt-1">{{ $totalKlinikTemujanji }} Temujanji</div>
-                    <div class="text-xs text-pink-700 mt-1">Selesai Dirawat: {{ $totalKlinikSelesai }}</div>
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-4 rounded-xl bg-cyan-50 border border-cyan-100">
                     <div class="text-xs font-bold text-cyan-800">Kursus Penternakan</div>
                     <div class="text-lg font-black text-cyan-900 mt-1">{{ $totalCourses }} Modul Ditawar</div>
@@ -632,7 +589,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const eptrData = @json(array_values($eptrByJajahan));
     const pawahData = @json(array_values($pawahByJajahan));
     const epuData = @json(array_values($epuByJajahan));
-    const klinikData = @json(array_values($klinikByJajahan));
 
     // 1. Chart EPTR & Pawah by Jajahan
     new ApexCharts(document.querySelector('#chart-eptr-jajahan'), {
@@ -682,17 +638,7 @@ document.addEventListener('DOMContentLoaded', function () {
         legend: { position: 'bottom' }
     }).render();
 
-    // 5. Chart Clinic Appointments by Jajahan
-    new ApexCharts(document.querySelector('#chart-klinik-jajahan'), {
-        series: [{ name: 'Jumlah Kes Rawatan', data: klinikData }],
-        chart: { type: 'bar', height: 280, toolbar: { show: false } },
-        colors: ['#ec4899'],
-        plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
-        dataLabels: { enabled: false },
-        xaxis: { categories: jajahanLabels, labels: { rotate: -45, style: { fontSize: '11px' } } }
-    }).render();
-
-    // 6. Chart EPU Status Pipeline
+    // 5. Chart EPU Status Pipeline
     new ApexCharts(document.querySelector('#chart-epu-status'), {
         series: [
             {{ $totalEpuLulus }},
