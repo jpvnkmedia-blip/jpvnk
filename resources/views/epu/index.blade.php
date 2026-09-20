@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'EPU - Enakmen Perladangan Unggas')
-@section('page_title', 'Enakmen Perladangan Unggas (EPU 2005 / 2024)')
+@section('title', in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) ? 'EPU Unggas PPVJ ' . (Auth::user()->jajahan ?? 'Jajahan') : 'EPU - Enakmen Perladangan Unggas')
+@section('page_title', in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) ? 'Pengurusan Ladang Unggas (PPVJ Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') . ')' : 'Enakmen Perladangan Unggas (EPU 2005 / 2024)')
 
 @section('content')
 <div class="space-y-6">
@@ -10,7 +10,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl font-extrabold text-slate-900">Senarai Ladang & Lesen Perladangan Unggas</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Pengurusan pendaftaran premis, pengeluaran lesen EPU, pembaharuan tahunan dan laporan pemeriksaan tapak</p>
+            <p class="text-xs text-slate-500 mt-0.5">
+                {{ in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) ? 'Pengurusan premis, verifikasi tapak kepatuhan & laporan pemeriksaan Borang D bagi Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') : 'Pengurusan pendaftaran premis, pengeluaran lesen EPU, pembaharuan tahunan dan kelulusan rasmi peringkat Negeri Kelantan' }}
+            </p>
         </div>
         <a href="{{ route('epu.create') }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-lg shadow-amber-700/30 transition flex items-center gap-2">
             <i class="fa-solid fa-plus-circle"></i>
@@ -23,7 +25,9 @@
         <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
             <div class="text-[11px] font-bold text-slate-500 uppercase">Jumlah Ladang Unggas</div>
             <div class="text-2xl font-black text-slate-900 mt-1">{{ $totalLadang }}</div>
-            <div class="text-[10px] text-slate-400 mt-0.5">Premis Berdaftar</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+                {{ in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) ? 'Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') : 'Seluruh Kelantan' }}
+            </div>
         </div>
         <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs">
             <div class="text-[11px] font-bold text-slate-500 uppercase">Lesen EPU Aktif</div>
@@ -40,6 +44,63 @@
             <div class="text-2xl font-black text-amber-800 mt-1">{{ $totalPemeriksaan }}</div>
             <div class="text-[10px] text-slate-400 mt-0.5">Borang D Lapangan</div>
         </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
+        <form action="{{ route('epu.index') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- Search Input -->
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Carian Ladang / Syarikat</label>
+                <div class="relative">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama Ladang / SSM / Pemilik..."
+                           class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-amber-500">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Jajahan Filter -->
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Jajahan</label>
+                @if(in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) && Auth::user()->jajahan)
+                    <div class="relative">
+                        <input type="text" value="Jajahan {{ Auth::user()->jajahan }} (Terkunci)" readonly
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-amber-300 bg-amber-50 font-bold text-amber-800 cursor-not-allowed">
+                        <i class="fas fa-lock absolute right-3 top-2.5 text-amber-600 text-xs"></i>
+                    </div>
+                @else
+                    <select name="jajahan" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-amber-500">
+                        <option value="">-- Semua Jajahan --</option>
+                        @php
+                            $kelantanJajahans = ['Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Pasir Puteh', 'Machang', 'Tanah Merah', 'Jeli', 'Kuala Krai', 'Gua Musang'];
+                        @endphp
+                        @foreach($kelantanJajahans as $j)
+                            <option value="{{ $j }}" {{ request('jajahan') == $j ? 'selected' : '' }}>{{ $j }}</option>
+                        @endforeach
+                    </select>
+                @endif
+            </div>
+
+            <!-- Sistem Reban -->
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Sistem Reban</label>
+                <select name="sistem_reban" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-amber-500">
+                    <option value="">-- Semua Sistem --</option>
+                    <option value="Tertutup" {{ request('sistem_reban') == 'Tertutup' ? 'selected' : '' }}>Tertutup (Moden)</option>
+                    <option value="Terbuka" {{ request('sistem_reban') == 'Terbuka' ? 'selected' : '' }}>Terbuka (Tradisional)</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="flex-1 px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition shadow-sm flex items-center justify-center">
+                    <i class="fas fa-filter mr-1.5"></i> Tapis
+                </button>
+                <a href="{{ route('epu.index') }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                    Reset
+                </a>
+            </div>
+        </form>
     </div>
 
     <!-- Farms Table -->

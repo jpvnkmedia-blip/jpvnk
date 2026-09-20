@@ -47,6 +47,8 @@ class EpuController extends Controller implements HasMiddleware
 
         if (!$user->isStaff()) {
             $query->where('user_id', $user->id);
+        } elseif (in_array($user->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) && !empty($user->jajahan)) {
+            $query->where('jajahan', $user->jajahan);
         }
 
         if ($request->filled('search')) {
@@ -67,10 +69,26 @@ class EpuController extends Controller implements HasMiddleware
         }
 
         $ladangList = $query->latest()->paginate(15);
-        $totalLadang = EpuLadang::count();
-        $totalLesenAktif = EpuPermohonan::where('status', 'Diluluskan')->count();
-        $totalRebanTertutup = EpuLadang::where('sistem_reban', 'Tertutup')->count();
-        $totalPemeriksaan = EpuPemeriksaan::count();
+
+        // KPI Metrics (Disesuaikan mengikut skop Jajahan jika Pegawai Jajahan)
+        $ladangCountQuery = EpuLadang::query();
+        $permohonanCountQuery = EpuPermohonan::query();
+        $pemeriksaanCountQuery = EpuPemeriksaan::query();
+
+        if (!$user->isStaff()) {
+            $ladangCountQuery->where('user_id', $user->id);
+            $permohonanCountQuery->whereHas('ladang', fn($q) => $q->where('user_id', $user->id));
+            $pemeriksaanCountQuery->whereHas('ladang', fn($q) => $q->where('user_id', $user->id));
+        } elseif (in_array($user->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) && !empty($user->jajahan)) {
+            $ladangCountQuery->where('jajahan', $user->jajahan);
+            $permohonanCountQuery->whereHas('ladang', fn($q) => $q->where('jajahan', $user->jajahan));
+            $pemeriksaanCountQuery->whereHas('ladang', fn($q) => $q->where('jajahan', $user->jajahan));
+        }
+
+        $totalLadang = $ladangCountQuery->count();
+        $totalLesenAktif = (clone $permohonanCountQuery)->where('status', 'Diluluskan')->count();
+        $totalRebanTertutup = (clone $ladangCountQuery)->where('sistem_reban', 'Tertutup')->count();
+        $totalPemeriksaan = $pemeriksaanCountQuery->count();
 
         return view('epu.index', compact(
             'ladangList',
@@ -967,18 +985,25 @@ class EpuController extends Controller implements HasMiddleware
     }
 
     /**
-     * Hantar notifikasi kepada pegawai EPU berkaitan (Admin EPU, PPVJ Jajahan, Pegawai Pelesen, Super Admin)
+     * Hantar notifikasi kepada pegawai EPU berkaitan (Admin EPU Negeri, Admin EPU Jajahan, Pegawai Pelesen, Super Admin)
      */
     private function notifyEpuOfficers(array $roles, ?string $jajahan, string $title, string $message, ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald', ?int $excludeUserId = null): void
     {
-        $query = User::whereIn('role', $roles);
+        $rolesExpanded = $roles;
+        if (in_array('admin_epu', $roles)) {
+            $rolesExpanded[] = 'admin_epu_negeri';
+        }
+        if (in_array('pegawai_verifikasi_epu', $roles)) {
+            $rolesExpanded[] = 'admin_epu_jajahan';
+        }
+        $query = User::whereIn('role', array_unique($rolesExpanded));
 
-        if ($jajahan && in_array('pegawai_verifikasi_epu', $roles)) {
+        if ($jajahan && (in_array('pegawai_verifikasi_epu', $roles) || in_array('admin_epu_jajahan', $roles))) {
             $query->where(function ($q) use ($jajahan) {
                 $q->where('jajahan', $jajahan)
                   ->orWhereNull('jajahan')
                   ->orWhere('jajahan', '')
-                  ->orWhereIn('role', ['admin_epu', 'pegawai_pelesen', 'super_admin']);
+                  ->orWhereIn('role', ['admin_epu', 'admin_epu_negeri', 'pegawai_pelesen', 'super_admin']);
             });
         }
 

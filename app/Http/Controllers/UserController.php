@@ -54,11 +54,17 @@ class UserController extends Controller implements HasMiddleware
                     'badge' => 'bg-teal-100 text-teal-800 border-teal-300',
                     'icon' => 'fa-handshake-angle text-teal-600',
                 ],
-                'admin_epu' => [
-                    'label' => 'Admin EPU Unggas',
-                    'desc' => 'Pengurusan ladang ternakan unggas (ayam, itik, puyuh) dan pemantauan permit.',
+                'admin_epu_negeri' => [
+                    'label' => 'Admin EPU Negeri',
+                    'desc' => 'Pengurusan Enakmen Perladangan Unggas, kelulusan lesen Borang B & pemantauan permit peringkat Negeri.',
                     'badge' => 'bg-orange-100 text-orange-800 border-orange-300',
                     'icon' => 'fa-feather text-orange-600',
+                ],
+                'admin_epu_jajahan' => [
+                    'label' => 'Admin EPU Jajahan (Pegawai Verifikasi)',
+                    'desc' => 'Semakan kelengkapan dokumen, verifikasi kepatuhan tapak & laporan pemeriksaan Borang D mengikut Jajahan.',
+                    'badge' => 'bg-amber-100 text-amber-800 border-amber-300',
+                    'icon' => 'fa-clipboard-check text-amber-600',
                 ],
                 'admin_naimbif_negeri' => [
                     'label' => 'Admin NAIMbif Negeri',
@@ -147,8 +153,14 @@ class UserController extends Controller implements HasMiddleware
         if ($request->filled('role') && $request->role !== 'semua') {
             if ($request->role === 'admin_jajahan') {
                 $query->whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan']);
+            } elseif ($request->role === 'admin_epu_negeri') {
+                $query->whereIn('role', ['admin_epu_negeri', 'admin_epu', 'pegawai_pelesen']);
+            } elseif ($request->role === 'admin_epu_jajahan') {
+                $query->whereIn('role', ['admin_epu_jajahan', 'pegawai_verifikasi_epu']);
             } elseif ($request->role === 'admin_naimbif_negeri') {
                 $query->whereIn('role', ['admin_naimbif_negeri', 'admin_naimbif']);
+            } elseif ($request->role === 'admin_naimbif_jajahan') {
+                $query->whereIn('role', ['admin_naimbif_jajahan']);
             } else {
                 $query->where('role', $request->role);
             }
@@ -170,9 +182,10 @@ class UserController extends Controller implements HasMiddleware
         $totalUsers = User::count();
         $totalStaff = User::whereIn('role', [
             'super_admin', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
-            'admin_program', 'admin_epu', 'admin_kursus', 'admin_ubat',
-            'admin_klinik', 'admin_pejabat', 'admin_naimbif_negeri', 'admin_naimbif',
-            'admin_naimbif_jajahan', 'staf'
+            'admin_program', 'admin_epu_negeri', 'admin_epu', 'pegawai_pelesen',
+            'admin_epu_jajahan', 'pegawai_verifikasi_epu',
+            'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat',
+            'admin_naimbif_negeri', 'admin_naimbif', 'admin_naimbif_jajahan', 'staf'
         ])->count();
         $totalPenternak = User::where('role', 'penternak')->count();
         $totalUsahawan = User::where('role', 'usahawan')->count();

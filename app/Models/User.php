@@ -56,6 +56,11 @@ class User extends Authenticatable
             'super_admin',
             'admin_eptr',
             'admin_program',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
+            'admin_epu_jajahan',
+            'pegawai_verifikasi_epu',
             'admin_jajahan',
             'admin_eptr_jajahan',
             'admin_naimbif_negeri',
@@ -77,6 +82,8 @@ class User extends Authenticatable
             'admin_jajahan',
             'admin_eptr_jajahan',
             'admin_naimbif_jajahan',
+            'admin_epu_jajahan',
+            'pegawai_verifikasi_epu',
         ]);
     }
 
@@ -89,6 +96,9 @@ class User extends Authenticatable
             'admin_program',
             'admin_naimbif_negeri',
             'admin_naimbif',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
         ]);
     }
 
@@ -138,15 +148,48 @@ class User extends Authenticatable
         return in_array($this->role, ['super_admin', 'admin_program']);
     }
 
+    public function isAdminEpuNegeri(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'pengarah',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
+        ]);
+    }
+
+    public function isAdminEpuJajahan(): bool
+    {
+        return in_array($this->role, [
+            'super_admin',
+            'admin_epu_jajahan',
+            'pegawai_verifikasi_epu',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+        ]);
+    }
+
     public function isAdminEpu(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_epu_jajahan', 'admin_jajahan', 'admin_eptr_jajahan']);
+        return in_array($this->role, [
+            'super_admin',
+            'pengarah',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
+            'admin_epu_jajahan',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+        ]);
     }
 
     public function isPegawaiVerifikasiEpu(): bool
     {
         return in_array($this->role, [
             'super_admin',
+            'admin_epu_negeri',
             'admin_epu',
             'pegawai_verifikasi_epu',
             'admin_epu_jajahan',
@@ -159,14 +202,16 @@ class User extends Authenticatable
     {
         return in_array($this->role, [
             'super_admin',
+            'pengarah',
             'pegawai_pelesen',
+            'admin_epu_negeri',
             'admin_epu',
         ]);
     }
 
     public function canPerformVerifikasi(?string $ladangJajahan = null): bool
     {
-        if ($this->isSuperAdmin() || $this->role === 'admin_epu') {
+        if ($this->isSuperAdmin() || in_array($this->role, ['admin_epu', 'admin_epu_negeri'])) {
             return true;
         }
 
@@ -182,7 +227,7 @@ class User extends Authenticatable
 
     public function canPerformKeputusanPelesen(): bool
     {
-        return in_array($this->role, ['super_admin', 'pegawai_pelesen', 'admin_epu']);
+        return in_array($this->role, ['super_admin', 'pengarah', 'pegawai_pelesen', 'admin_epu', 'admin_epu_negeri']);
     }
 
     public function isAdminKursus(): bool
@@ -365,9 +410,11 @@ class User extends Authenticatable
     public function canCetakBorangEpu(): bool
     {
         return in_array($this->role, [
-            'admin_epu',
-            'pegawai_verifikasi_epu',
             'super_admin',
+            'admin_epu',
+            'admin_epu_negeri',
+            'pegawai_verifikasi_epu',
+            'admin_epu_jajahan',
         ]);
     }
 
@@ -390,6 +437,7 @@ class User extends Authenticatable
             'admin_klinik',
             'admin_eptr',
             'admin_program',
+            'admin_epu_negeri',
             'admin_epu',
             'pegawai_pelesen',
             'pegawai_verifikasi_epu',
@@ -426,9 +474,9 @@ class User extends Authenticatable
             'admin_klinik' => 'Admin Klinik Haiwan & Rawatan',
             'admin_eptr' => 'Admin EPTR Negeri',
             'admin_program' => 'Admin Program Pawah',
-            'admin_epu' => 'Admin EPU Negeri',
+            'admin_epu_negeri', 'admin_epu' => 'Admin EPU Negeri',
             'pegawai_pelesen' => 'Pegawai Pelesen / Pengarah (EPU)',
-            'pegawai_verifikasi_epu', 'admin_epu_jajahan' => 'Pegawai Verifikasi EPU (PPVJ ' . ($this->jajahan ?? 'Jajahan') . ')',
+            'pegawai_verifikasi_epu', 'admin_epu_jajahan' => 'Admin EPU Jajahan (PPVJ ' . ($this->jajahan ?? 'Jajahan') . ')',
             'admin_kursus' => 'Admin Kursus',
             'admin_jajahan', 'admin_eptr_jajahan' => 'Admin EPTR Jajahan (' . ($this->jajahan ?? 'Kelantan') . ')',
             'admin_naimbif_negeri', 'admin_naimbif' => 'Admin NAIMbif Negeri',

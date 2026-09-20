@@ -209,6 +209,22 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Admin EPU Jajahan (PPVJ Pasir Puteh)
+        $verifikasiPp = User::firstOrCreate(
+            ['ic_number' => '860909035511'],
+            [
+                'name' => 'En. Wan Mohd Fauzi bin Wan Ahmad',
+                'email' => 'epu.pasirputeh@veterinar.kelantan.gov.my',
+                'phone' => '019-9443322',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh (PPVJ)',
+                'jajahan' => 'Pasir Puteh',
+                'role' => 'admin_epu_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => bcrypt('super@DVS5511'),
+            ]
+        );
+
         $adminKursus = User::create([
             'name' => 'Pn. Roslina binti Daud',
             'email' => 'adminkursus@veterinar.kelantan.gov.my',
