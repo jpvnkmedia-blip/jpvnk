@@ -39,8 +39,8 @@ class JpvnkUnifiedSystemTest extends TestCase
         $loginResponse = $this->get('/login');
         $loginResponse->assertStatus(200);
         $loginResponse->assertSee('Jabatan Perkhidmatan Veterinar Negeri Kelantan');
-        $loginResponse->assertSee('MyDigital ID');
-        $loginResponse->assertSee('Google');
+        $loginResponse->assertSee('No. Kad Pengenalan / Emel');
+        $loginResponse->assertSee('Kata Laluan');
     }
 
     public function test_auth_login_and_dashboard_renders()

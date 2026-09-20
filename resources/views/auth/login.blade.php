@@ -54,7 +54,7 @@
         </p>
     </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl px-4" x-data="{ tab: 'manual' }">
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl px-4">
         <div class="bg-white py-8 px-6 shadow-2xl rounded-3xl sm:px-10 border border-slate-100">
             
             @if(session('success'))
@@ -75,91 +75,42 @@
                 </div>
             @endif
 
-            <!-- Auth Method Selector Tabs -->
-            <div class="flex rounded-2xl bg-slate-100 p-1.5 mb-6 text-xs font-semibold">
-                <button @click="tab = 'manual'" :class="tab === 'manual' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-id-card text-emerald-600"></i>
-                    <span>No. Kad Pengenalan</span>
+            <!-- Login Form -->
+            <form action="{{ route('login') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="ic_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">No. Kad Pengenalan / Emel</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-id-card text-sm"></i>
+                        </span>
+                        <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number') }}" placeholder="Contoh: 900729035413 atau emel" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-mono">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Masukkan 12 digit tanpa tanda sempang (-) atau alamat emel berdaftar.</p>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kata Laluan</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-lock text-sm"></i>
+                        </span>
+                        <input id="password" name="password" type="password" required placeholder="Masukkan kata laluan anda" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs">
+                    <label class="flex items-center text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                        <span class="ml-2">Ingat saya pada peranti ini</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-700/30 transition duration-150 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Log Masuk ke Sistem</span>
                 </button>
-                <button @click="tab = 'sso'" :class="tab === 'sso' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'" class="flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-fingerprint text-blue-600"></i>
-                    <span>MyDigital ID / Google</span>
-                </button>
-            </div>
-
-            <!-- TAB 1: Manual Login Form -->
-            <div x-show="tab === 'manual'" class="space-y-4">
-                <form action="{{ route('login') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label for="ic_number" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">No. Kad Pengenalan / Emel</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                                <i class="fa-solid fa-id-card text-sm"></i>
-                            </span>
-                            <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number') }}" placeholder="Contoh: 900729035413 atau emel" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-mono">
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-1">Masukkan 12 digit tanpa tanda sempang (-) atau alamat emel berdaftar.</p>
-                    </div>
-
-                    <div>
-                        <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kata Laluan</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                                <i class="fa-solid fa-lock text-sm"></i>
-                            </span>
-                            <input id="password" name="password" type="password" required placeholder="Masukkan kata laluan anda" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-xs">
-                        <label class="flex items-center text-slate-600 cursor-pointer">
-                            <input type="checkbox" name="remember" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
-                            <span class="ml-2">Ingat saya pada peranti ini</span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-700/30 transition duration-150 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <span>Log Masuk ke Sistem</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- TAB 2: SSO (Google & MyDigital ID) -->
-            <div x-show="tab === 'sso'" x-cloak class="space-y-4">
-                
-                <!-- MyDigital ID Option -->
-                <a href="{{ route('auth.mydigitalid') }}" class="w-full p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/60 hover:bg-blue-100/70 transition flex items-center justify-between group">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-md shadow-blue-500/30">
-                            <i class="fa-solid fa-id-card"></i>
-                        </div>
-                        <div class="text-left">
-                            <div class="text-sm font-bold text-blue-950 flex items-center gap-1.5">
-                                MyDigital ID Nasional
-                                <span class="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Rasmi</span>
-                            </div>
-                            <div class="text-xs text-blue-700">Log masuk selamat menggunakan Identiti Digital Malaysia</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-arrow-right text-blue-600 group-hover:translate-x-1 transition-transform"></i>
-                </a>
-
-                <!-- Google Account Option -->
-                <a href="{{ route('auth.google') }}" class="w-full p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition flex items-center justify-between group shadow-xs">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center text-2xl">
-                            <i class="fa-brands fa-google"></i>
-                        </div>
-                        <div class="text-left">
-                            <div class="text-sm font-bold text-slate-900">Google Account</div>
-                            <div class="text-xs text-slate-500">Log masuk menggunakan akaun Gmail / Google Workspace</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-arrow-right text-slate-400 group-hover:text-red-600 group-hover:translate-x-1 transition"></i>
-                </a>
-            </div>
+            </form>
 
             <!-- Single Registration Link -->
             <div class="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-600">
