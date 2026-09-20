@@ -1972,10 +1972,10 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->actingAs($adminKlinik)->get('/epu')->assertStatus(403);
         $this->actingAs($adminKlinik)->get('/pawah')->assertStatus(403);
         $this->actingAs($adminKlinik)->get('/inventori/pejabat')->assertStatus(403);
-        $this->actingAs($adminKlinik)->get('/inventori/ubat')->assertStatus(403);
-
-        // - Admin Klinik boleh mohon alatan pejabat staf tetapi disekat daripada mohon ubat veterinar (hanya admin_jajahan)
-        $this->actingAs($adminKlinik)->get('/inventori/permohonan/pejabat/mohon')->assertStatus(200);
+        // - Admin Klinik disekat daripada modul kenderaan dan permohonan stor staf (403 Forbidden)
+        $this->actingAs($adminKlinik)->get('/kenderaan')->assertStatus(403);
+        $this->actingAs($adminKlinik)->get('/inventori/permohonan/saya')->assertStatus(403);
+        $this->actingAs($adminKlinik)->get('/inventori/permohonan/pejabat/mohon')->assertStatus(403);
         $this->actingAs($adminKlinik)->get('/inventori/permohonan/ubat/mohon')->assertStatus(403);
 
         // - Semakan Papan Pemuka Admin Klinik

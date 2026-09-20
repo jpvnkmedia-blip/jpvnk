@@ -43,6 +43,8 @@
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin NAIMbif Negeri</span>. Anda bertanggungjawab menguruskan permohonan, semakan penilaian, dan kelulusan geran/bantuan <span class="text-white font-semibold">Program Ladang Bridlot Pedaging NAIMbif</span> peringkat Negeri Kelantan.
                 @elseif($user->role === 'admin_naimbif_jajahan')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin NAIMbif Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab melaksanakan siasatan premis ternakan, verifikasi kandang &amp; padang ragut, penetapan ID premis, dan perakuan syor permohonan Ladang Bridlot bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
+                @elseif($user->role === 'admin_klinik')
+                    Anda sedang mengakses sistem sebagai <span class="text-rose-400 font-bold">Admin Klinik Haiwan &amp; Rawatan</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Temujanji Rawatan Haiwan</span>, rekod rawatan klinikal, surgeri/pembedahan serta pengeluaran kad rawatan pesakit veterinar.
                 @else
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">{{ $user->role_label }}</span>. Sistem ini membolehkan pengurusan bersepadu bagi semua perkhidmatan veterinar di bawah satu akaun berpusat.
                 @endif
@@ -188,10 +190,6 @@
                     <a href="{{ route('klinik.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
                         <i class="fa-solid fa-notes-medical"></i>
                         <span>Senarai Semua Temujanji</span>
-                    </a>
-                    <a href="{{ route('inventori.permohonan.saya') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shadow-lg shadow-slate-900/40 transition">
-                        <i class="fa-solid fa-clipboard-list"></i>
-                        <span>Permohonan Stor Saya</span>
                     </a>
                 @elseif($user->role === 'staf')
                     <a href="{{ route('inventori.permohonan.pejabat.mohon') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">

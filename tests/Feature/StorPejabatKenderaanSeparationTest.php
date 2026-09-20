@@ -146,4 +146,43 @@ class StorPejabatKenderaanSeparationTest extends TestCase
         $this->actingAs($superAdmin)->get(route('kenderaan.pemandu.index'))->assertStatus(200);
         $this->actingAs($superAdmin)->get(route('kenderaan.pemandu.create'))->assertStatus(302);
     }
+
+    public function test_admin_klinik_can_manage_klinik_but_blocked_from_stor_staf_and_kenderaan_rasmi()
+    {
+        $adminKlinik = User::where('role', 'admin_klinik')->first();
+        if (!$adminKlinik) {
+            $adminKlinik = User::factory()->create(['role' => 'admin_klinik', 'name' => 'Dr. Aminah Veterinar']);
+        }
+        $this->assertNotNull($adminKlinik);
+
+        // 1. Admin Klinik boleh akses modul Klinik Haiwan
+        $this->assertTrue($adminKlinik->canAccessKlinik());
+        $this->actingAs($adminKlinik)->get(route('klinik.index'))->assertStatus(200);
+        $this->actingAs($adminKlinik)->get(route('klinik.create'))->assertStatus(200);
+
+        // 2. Admin Klinik DISEKAT daripada Kenderaan Rasmi
+        $this->assertFalse($adminKlinik->canAccessKenderaan());
+        $this->assertFalse($adminKlinik->canBookVehicle());
+        $this->actingAs($adminKlinik)->get(route('kenderaan.index'))->assertStatus(403);
+        $this->actingAs($adminKlinik)->get(route('kenderaan.create'))->assertStatus(403);
+        $this->actingAs($adminKlinik)->get(route('kenderaan.fleet'))->assertStatus(403);
+        $this->actingAs($adminKlinik)->get(route('kenderaan.pemandu.index'))->assertStatus(403);
+
+        // 3. Admin Klinik DISEKAT daripada Permohonan Stor Staf
+        $this->assertFalse($adminKlinik->canRequestInventori());
+        $this->assertFalse($adminKlinik->canRequestAlatanPejabat());
+        $this->actingAs($adminKlinik)->get(route('inventori.permohonan.saya'))->assertStatus(403);
+        $this->actingAs($adminKlinik)->get(route('inventori.permohonan.pejabat.mohon'))->assertStatus(403);
+        $this->actingAs($adminKlinik)->get(route('inventori.permohonan.ubat.mohon'))->assertStatus(403);
+
+        // 4. Semak Dashboard & Sidebar tiada menu/butang Kenderaan Rasmi dan Permohonan Stor Staf
+        $dashboardResp = $this->actingAs($adminKlinik)->get(route('dashboard'));
+        $dashboardResp->assertStatus(200);
+        $dashboardResp->assertDontSee('Kenderaan Rasmi', false);
+        $dashboardResp->assertDontSee('Permohonan Stor Staf', false);
+        $dashboardResp->assertDontSee('Permohonan Stor Saya', false);
+        $dashboardResp->assertSee('Admin Klinik Haiwan &amp; Rawatan', false);
+        $dashboardResp->assertSee('Daftar Temujanji Rawatan', false);
+        $dashboardResp->assertSee('Senarai Semua Temujanji', false);
+    }
 }

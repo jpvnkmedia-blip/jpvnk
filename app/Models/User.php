@@ -355,6 +355,7 @@ class User extends Authenticatable
             'admin_program',
             'admin_kursus',
             'admin_ubat',
+            'admin_klinik',
             'admin_jajahan',
             'admin_eptr_jajahan',
             'admin_naimbif_negeri',
@@ -505,12 +506,12 @@ class User extends Authenticatable
 
     public function canRequestInventori(): bool
     {
-        return $this->isStaff() && !$this->hasAnyRole(['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan']);
+        return $this->isStaff() && !$this->hasAnyRole(['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik']);
     }
 
     public function canRequestAlatanPejabat(): bool
     {
-        return $this->isStaff() && !$this->hasAnyRole(['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan']);
+        return $this->isStaff() && !$this->hasAnyRole(['admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik']);
     }
 
     public function canRequestUbat(): bool
