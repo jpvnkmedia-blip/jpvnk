@@ -65,55 +65,207 @@ class NaimbifPublicController extends Controller
             ->latest()
             ->first();
 
-        if ($activeApp) {
-            return response()->json([
-                'found' => true,
-                'has_active_application' => true,
-                'application' => [
-                    'no_rujukan' => $activeApp->no_rujukan,
-                    'nama' => $activeApp->nama,
-                    'status' => $activeApp->status_negeri === 'Lulus' ? 'Lulus' : ($activeApp->syor_permohonan === 'Disokong' ? 'Disokong Jajahan' : $activeApp->status_kelengkapan),
-                    'tarikh' => $activeApp->tarikh_permohonan ? $activeApp->tarikh_permohonan->format('d/m/Y') : $activeApp->created_at->format('d/m/Y'),
-                ],
-            ]);
-        }
+        // 2. Semak rekod Pemunya, User & Rekod Terdahulu
+        $pemunya = Pemunya::with('ternakan')->where('no_kp', $ic)->first();
+        $user = User::where('ic_number', $ic)
+            ->orWhere('id', $pemunya?->user_id)
+            ->first();
 
-        // 2. Semak pangkalan data Pemunya JPVNK
-        $pemunya = Pemunya::where('no_kp', $ic)->first();
-        if ($pemunya) {
-            return response()->json([
-                'found' => true,
-                'has_active_application' => false,
-                'source' => 'pemunya',
-                'data' => [
-                    'nama' => $pemunya->nama,
-                    'no_telefon' => $pemunya->no_telefon,
-                    'alamat_tetap' => $pemunya->alamat,
-                    'poskod' => $pemunya->poskod,
-                    'jajahan' => $pemunya->jajahan,
-                    'daerah' => $pemunya->daerah,
-                ],
-            ]);
-        }
+        $pastNaimbif = NaimbifPermohonan::with('inventoriTernakan')
+            ->where('no_kp', $ic)
+            ->latest()
+            ->first();
 
-        // 3. Semak pangkalan data User JPVNK
-        $user = User::where('ic_number', $ic)->first();
+        $courseApp = null;
         if ($user) {
+            $courseApp = \App\Models\CourseApplication::with('course')
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['approved', 'completed', 'attended', 'sijil_dikeluarkan'])
+                ->latest()
+                ->first();
+        }
+
+        $epuLadang = null;
+        if ($user || $pemunya) {
+            $epuLadang = \App\Models\EpuLadang::where('user_id', $user?->id)
+                ->orWhere('pemunya_id', $pemunya?->id)
+                ->latest()
+                ->first();
+        }
+
+        $hasPawah = false;
+        if ($pemunya || $user) {
+            $hasPawah = \App\Models\PawahPerjanjian::where('pemunya_id', $pemunya?->id)
+                ->orWhere('user_id', $user?->id)
+                ->exists();
+        }
+
+        $found = (bool) ($activeApp || $pemunya || $user || $pastNaimbif);
+
+        if (!$found) {
             return response()->json([
-                'found' => true,
+                'found' => false,
                 'has_active_application' => false,
-                'source' => 'user',
-                'data' => [
-                    'nama' => $user->name,
-                    'no_telefon' => $user->phone,
-                    'alamat_tetap' => $user->address,
-                    'poskod' => $user->poskod,
-                    'jajahan' => $user->jajahan,
-                ],
             ]);
         }
 
-        return response()->json(['found' => false]);
+        // Bina Objek Data Auto-fill
+        $nama = $pemunya?->nama ?: ($user?->name ?: ($pastNaimbif?->nama ?: ''));
+        $noTelefon = $pemunya?->no_telefon ?: ($user?->phone ?: ($pastNaimbif?->no_telefon ?: ''));
+        $alamatTetap = $pemunya?->alamat ?: ($user?->address ?: ($pastNaimbif?->alamat_tetap ?: ''));
+        $poskod = $pemunya?->poskod ?: ($user?->poskod ?: ($pastNaimbif?->poskod ?: ''));
+        $jajahan = $pemunya?->jajahan ?: ($user?->jajahan ?: ($pastNaimbif?->jajahan ?: ''));
+
+        $pengalamanMenternak = $pastNaimbif?->pengalaman_menternak ?? ($epuLadang ? 5 : null);
+        $statusPenternakan = $pastNaimbif?->status_penternakan ?? 'Sepenuh Masa';
+
+        $pernahKursus = $courseApp ? '1' : ($pastNaimbif ? ($pastNaimbif->pernah_kursus ? '1' : '0') : null);
+        $namaKursus = $courseApp ? ($courseApp->course?->tajuk ?: 'Kursus Asas Penternakan Ruminan JPVNK') : ($pastNaimbif?->nama_kursus ?: '');
+        $anjuranKursus = $courseApp ? 'Jabatan Perkhidmatan Veterinar Negeri Kelantan (JPVNK)' : ($pastNaimbif?->anjuran_kursus ?: '');
+        $berminatKursus = $pastNaimbif ? ($pastNaimbif->berminat_kursus_jpvnk ? '1' : '0') : '1';
+
+        // Maklumat Ladang
+        $alamatLadang = $pastNaimbif?->alamat_ladang ?: ($epuLadang?->alamat_ladang ?: ($pemunya?->ternakan?->first()?->lokasi_kandang ?: $alamatTetap));
+        $poskodLadang = $pastNaimbif?->poskod_ladang ?: ($epuLadang?->poskod ?: ($pemunya?->ternakan?->first()?->poskod ?: $poskod));
+        $jajahanLadang = $pastNaimbif?->jajahan_ladang ?: ($epuLadang?->jajahan ?: ($pemunya?->ternakan?->first()?->jajahan ?: $jajahan));
+        $gpsLat = $pastNaimbif?->gps_latitud ?: ($epuLadang?->latitude ?: '');
+        $gpsLng = $pastNaimbif?->gps_longitud ?: ($epuLadang?->longitude ?: '');
+
+        $statusTanah = $pastNaimbif?->status_tanah ?: ($epuLadang?->status_pemilikan ?: 'Sendiri');
+        $statusTanahLain = $pastNaimbif?->status_tanah_lain ?: '';
+        $keluasanTanah = $pastNaimbif?->keluasan_tanah ?: ($epuLadang?->keluasan_hektar ? round($epuLadang->keluasan_hektar * 2.47105, 2) : '');
+        $padangRagut = $pastNaimbif?->padang_ragut ?: 'Ada';
+        $bilanganPekerja = $pastNaimbif?->bilangan_pekerja ?? ($epuLadang?->bilangan_pekerja ?? 1);
+
+        // Maklumat Ternakan
+        $puncaTernakan = $hasPawah ? 'Pawah' : ($pastNaimbif?->punca_ternakan ?: 'Beli');
+        $puncaTernakanLain = $pastNaimbif?->punca_ternakan_lain ?: '';
+        $kaedahPembiakan = $pastNaimbif?->kaedah_pembiakan ?: 'Permanian Beradas';
+
+        // Stok Baka Sedia Ada
+        $stokBaka = [
+            'charolais' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0],
+            'belgian_blue' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0],
+            'blonde_daquitaine' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0],
+            'limousin' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0],
+            'kedah_kelantan' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0],
+            'lain_lain' => ['betina_anak' => 0, 'betina_dara' => 0, 'betina_induk' => 0, 'jantan_anak' => 0, 'jantan_pejantan' => 0, 'nama_baka_lain' => ''],
+        ];
+
+        // Isikan stok baka daripada rekod Ternakan EPTR
+        if ($pemunya && $pemunya->ternakan && $pemunya->ternakan->count() > 0) {
+            foreach ($pemunya->ternakan as $t) {
+                $bakaUpper = strtoupper(trim($t->baka ?: ''));
+                $key = 'lain_lain';
+                if (str_contains($bakaUpper, 'CHAROLAIS')) $key = 'charolais';
+                elseif (str_contains($bakaUpper, 'BELGIAN') || str_contains($bakaUpper, 'BLUE')) $key = 'belgian_blue';
+                elseif (str_contains($bakaUpper, 'BLONDE') || str_contains($bakaUpper, 'AQUITAINE')) $key = 'blonde_daquitaine';
+                elseif (str_contains($bakaUpper, 'LIMOUSIN')) $key = 'limousin';
+                elseif (str_contains($bakaUpper, 'KELANTAN') || str_contains($bakaUpper, 'KK')) $key = 'kedah_kelantan';
+
+                $jantina = strtolower($t->jantina ?: '');
+                $umur = (float) ($t->umur ?: 1);
+
+                if (str_contains($jantina, 'betina')) {
+                    if ($umur < 1) $stokBaka[$key]['betina_anak']++;
+                    elseif ($umur <= 2) $stokBaka[$key]['betina_dara']++;
+                    else $stokBaka[$key]['betina_induk']++;
+                } else {
+                    if ($umur < 1.5) $stokBaka[$key]['jantan_anak']++;
+                    else $stokBaka[$key]['jantan_pejantan']++;
+                }
+            }
+        } elseif ($pastNaimbif && $pastNaimbif->inventoriTernakan && $pastNaimbif->inventoriTernakan->count() > 0) {
+            foreach ($pastNaimbif->inventoriTernakan as $inv) {
+                $slug = \Illuminate\Support\Str::slug($inv->baka, '_');
+                if (isset($stokBaka[$slug])) {
+                    $stokBaka[$slug]['betina_anak'] = (int) $inv->betina_anak;
+                    $stokBaka[$slug]['betina_dara'] = (int) $inv->betina_dara;
+                    $stokBaka[$slug]['betina_induk'] = (int) $inv->betina_induk;
+                    $stokBaka[$slug]['jantan_anak'] = (int) $inv->jantan_anak;
+                    $stokBaka[$slug]['jantan_pejantan'] = (int) $inv->jantan_pejantan;
+                    if ($slug === 'lain_lain' && $inv->nama_baka_lain) {
+                        $stokBaka[$slug]['nama_baka_lain'] = $inv->nama_baka_lain;
+                    }
+                }
+            }
+        }
+
+        // Tentukan punca sumber data untuk paparan mesra pengguna
+        $sources = [];
+        if ($pemunya) $sources[] = 'Pangkalan Data Penternak (Pemunya)';
+        if ($user) $sources[] = 'Akaun Pengguna JPVNK';
+        if ($pemunya?->ternakan?->count() > 0) $sources[] = 'Daftar Ternakan EPTR (' . $pemunya->ternakan->count() . ' Ekor)';
+        if ($courseApp) $sources[] = 'Rekod Kursus Veterinar';
+        if ($pastNaimbif) $sources[] = 'Rekod Ladang NAIMbif';
+
+        $sourceLabel = implode(' • ', $sources) ?: 'Pangkalan Data Sepunya JPVNK';
+
+        $autofillData = [
+            'nama' => $nama,
+            'no_telefon' => $noTelefon,
+            'alamat_tetap' => $alamatTetap,
+            'poskod' => $poskod,
+            'jajahan' => $jajahan,
+            'pengalaman_menternak' => $pengalamanMenternak,
+            'status_penternakan' => $statusPenternakan,
+            'pernah_kursus' => $pernahKursus,
+            'nama_kursus' => $namaKursus,
+            'anjuran_kursus' => $anjuranKursus,
+            'berminat_kursus_jpvnk' => $berminatKursus,
+            'alamat_ladang' => $alamatLadang,
+            'poskod_ladang' => $poskodLadang,
+            'jajahan_ladang' => $jajahanLadang,
+            'gps_latitud' => $gpsLat,
+            'gps_longitud' => $gpsLng,
+            'status_tanah' => $statusTanah,
+            'status_tanah_lain' => $statusTanahLain,
+            'keluasan_tanah' => $keluasanTanah,
+            'padang_ragut' => $padangRagut,
+            'bilangan_pekerja' => $bilanganPekerja,
+            'punca_ternakan' => $puncaTernakan,
+            'punca_ternakan_lain' => $puncaTernakanLain,
+            'kaedah_pembiakan' => $kaedahPembiakan,
+            'stok' => $stokBaka,
+        ];
+
+        // Senarai field yang berjaya diisi
+        $autofillKeys = [];
+        foreach ($autofillData as $k => $v) {
+            if ($k !== 'stok' && !empty($v)) {
+                $autofillKeys[] = $k;
+            }
+        }
+
+        $responsePayload = [
+            'found' => true,
+            'has_active_application' => (bool) $activeApp,
+            'source' => $pemunya ? 'pemunya' : ($user ? 'user' : 'naimbif'),
+            'source_label' => $sourceLabel,
+            'autofill_keys' => $autofillKeys,
+            'data' => [
+                'nama' => $nama,
+                'no_telefon' => $noTelefon,
+                'alamat_tetap' => $alamatTetap,
+                'poskod' => $poskod,
+                'jajahan' => $jajahan,
+                'daerah' => $pemunya?->daerah ?: $jajahan,
+            ],
+            'autofill' => $autofillData,
+        ];
+
+        if ($activeApp) {
+            $responsePayload['application'] = [
+                'no_rujukan' => $activeApp->no_rujukan,
+                'nama' => $activeApp->nama,
+                'status' => $activeApp->status_negeri === 'Lulus' ? 'Lulus' : ($activeApp->syor_permohonan === 'Disokong' ? 'Disokong Jajahan' : $activeApp->status_kelengkapan),
+                'tarikh' => $activeApp->tarikh_permohonan ? $activeApp->tarikh_permohonan->format('d/m/Y') : $activeApp->created_at->format('d/m/Y'),
+                'check_url' => route('naimbif.public.check_status', ['carian' => $activeApp->no_rujukan]),
+                'edit_url' => route('naimbif.public.edit', $activeApp->no_rujukan),
+            ];
+        }
+
+        return response()->json($responsePayload);
     }
 
     /**

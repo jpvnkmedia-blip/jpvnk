@@ -21,6 +21,14 @@
         outline: none;
         box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
     }
+    @keyframes pulseSoft {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.95; transform: scale(1.005); }
+    }
+    .autofill-highlight {
+        border-color: #10b981 !important;
+        background-color: #f0fdf4 !important;
+    }
 </style>
 @endpush
 
@@ -40,17 +48,15 @@
                         <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
                             BORANG PERMOHONAN PENYERTAAN LADANG BRIDLOT NAIMbif
                         </h1>
-                        <p class="text-xs text-emerald-100 mt-1">Sila isi semua maklumat dengan lengkap dan tepat.</p>
+                        <p class="text-xs text-emerald-100 mt-1">Sila masukkan No. Kad Pengenalan untuk auto-fill data pendaftaran sedia ada dalam sistem.</p>
                     </div>
                 </div>
 
                 <div class="bg-black/20 backdrop-blur-sm rounded-xl p-3 text-xs text-emerald-100 border border-white/10 max-w-xs text-left">
-                    <div class="font-semibold text-white mb-1"><i class="fas fa-info-circle text-amber-300 mr-1"></i> Nota Penting:</div>
-                    <ul class="space-y-0.5 text-[11px] list-disc list-inside">
-                        <li>Borang diberi secara percuma.</li>
-                        <li>Boleh dimuat turun dari portal JPVNK.</li>
-                        <li>Sila kemukakan permohonan lengkap.</li>
-                    </ul>
+                    <div class="font-semibold text-white mb-1"><i class="fas fa-magic text-amber-300 mr-1"></i> Auto-Fill Pintar:</div>
+                    <p class="text-[11px] leading-snug">
+                        Sistem akan mengesan profil penternak anda secara automatik. Anda hanya perlu melengkapkan ruangan yang masih belum diisi.
+                    </p>
                 </div>
             </div>
         </div>
@@ -107,43 +113,67 @@
         <!-- SEKSYEN 1: MAKLUMAT PESERTA                -->
         <!-- ========================================== -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
-            <div class="flex items-center space-x-3 pb-4 mb-6 border-b border-slate-200">
-                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold flex items-center justify-center text-sm">1</span>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900">MAKLUMAT PESERTA</h2>
-                    <p class="text-xs text-slate-500">Butiran peribadi penternak / pemohon</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-6 border-b border-slate-200 gap-2">
+                <div class="flex items-center space-x-3">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold flex items-center justify-center text-sm">1</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">MAKLUMAT PESERTA</h2>
+                        <p class="text-xs text-slate-500">Butiran peribadi penternak / pemohon</p>
+                    </div>
                 </div>
+
+                <!-- Auto-fill Status Chip in Header -->
+                <template x-if="autofillActive">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold animate-pulse">
+                        <i class="fas fa-circle-check text-emerald-600"></i>
+                        <span>Rekod Ditemui & Diisi Automatik</span>
+                    </div>
+                </template>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 1. Nama -->
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        1. NAMA PENUH <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="nama" value="{{ old('nama') }}" required placeholder="Contoh: WAN MUHAMMAD AZLAN BIN WAN HASSAN"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm uppercase">
-                    @error('nama') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
 
-                <!-- 2. No Kad Pengenalan -->
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        2. NO. KAD PENGENALAN <span class="text-rose-500">*</span>
-                    </label>
+                <!-- 2. No Kad Pengenalan (Utama untuk Carian Auto-Fill) -->
+                <div class="md:col-span-2 bg-gradient-to-br from-emerald-50/50 via-teal-50/30 to-slate-50 p-4 sm:p-5 rounded-2xl border-2 border-emerald-200/80 shadow-xs">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                            <i class="fas fa-id-card text-emerald-700 text-sm"></i>
+                            NO. KAD PENGENALAN <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[11px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                            <i class="fas fa-bolt text-amber-500 mr-1"></i> Auto-Semakan Data
+                        </span>
+                    </div>
+
                     <div class="relative">
-                        <input type="text" name="no_kp" x-model="noKp" @input.debounce.500ms="checkIc" @blur="checkIc" value="{{ old('no_kp') }}" required maxlength="14" placeholder="Contoh: 850712-03-5411"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-                               :class="{'border-amber-400 focus:ring-amber-400 bg-amber-50/40': duplicateInfo.exists}">
-                        <div x-show="isCheckingIc" x-cloak class="absolute right-3 top-3 text-slate-400 text-xs">
-                            <i class="fas fa-spinner fa-spin"></i>
+                        <input type="text" name="no_kp" x-model="noKp" @input.debounce.400ms="checkIc" @blur="checkIc" value="{{ old('no_kp', $pemunya->no_kp ?? ($user->ic_number ?? '')) }}" required maxlength="14" placeholder="Contoh: 850712035411 atau 850712-03-5411"
+                               class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base font-mono font-bold tracking-wider"
+                               :class="{'border-emerald-500 bg-white ring-2 ring-emerald-400/20': autofillActive, 'border-amber-400 focus:ring-amber-400 bg-amber-50/40': duplicateInfo.exists}">
+                        <div x-show="isCheckingIc" x-cloak class="absolute right-4 top-3.5 text-emerald-600 text-sm flex items-center gap-2">
+                            <i class="fas fa-circle-notch fa-spin text-base"></i>
+                            <span class="text-xs font-semibold">Menyemak rekod...</span>
                         </div>
                     </div>
-                    <span class="text-[11px] text-slate-400">12 digit tanpa simbol atau dengan sempang.</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Masukkan 12 digit No. KP anda. Sistem akan mencari dan mengisi maklumat berdaftar anda secara automatik.</p>
                     @error('no_kp') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
 
+                    <!-- Dynamic Auto-fill Notification Card -->
+                    <template x-if="autofillActive && !duplicateInfo.exists">
+                        <div class="mt-3 p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-950 space-y-2 shadow-xs">
+                            <div class="flex items-center justify-between">
+                                <div class="font-bold flex items-center text-emerald-900 text-sm">
+                                    <i class="fas fa-magic text-emerald-600 mr-2 text-base"></i> Data Penternak Ditemui dalam Pangkalan Data JPVNK!
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 font-extrabold text-[11px]" x-text="autofillKeys.length + ' Ruangan Diisikan'"></span>
+                            </div>
+                            <p class="text-[11px] text-emerald-800 leading-relaxed">
+                                Rekod anda telah dikesan daripada: <strong class="font-semibold text-emerald-950" x-text="autofillSource"></strong>. Maklumat yang telah berdaftar telah diisikan ke dalam borang. Sila <strong>semak dan hanya lengkapkan baki ruangan yang masih kosong</strong>.
+                            </p>
+                        </div>
+                    </template>
+
                     <!-- Real-Time Duplicate Warning Card -->
-                    <div x-show="duplicateInfo.exists" x-cloak class="mt-2.5 p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 space-y-2 animate-fadeIn">
+                    <div x-show="duplicateInfo.exists" x-cloak class="mt-3 p-4 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950 space-y-2">
                         <div class="font-bold flex items-center text-amber-900">
                             <i class="fas fa-exclamation-circle text-amber-600 mr-1.5 text-sm"></i> Rekod Permohonan Aktif Ditemui
                         </div>
@@ -161,42 +191,56 @@
                     </div>
                 </div>
 
+                <!-- 1. Nama Penuh -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            1. NAMA PENUH <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('nama')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
+                    <input type="text" name="nama" x-model="formData.nama" value="{{ old('nama') }}" required placeholder="Contoh: WAN MUHAMMAD AZLAN BIN WAN HASSAN"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm uppercase transition"
+                           :class="{'autofill-highlight': isAutofilled('nama')}">
+                    @error('nama') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
                 <!-- 3. No Telefon -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        3. NO. TELEFON <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="tel" name="no_telefon" value="{{ old('no_telefon') }}" required placeholder="Contoh: 019-9112233"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            3. NO. TELEFON <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('no_telefon')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
+                    <input type="tel" name="no_telefon" x-model="formData.no_telefon" value="{{ old('no_telefon') }}" required placeholder="Contoh: 019-9112233"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition"
+                           :class="{'autofill-highlight': isAutofilled('no_telefon')}">
                     @error('no_telefon') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- 4. Alamat Tetap -->
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        4. ALAMAT TETAP <span class="text-rose-500">*</span>
-                    </label>
-                    <textarea name="alamat_tetap" rows="2" required placeholder="Alamat kediaman tetap anda..."
-                              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">{{ old('alamat_tetap') }}</textarea>
-                    @error('alamat_tetap') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-
-                <!-- Poskod Tetap -->
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        POSKOD <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="poskod" value="{{ old('poskod') }}" required maxlength="5" placeholder="Contoh: 15050"
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
-                    @error('poskod') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <!-- Jajahan Tetap -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        JAJAHAN <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="jajahan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            JAJAHAN <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('jajahan')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
+                    <select name="jajahan" x-model="formData.jajahan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition"
+                            :class="{'autofill-highlight': isAutofilled('jajahan')}">
                         <option value="">-- Pilih Jajahan --</option>
                         @foreach($jajahans as $j)
                             <option value="{{ $j }}" {{ old('jajahan') == $j ? 'selected' : '' }}>{{ $j }}</option>
@@ -205,78 +249,133 @@
                     @error('jajahan') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <!-- 4. Alamat Tetap -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            4. ALAMAT TETAP <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('alamat_tetap')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
+                    <textarea name="alamat_tetap" x-model="formData.alamat_tetap" rows="2" required placeholder="Alamat kediaman tetap anda..."
+                              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition"
+                              :class="{'autofill-highlight': isAutofilled('alamat_tetap')}">{{ old('alamat_tetap') }}</textarea>
+                    @error('alamat_tetap') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <!-- Poskod Tetap -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            POSKOD <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('poskod')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
+                    <input type="text" name="poskod" x-model="formData.poskod" value="{{ old('poskod') }}" required maxlength="5" placeholder="Contoh: 15050"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition"
+                           :class="{'autofill-highlight': isAutofilled('poskod')}">
+                    @error('poskod') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
                 <!-- 5. Pengalaman Menternak -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        5. PENGALAMAN MENTERNAK (TAHUN) <span class="text-rose-500">*</span>
-                    </label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            5. PENGALAMAN MENTERNAK (TAHUN) <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('pengalaman_menternak')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Rekod Sedia Ada
+                            </span>
+                        </template>
+                    </div>
                     <div class="relative">
-                        <input type="number" name="pengalaman_menternak" value="{{ old('pengalaman_menternak', 0) }}" min="0" max="80" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16">
+                        <input type="number" name="pengalaman_menternak" x-model.number="formData.pengalaman_menternak" value="{{ old('pengalaman_menternak', 0) }}" min="0" max="80" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16 transition"
+                               :class="{'autofill-highlight': isAutofilled('pengalaman_menternak')}">
                         <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-semibold text-slate-400">Tahun</span>
                     </div>
                     @error('pengalaman_menternak') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <!-- 6. Status Penternakan -->
-                <div>
+                <div class="md:col-span-2">
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                         6. STATUS PENTERNAKAN <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-3 mt-1.5">
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors {{ old('status_penternakan', 'Sepenuh Masa') == 'Sepenuh Masa' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="status_penternakan" value="Sepenuh Masa" {{ old('status_penternakan', 'Sepenuh Masa') == 'Sepenuh Masa' ? 'checked' : '' }} class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">Sepenuh Masa</span>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+                               :class="formData.status_penternakan === 'Sepenuh Masa' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="status_penternakan" value="Sepenuh Masa" x-model="formData.status_penternakan" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="ml-2 text-xs text-slate-800">Sepenuh Masa</span>
                         </label>
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors {{ old('status_penternakan') == 'Sampingan' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="status_penternakan" value="Sampingan" {{ old('status_penternakan') == 'Sampingan' ? 'checked' : '' }} class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">Sampingan</span>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+                               :class="formData.status_penternakan === 'Sampingan' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="status_penternakan" value="Sampingan" x-model="formData.status_penternakan" class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="ml-2 text-xs text-slate-800">Sampingan</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- 7. Kursus Berkaitan -->
-                <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200" x-data="{ pernahKursus: '{{ old('pernah_kursus', '0') }}' }">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                        7. PERNAH MENGIKUTI SEBARANG KURSUS BERKAITAN? <span class="text-rose-500">*</span>
-                    </label>
+                <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            7. PERNAH MENGIKUTI SEBARANG KURSUS BERKAITAN? <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('pernah_kursus')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-graduation-cap text-emerald-600 mr-1"></i> Rekod Kursus JPVNK
+                            </span>
+                        </template>
+                    </div>
                     <div class="flex items-center space-x-6 mb-3">
                         <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="pernah_kursus" value="1" x-model="pernahKursus" class="text-emerald-600 focus:ring-emerald-500">
+                            <input type="radio" name="pernah_kursus" value="1" x-model="formData.pernah_kursus" class="text-emerald-600 focus:ring-emerald-500">
                             <span class="ml-2 text-xs font-semibold text-slate-800">YA</span>
                         </label>
                         <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="pernah_kursus" value="0" x-model="pernahKursus" class="text-emerald-600 focus:ring-emerald-500">
+                            <input type="radio" name="pernah_kursus" value="0" x-model="formData.pernah_kursus" class="text-emerald-600 focus:ring-emerald-500">
                             <span class="ml-2 text-xs font-semibold text-slate-800">TIDAK</span>
                         </label>
                     </div>
 
                     <!-- Jika Ya: Butiran Kursus -->
-                    <div x-show="pernahKursus === '1'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
+                    <div x-show="formData.pernah_kursus === '1' || formData.pernah_kursus === 1 || formData.pernah_kursus === true" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">NAMA KURSUS:</label>
-                            <input type="text" name="nama_kursus" value="{{ old('nama_kursus') }}" placeholder="Contoh: Kursus Pengurusan Ternakan Bridlot"
-                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 focus:border-emerald-500">
+                            <input type="text" name="nama_kursus" x-model="formData.nama_kursus" value="{{ old('nama_kursus') }}" placeholder="Contoh: Kursus Pengurusan Ternakan Bridlot"
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 focus:border-emerald-500 transition"
+                                   :class="{'autofill-highlight': isAutofilled('nama_kursus')}">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">ANJURAN:</label>
-                            <input type="text" name="anjuran_kursus" value="{{ old('anjuran_kursus') }}" placeholder="Contoh: JPV Negeri Kelantan / MARDI"
-                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 focus:border-emerald-500">
+                            <input type="text" name="anjuran_kursus" x-model="formData.anjuran_kursus" value="{{ old('anjuran_kursus') }}" placeholder="Contoh: JPV Negeri Kelantan / MARDI"
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 focus:border-emerald-500 transition"
+                                   :class="{'autofill-highlight': isAutofilled('anjuran_kursus')}">
                         </div>
                     </div>
 
                     <!-- Jika Tidak: Minat Sertai Kursus JPVNK -->
-                    <div x-show="pernahKursus === '0'" class="mt-3 pt-3 border-t border-slate-200">
+                    <div x-show="formData.pernah_kursus === '0' || formData.pernah_kursus === 0 || formData.pernah_kursus === false" class="mt-3 pt-3 border-t border-slate-200">
                         <label class="block text-xs font-semibold text-slate-700 mb-1">
                             JIKA TIDAK, ADAKAH ANDA BERMINAT UNTUK MENYERTAI KURSUS YANG DIANJURKAN JPVNK?
                         </label>
                         <div class="flex items-center space-x-6 mt-1">
                             <label class="inline-flex items-center">
-                                <input type="radio" name="berminat_kursus_jpvnk" value="1" {{ old('berminat_kursus_jpvnk', '1') == '1' ? 'checked' : '' }} class="text-emerald-600">
+                                <input type="radio" name="berminat_kursus_jpvnk" value="1" x-model="formData.berminat_kursus_jpvnk" class="text-emerald-600">
                                 <span class="ml-2 text-xs font-medium text-slate-700">YA, BERMINAT</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="berminat_kursus_jpvnk" value="0" {{ old('berminat_kursus_jpvnk') == '0' ? 'checked' : '' }} class="text-emerald-600">
+                                <input type="radio" name="berminat_kursus_jpvnk" value="0" x-model="formData.berminat_kursus_jpvnk" class="text-emerald-600">
                                 <span class="ml-2 text-xs font-medium text-slate-700">TIDAK</span>
                             </label>
                         </div>
@@ -288,7 +387,7 @@
         <!-- ========================================== -->
         <!-- SEKSYEN 2: MAKLUMAT ASAS LADANG            -->
         <!-- ========================================== -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8" x-data="{ samaAlamat: true }">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
             <div class="flex items-center space-x-3 pb-4 mb-6 border-b border-slate-200">
                 <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-extrabold flex items-center justify-center text-sm">2</span>
                 <div>
@@ -310,18 +409,21 @@
                     </div>
                     
                     <div x-show="!samaAlamat" class="space-y-3 mt-2">
-                        <textarea name="alamat_ladang" rows="2" placeholder="Alamat tapak ladang / kandang..."
-                                  class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">{{ old('alamat_ladang') }}</textarea>
+                        <textarea name="alamat_ladang" x-model="formData.alamat_ladang" rows="2" placeholder="Alamat tapak ladang / kandang..."
+                                  class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition"
+                                  :class="{'autofill-highlight': isAutofilled('alamat_ladang')}">{{ old('alamat_ladang') }}</textarea>
                         
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">POSKOD LADANG</label>
-                                <input type="text" name="poskod_ladang" value="{{ old('poskod_ladang') }}" maxlength="5" placeholder="Poskod"
-                                       class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
+                                <input type="text" name="poskod_ladang" x-model="formData.poskod_ladang" value="{{ old('poskod_ladang') }}" maxlength="5" placeholder="Poskod"
+                                       class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs transition"
+                                       :class="{'autofill-highlight': isAutofilled('poskod_ladang')}">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">JAJAHAN LADANG</label>
-                                <select name="jajahan_ladang" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
+                                <select name="jajahan_ladang" x-model="formData.jajahan_ladang" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs transition"
+                                        :class="{'autofill-highlight': isAutofilled('jajahan_ladang')}">
                                     <option value="">-- Pilih Jajahan --</option>
                                     @foreach($jajahans as $j)
                                         <option value="{{ $j }}" {{ old('jajahan_ladang') == $j ? 'selected' : '' }}>{{ $j }}</option>
@@ -338,9 +440,16 @@
                 <!-- 9. Lokasi GPS -->
                 <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            9. LOKASI GPS LADANG
-                        </label>
+                        <div class="flex items-center gap-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                9. LOKASI GPS LADANG
+                            </label>
+                            <template x-if="isAutofilled('gps_latitud')">
+                                <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                    <i class="fas fa-map-marker-alt text-emerald-600 mr-1"></i> Koordinat Rekod JPVNK
+                                </span>
+                            </template>
+                        </div>
                         <button type="button" @click="detectLocation()" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm">
                             <i class="fas fa-crosshairs mr-1.5"></i> Kesan Lokasi Semasa Saya
                         </button>
@@ -350,12 +459,14 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">LONGITUD [E]</label>
                             <input type="text" name="gps_longitud" x-model="gpsLng" placeholder="Contoh: 102.291240"
-                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500">
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 font-mono"
+                                   :class="{'autofill-highlight': isAutofilled('gps_longitud')}">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 mb-1">LATITUD [N]</label>
                             <input type="text" name="gps_latitud" x-model="gpsLat" placeholder="Contoh: 6.158420"
-                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500">
+                                   class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-emerald-500 font-mono"
+                                   :class="{'autofill-highlight': isAutofilled('gps_latitud')}">
                         </div>
                     </div>
 
@@ -369,34 +480,42 @@
                 </div>
 
                 <!-- 10. Status Tanah -->
-                <div class="md:col-span-2" x-data="{ statusTanah: '{{ old('status_tanah', 'Sendiri') }}' }">
+                <div class="md:col-span-2">
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                         10. STATUS TANAH <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         @foreach(['Sendiri', 'Sewa', 'Kerajaan', 'Lain-lain'] as $st)
-                            <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="statusTanah === '{{ $st }}' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300'">
-                                <input type="radio" name="status_tanah" value="{{ $st }}" x-model="statusTanah" class="text-emerald-600 focus:ring-emerald-500">
-                                <span class="ml-2 text-xs font-semibold text-slate-800">{{ $st }}</span>
+                            <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.status_tanah === '{{ $st }}' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                                <input type="radio" name="status_tanah" value="{{ $st }}" x-model="formData.status_tanah" class="text-emerald-600 focus:ring-emerald-500">
+                                <span class="ml-2 text-xs text-slate-800">{{ $st }}</span>
                             </label>
                         @endforeach
                     </div>
 
-                    <div x-show="statusTanah === 'Lain-lain'" class="mt-3">
+                    <div x-show="formData.status_tanah === 'Lain-lain'" class="mt-3">
                         <label class="block text-[11px] font-semibold text-slate-700 mb-1">JIKA LAIN-LAIN, NYATAKAN:</label>
-                        <input type="text" name="status_tanah_lain" value="{{ old('status_tanah_lain') }}" placeholder="Nyatakan status tanah..."
+                        <input type="text" name="status_tanah_lain" x-model="formData.status_tanah_lain" value="{{ old('status_tanah_lain') }}" placeholder="Nyatakan status tanah..."
                                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
                     </div>
                 </div>
 
                 <!-- 11. Keluasan Tanah -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        11. KELUASAN TANAH <span class="text-rose-500">*</span>
-                    </label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            11. KELUASAN TANAH <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('keluasan_tanah')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill JPVNK
+                            </span>
+                        </template>
+                    </div>
                     <div class="relative">
-                        <input type="number" step="0.1" min="0.1" name="keluasan_tanah" value="{{ old('keluasan_tanah', 1) }}" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16">
+                        <input type="number" step="0.1" min="0.1" name="keluasan_tanah" x-model="formData.keluasan_tanah" value="{{ old('keluasan_tanah') }}" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16 transition"
+                               :class="{'autofill-highlight': isAutofilled('keluasan_tanah')}">
                         <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-semibold text-slate-400">Ekar</span>
                     </div>
                     @error('keluasan_tanah') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
@@ -408,25 +527,35 @@
                         12. PADANG RAGUT <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-3 mt-1">
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 {{ old('padang_ragut', 'Ada') == 'Ada' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="padang_ragut" value="Ada" {{ old('padang_ragut', 'Ada') == 'Ada' ? 'checked' : '' }} class="text-emerald-600">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">ADA</span>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+                               :class="formData.padang_ragut === 'Ada' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="padang_ragut" value="Ada" x-model="formData.padang_ragut" class="text-emerald-600">
+                            <span class="ml-2 text-xs text-slate-800">ADA</span>
                         </label>
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 {{ old('padang_ragut') == 'Tiada' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="padang_ragut" value="Tiada" {{ old('padang_ragut') == 'Tiada' ? 'checked' : '' }} class="text-emerald-600">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">TIADA</span>
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+                               :class="formData.padang_ragut === 'Tiada' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="padang_ragut" value="Tiada" x-model="formData.padang_ragut" class="text-emerald-600">
+                            <span class="ml-2 text-xs text-slate-800">TIADA</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- 13. Bilangan Pekerja -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        13. BILANGAN PEKERJA <span class="text-rose-500">*</span>
-                    </label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            13. BILANGAN PEKERJA <span class="text-rose-500">*</span>
+                        </label>
+                        <template x-if="isAutofilled('bilangan_pekerja')">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">
+                                <i class="fas fa-check text-emerald-600 mr-1"></i> Auto-fill
+                            </span>
+                        </template>
+                    </div>
                     <div class="relative">
-                        <input type="number" min="0" name="bilangan_pekerja" value="{{ old('bilangan_pekerja', 1) }}" required
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16">
+                        <input type="number" min="0" name="bilangan_pekerja" x-model.number="formData.bilangan_pekerja" value="{{ old('bilangan_pekerja', 1) }}" required
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm pr-16 transition"
+                               :class="{'autofill-highlight': isAutofilled('bilangan_pekerja')}">
                         <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-semibold text-slate-400">Orang</span>
                     </div>
                 </div>
@@ -448,27 +577,27 @@
             <!-- 14. Punca Ternakan & 15. Kaedah Pembiakan -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 pb-6 border-b border-slate-200">
                 <!-- 14. Punca Ternakan -->
-                <div x-data="{ puncaTernakan: '{{ old('punca_ternakan', 'Beli') }}' }">
+                <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                         14. PUNCA TERNAKAN <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-3 gap-2">
-                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50" :class="puncaTernakan === 'Beli' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300'">
-                            <input type="radio" name="punca_ternakan" value="Beli" x-model="puncaTernakan" class="text-emerald-600">
-                            <span class="ml-1.5 text-xs font-semibold text-slate-800">BELI</span>
+                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.punca_ternakan === 'Beli' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="punca_ternakan" value="Beli" x-model="formData.punca_ternakan" class="text-emerald-600">
+                            <span class="ml-1.5 text-xs text-slate-800">BELI</span>
                         </label>
-                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50" :class="puncaTernakan === 'Pawah' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300'">
-                            <input type="radio" name="punca_ternakan" value="Pawah" x-model="puncaTernakan" class="text-emerald-600">
-                            <span class="ml-1.5 text-xs font-semibold text-slate-800">PAWAH</span>
+                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.punca_ternakan === 'Pawah' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="punca_ternakan" value="Pawah" x-model="formData.punca_ternakan" class="text-emerald-600">
+                            <span class="ml-1.5 text-xs text-slate-800">PAWAH</span>
                         </label>
-                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50" :class="puncaTernakan === 'Lain-lain' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300'">
-                            <input type="radio" name="punca_ternakan" value="Lain-lain" x-model="puncaTernakan" class="text-emerald-600">
-                            <span class="ml-1.5 text-xs font-semibold text-slate-800">LAIN-LAIN</span>
+                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.punca_ternakan === 'Lain-lain' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="punca_ternakan" value="Lain-lain" x-model="formData.punca_ternakan" class="text-emerald-600">
+                            <span class="ml-1.5 text-xs text-slate-800">LAIN-LAIN</span>
                         </label>
                     </div>
 
-                    <div x-show="puncaTernakan === 'Lain-lain'" class="mt-2">
-                        <input type="text" name="punca_ternakan_lain" value="{{ old('punca_ternakan_lain') }}" placeholder="Nyatakan punca ternakan..."
+                    <div x-show="formData.punca_ternakan === 'Lain-lain'" class="mt-2">
+                        <input type="text" name="punca_ternakan_lain" x-model="formData.punca_ternakan_lain" value="{{ old('punca_ternakan_lain') }}" placeholder="Nyatakan punca ternakan..."
                                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs">
                     </div>
                 </div>
@@ -479,13 +608,13 @@
                         15. KAEDAH PEMBIAKAN <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 {{ old('kaedah_pembiakan', 'Asli') == 'Asli' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="kaedah_pembiakan" value="Asli" {{ old('kaedah_pembiakan', 'Asli') == 'Asli' ? 'checked' : '' }} class="text-emerald-600">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">ASLI</span>
+                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.kaedah_pembiakan === 'Asli' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="kaedah_pembiakan" value="Asli" x-model="formData.kaedah_pembiakan" class="text-emerald-600">
+                            <span class="ml-2 text-xs text-slate-800">ASLI</span>
                         </label>
-                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 {{ old('kaedah_pembiakan') == 'Permanian Beradas' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-300' }}">
-                            <input type="radio" name="kaedah_pembiakan" value="Permanian Beradas" {{ old('kaedah_pembiakan') == 'Permanian Beradas' ? 'checked' : '' }} class="text-emerald-600">
-                            <span class="ml-2 text-xs font-semibold text-slate-800">PERMANIAN BERADAS (AI)</span>
+                        <label class="flex items-center p-2.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" :class="formData.kaedah_pembiakan === 'Permanian Beradas' ? 'border-emerald-500 bg-emerald-50/50 font-bold' : 'border-slate-300'">
+                            <input type="radio" name="kaedah_pembiakan" value="Permanian Beradas" x-model="formData.kaedah_pembiakan" class="text-emerald-600">
+                            <span class="ml-2 text-xs text-slate-800">PERMANIAN BERADAS (AI)</span>
                         </label>
                     </div>
                 </div>
@@ -527,7 +656,7 @@
                                         {{ $b }}
                                         @if($b === 'LAIN-LAIN')
                                             <div class="mt-1">
-                                                <input type="text" name="stok[{{ $b }}][nama_baka_lain]" placeholder="Nyatakan baka lain..."
+                                                <input type="text" name="stok[{{ $b }}][nama_baka_lain]" x-model="stok.lain_lain.nama_baka_lain" placeholder="Nyatakan baka lain..."
                                                        class="w-full px-2 py-1 text-[11px] rounded border border-slate-300 font-normal">
                                             </div>
                                         @endif
@@ -600,48 +729,51 @@
                 </div>
             </div>
 
-            <!-- Checkbox Pengakuan -->
-            <div class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl mb-6">
-                <label class="flex items-start cursor-pointer">
-                    <input type="checkbox" name="pengakuan_benar" value="1" required checked
-                           class="mt-1 h-4 w-4 text-emerald-600 rounded focus:ring-emerald-500">
-                    <span class="ml-3 text-xs sm:text-sm font-bold text-slate-800 uppercase leading-relaxed">
-                        SAYA MENGAKUI BAHAWA BUTIRAN DI ATAS ADALAH BENAR DAN SAHIH.
-                    </span>
-                </label>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Signature Pad -->
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            TANDATANGAN PEMOHON
-                        </label>
-                        <button type="button" @click="clearSignature()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold">
-                            <i class="fas fa-redo-alt mr-1"></i> Padam Semula
-                        </button>
-                    </div>
-                    <div class="border-2 border-dashed border-slate-300 rounded-xl overflow-hidden bg-slate-50 relative">
-                        <canvas id="signatureCanvas" class="w-full h-40 touch-none bg-white"></canvas>
-                        <div class="absolute bottom-2 left-3 text-[10px] text-slate-400 pointer-events-none">
-                            <i class="fas fa-pencil-alt mr-1"></i> Tandatangan menggunakan tetikus / skrin sentuh
-                        </div>
-                    </div>
-                    <input type="hidden" name="tandatangan" id="signatureData">
+            <div class="space-y-6">
+                <!-- Pengakuan Benar Checkbox -->
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <label class="flex items-start cursor-pointer">
+                        <input type="checkbox" name="pengakuan_benar" value="1" required {{ old('pengakuan_benar') ? 'checked' : '' }}
+                               class="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        <span class="ml-3 text-xs leading-relaxed font-semibold text-slate-800">
+                            SAYA MENGAKUI BAHAWA SEMUA BUTIRAN DAN MAKLUMAT YANG DIBERIKAN DI ATAS ADALAH BENAR DAN TEPAT. SEKIRANYA TERDAPAT SEBARANG MAKLUMAT PALSU, PIHAK JABATAN BERHAK MEMBATALKAN PERMOHONAN SAYA SERTA-MERTA.
+                        </span>
+                    </label>
+                    @error('pengakuan_benar') <p class="text-rose-600 text-xs mt-2 ml-8">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- Tarikh Permohonan -->
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        TARIKH PERMOHONAN
-                    </label>
-                    <input type="date" name="tarikh_permohonan" value="{{ date('Y-m-d') }}" readonly
-                           class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-slate-100 text-sm font-semibold text-slate-700">
-                    
-                    <div class="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 space-y-1">
-                        <div class="font-bold text-slate-700"><i class="fas fa-shield-alt text-emerald-600 mr-1"></i> Pengesahan Rasmi</div>
-                        <p>Setelah dihantar, permohonan anda akan terus direkodkan ke dalam pangkalan data Pejabat Perkhidmatan Veterinar Negeri Kelantan.</p>
+                <!-- Signature Pad Container -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                TANDATANGAN DIGITAL PEMOHON
+                            </label>
+                            <button type="button" @click="clearSignature()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold underline">
+                                <i class="fas fa-undo mr-1"></i> Padam Semula
+                            </button>
+                        </div>
+                        <div class="border-2 border-dashed border-slate-300 rounded-2xl bg-white p-1 relative shadow-inner">
+                            <canvas id="signatureCanvas" class="w-full h-44 rounded-xl cursor-crosshair"></canvas>
+                            <div class="absolute bottom-2 left-3 text-[10px] text-slate-400 pointer-events-none">
+                                <i class="fas fa-pencil-alt mr-1"></i> Tandatangan menggunakan tetikus / skrin sentuh
+                            </div>
+                        </div>
+                        <input type="hidden" name="tandatangan" id="signatureData">
+                    </div>
+
+                    <!-- Tarikh Permohonan -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                            TARIKH PERMOHONAN
+                        </label>
+                        <input type="date" name="tarikh_permohonan" value="{{ date('Y-m-d') }}" readonly
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-slate-100 text-sm font-semibold text-slate-700">
+                        
+                        <div class="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 space-y-1">
+                            <div class="font-bold text-slate-700"><i class="fas fa-shield-alt text-emerald-600 mr-1"></i> Pengesahan Rasmi</div>
+                            <p>Setelah dihantar, permohonan anda akan terus direkodkan ke dalam pangkalan data Pejabat Perkhidmatan Veterinar Negeri Kelantan.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -676,11 +808,41 @@
 
     function applicationForm() {
         return {
-            noKp: '{{ old("no_kp", "") }}',
+            noKp: '{{ old("no_kp", $pemunya->no_kp ?? ($user->ic_number ?? "")) }}',
             isCheckingIc: false,
+            autofillActive: false,
+            autofillSource: '',
+            autofillKeys: [],
             duplicateInfo: { exists: false },
+            samaAlamat: true,
             gpsLat: '{{ old("gps_latitud", "6.1254") }}',
             gpsLng: '{{ old("gps_longitud", "102.2381") }}',
+            
+            formData: {
+                nama: '{{ old("nama", $pemunya->nama ?? ($user->name ?? "")) }}',
+                no_telefon: '{{ old("no_telefon", $pemunya->no_telefon ?? ($user->phone ?? "")) }}',
+                alamat_tetap: '{{ old("alamat_tetap", $pemunya->alamat ?? ($user->address ?? "")) }}',
+                poskod: '{{ old("poskod", $pemunya->poskod ?? ($user->poskod ?? "")) }}',
+                jajahan: '{{ old("jajahan", $pemunya->jajahan ?? ($user->jajahan ?? "")) }}',
+                pengalaman_menternak: {{ old("pengalaman_menternak", 0) }},
+                status_penternakan: '{{ old("status_penternakan", "Sepenuh Masa") }}',
+                pernah_kursus: '{{ old("pernah_kursus", "0") }}',
+                nama_kursus: '{{ old("nama_kursus", "") }}',
+                anjuran_kursus: '{{ old("anjuran_kursus", "") }}',
+                berminat_kursus_jpvnk: '{{ old("berminat_kursus_jpvnk", "1") }}',
+                alamat_ladang: '{{ old("alamat_ladang", "") }}',
+                poskod_ladang: '{{ old("poskod_ladang", "") }}',
+                jajahan_ladang: '{{ old("jajahan_ladang", "") }}',
+                status_tanah: '{{ old("status_tanah", "Sendiri") }}',
+                status_tanah_lain: '{{ old("status_tanah_lain", "") }}',
+                keluasan_tanah: '{{ old("keluasan_tanah", "") }}',
+                padang_ragut: '{{ old("padang_ragut", "Ada") }}',
+                bilangan_pekerja: {{ old("bilangan_pekerja", 1) }},
+                punca_ternakan: '{{ old("punca_ternakan", "Beli") }}',
+                punca_ternakan_lain: '{{ old("punca_ternakan_lain", "") }}',
+                kaedah_pembiakan: '{{ old("kaedah_pembiakan", "Permanian Beradas") }}',
+            },
+
             stok: {
                 @foreach($bakas as $b)
                 '{{ \Illuminate\Support\Str::slug($b, '_') }}': {
@@ -688,16 +850,23 @@
                     betina_dara: 0,
                     betina_induk: 0,
                     jantan_anak: 0,
-                    jantan_pejantan: 0
+                    jantan_pejantan: 0,
+                    @if($b === 'LAIN-LAIN')
+                    nama_baka_lain: ''
+                    @endif
                 },
                 @endforeach
+            },
+
+            isAutofilled(key) {
+                return this.autofillKeys.includes(key);
             },
 
             init() {
                 this.$nextTick(() => {
                     this.initMap();
                     this.initSignature();
-                    if (this.noKp && this.noKp.replace(/[^0-9]/g, '').length === 12) {
+                    if (this.noKp && this.noKp.replace(/[^0-9]/g, '').length >= 6) {
                         this.checkIc();
                     }
                 });
@@ -705,19 +874,72 @@
 
             async checkIc() {
                 const clean = (this.noKp || '').replace(/[^0-9]/g, '');
-                if (clean.length === 12) {
-                    this.isCheckingIc = true;
-                    try {
-                        const res = await fetch('{{ route("naimbif.public.check_ic") }}?no_kp=' + encodeURIComponent(clean));
-                        const data = await res.json();
-                        this.duplicateInfo = data;
-                    } catch (e) {
-                        console.error('Ralat semasa semakan No. KP:', e);
-                    } finally {
-                        this.isCheckingIc = false;
-                    }
-                } else {
+                if (clean.length < 6) {
                     this.duplicateInfo = { exists: false };
+                    this.autofillActive = false;
+                    this.autofillKeys = [];
+                    return;
+                }
+
+                this.isCheckingIc = true;
+                try {
+                    const res = await fetch('{{ route("naimbif.public.check_ic") }}?no_kp=' + encodeURIComponent(clean));
+                    const data = await res.json();
+                    
+                    if (data.has_active_application) {
+                        this.duplicateInfo = data.application || { exists: true };
+                        this.duplicateInfo.exists = true;
+                    } else {
+                        this.duplicateInfo = { exists: false };
+                    }
+
+                    if (data.found && data.autofill) {
+                        this.autofillActive = true;
+                        this.autofillSource = data.source_label || 'Pangkalan Data JPVNK';
+                        this.autofillKeys = data.autofill_keys || [];
+
+                        // 1. Isikan Data Peserta & Ladang
+                        for (const key in data.autofill) {
+                            if (key === 'stok') continue;
+                            const val = data.autofill[key];
+                            if (val !== null && val !== undefined && val !== '') {
+                                this.formData[key] = val;
+                            }
+                        }
+
+                        // 2. Set GPS Koordinat & Reposisi Peta
+                        if (data.autofill.gps_latitud && data.autofill.gps_longitud) {
+                            this.gpsLat = data.autofill.gps_latitud;
+                            this.gpsLng = data.autofill.gps_longitud;
+                            const lat = parseFloat(this.gpsLat);
+                            const lng = parseFloat(this.gpsLng);
+                            if (!isNaN(lat) && !isNaN(lng) && map && marker) {
+                                map.setView([lat, lng], 14);
+                                marker.setLatLng([lat, lng]);
+                            }
+                        }
+
+                        // 3. Set Alamat Ladang status jika berbeza
+                        if (data.autofill.alamat_ladang && data.autofill.alamat_ladang !== data.autofill.alamat_tetap) {
+                            this.samaAlamat = false;
+                        }
+
+                        // 4. Set Stok Ternakan
+                        if (data.autofill.stok && typeof data.autofill.stok === 'object') {
+                            for (const bKey in data.autofill.stok) {
+                                if (this.stok[bKey]) {
+                                    this.stok[bKey] = Object.assign({}, this.stok[bKey], data.autofill.stok[bKey]);
+                                }
+                            }
+                        }
+                    } else if (!data.found) {
+                        this.autofillActive = false;
+                        this.autofillKeys = [];
+                    }
+                } catch (e) {
+                    console.error('Ralat semasa semakan No. KP:', e);
+                } finally {
+                    this.isCheckingIc = false;
                 }
             },
 
@@ -747,6 +969,8 @@
             updateGps(lat, lng) {
                 this.gpsLat = lat.toFixed(6);
                 this.gpsLng = lng.toFixed(6);
+                this.formData.gps_latitud = this.gpsLat;
+                this.formData.gps_longitud = this.gpsLng;
             },
 
             detectLocation() {

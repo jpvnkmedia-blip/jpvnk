@@ -47,7 +47,22 @@ class NaimbifIntegrationTest extends TestCase
                 'found' => true,
                 'data' => [
                     'nama' => $pemunya->nama,
-                ]
+                ],
+                'autofill' => [
+                    'nama' => $pemunya->nama,
+                ],
+            ]);
+            $response->assertJsonStructure([
+                'found',
+                'source',
+                'source_label',
+                'autofill_keys',
+                'autofill' => [
+                    'nama',
+                    'no_telefon',
+                    'alamat_tetap',
+                    'jajahan',
+                ],
             ]);
         } else {
             $this->assertTrue(true);
