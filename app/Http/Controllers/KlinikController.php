@@ -155,13 +155,19 @@ class KlinikController extends Controller implements HasMiddleware
         ];
 
         $registeredClients = [];
+        $adminKlinikNama = null;
         if (Auth::user()->isStaff()) {
             $registeredClients = User::whereIn('role', ['orang_awam', 'penternak', 'usahawan'])
                 ->orderBy('name')
                 ->get();
+
+            $adminJajahan = Auth::user()->jajahan ?: 'Kota Bharu';
+            $adminKlinikNama = (strcasecmp($adminJajahan, 'Kota Bharu') === 0 || empty(Auth::user()->jajahan))
+                ? 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu'
+                : 'Pusat Veterinar Jajahan ' . $adminJajahan;
         }
 
-        return view('klinik.create', compact('klinikList', 'registeredClients'));
+        return view('klinik.create', compact('klinikList', 'registeredClients', 'adminKlinikNama'));
     }
 
     /**
@@ -226,6 +232,8 @@ class KlinikController extends Controller implements HasMiddleware
 
     public function store(Request $request)
     {
+        $isStaff = Auth::user()->isStaff();
+
         $rules = [
             'jenis_haiwan' => 'required|string',
             'nama_haiwan' => 'nullable|string|max:100',
@@ -235,10 +243,10 @@ class KlinikController extends Controller implements HasMiddleware
             'simptom_atau_tujuan' => 'required|string',
             'tarikh_temujanji' => 'required|date|after_or_equal:today',
             'sesi' => 'required|string',
-            'klinik_jajahan' => 'required|string',
+            'klinik_jajahan' => $isStaff ? 'nullable|string' : 'required|string',
         ];
 
-        if (Auth::user()->isStaff()) {
+        if ($isStaff) {
             $rules['user_id'] = 'nullable|exists:users,id';
             $rules['no_kp_pemilik'] = 'nullable|string|max:30';
             $rules['nama_pemilik'] = 'nullable|string|max:255';
@@ -249,6 +257,14 @@ class KlinikController extends Controller implements HasMiddleware
         }
 
         $validated = $request->validate($rules);
+
+        // Tentukan klinik jajahan: jika staf/walk-in, gunakan klinik bertugas staf jika tidak dinyatakan
+        $adminJajahan = Auth::user()->jajahan ?: 'Kota Bharu';
+        $defaultKlinik = (strcasecmp($adminJajahan, 'Kota Bharu') === 0 || empty(Auth::user()->jajahan))
+            ? 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu'
+            : 'Pusat Veterinar Jajahan ' . $adminJajahan;
+
+        $klinikJajahan = !empty($validated['klinik_jajahan']) ? $validated['klinik_jajahan'] : $defaultKlinik;
 
         $userId = Auth::id();
 
@@ -333,7 +349,7 @@ class KlinikController extends Controller implements HasMiddleware
             'simptom_atau_tujuan' => $validated['simptom_atau_tujuan'],
             'tarikh_temujanji' => $validated['tarikh_temujanji'],
             'sesi' => $validated['sesi'],
-            'klinik_jajahan' => $validated['klinik_jajahan'],
+            'klinik_jajahan' => $klinikJajahan,
             'status' => 'Disahkan',
             'catatan_pegawai' => 'Temujanji disahkan secara automatik. Sila hadir 15 minit awal.',
         ]);

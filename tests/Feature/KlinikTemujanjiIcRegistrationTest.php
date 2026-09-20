@@ -22,6 +22,7 @@ class KlinikTemujanjiIcRegistrationTest extends TestCase
             'role' => 'admin_klinik',
             'email' => 'adminklinik@example.com',
             'ic_number' => '800101031111',
+            'jajahan' => 'Kota Bharu',
         ]);
     }
 
@@ -76,7 +77,6 @@ class KlinikTemujanjiIcRegistrationTest extends TestCase
         ]);
 
         $postData = [
-            'klinik_jajahan' => 'Pusat Veterinar Jajahan Pasir Mas',
             'jenis_haiwan' => 'Kucing',
             'nama_haiwan' => 'Comel',
             'baka' => 'Domestic Short Hair',
@@ -101,6 +101,7 @@ class KlinikTemujanjiIcRegistrationTest extends TestCase
             'user_id' => $existingUser->id,
             'nama_haiwan' => 'Comel',
             'jenis_haiwan' => 'Kucing',
+            'klinik_jajahan' => 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu',
         ]);
     }
 
@@ -109,7 +110,6 @@ class KlinikTemujanjiIcRegistrationTest extends TestCase
         $newNoKp = '950505037777';
 
         $postData = [
-            'klinik_jajahan' => 'Pusat Veterinar Jajahan Tumpat',
             'jenis_haiwan' => 'Anjing',
             'nama_haiwan' => 'Lucky',
             'baka' => 'Mix',
@@ -147,10 +147,37 @@ class KlinikTemujanjiIcRegistrationTest extends TestCase
         $createdUser = User::where('ic_number', $newNoKp)->first();
         $this->assertNotNull($createdUser);
 
-        // Check appointment is created with new user id
+        // Check appointment is created with new user id and admin default clinic
         $this->assertDatabaseHas('klinik_temujanji', [
             'user_id' => $createdUser->id,
             'nama_haiwan' => 'Lucky',
+            'klinik_jajahan' => 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu',
         ]);
+    }
+
+    public function test_admin_walkin_does_not_see_clinic_dropdown_and_public_user_sees_clinic_dropdown(): void
+    {
+        // 1. Admin Walk-in / Staf: tidak perlu dropdown pilih klinik
+        $adminResponse = $this->actingAs($this->adminKlinik)
+            ->get(route('klinik.create'));
+
+        $adminResponse->assertOk();
+        $adminResponse->assertSee('Pendaftaran Walk-In / Admin');
+        $adminResponse->assertDontSee('Pilih Klinik / Pusat Veterinar Jajahan', false);
+
+        // 2. Pengguna Awam / Penternak / Usahawan: boleh memilih klinik jajahan
+        $orangAwam = User::factory()->create([
+            'role' => 'orang_awam',
+            'email' => 'awam2@example.com',
+        ]);
+
+        $publicResponse = $this->actingAs($orangAwam)
+            ->get(route('klinik.create'));
+
+        $publicResponse->assertOk();
+        $publicResponse->assertSee('Tempahan Awam &amp; Penternak', false);
+        $publicResponse->assertSee('Pilih Klinik / Pusat Veterinar Jajahan');
+        $publicResponse->assertSee('Pusat Veterinar Jajahan Pasir Mas');
+        $publicResponse->assertSee('Pusat Veterinar Jajahan Bachok');
     }
 }

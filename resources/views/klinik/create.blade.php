@@ -6,9 +6,29 @@
 @section('content')
 <div class="max-w-2xl mx-auto bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
     
-    <div class="border-b border-slate-100 pb-4 mb-6">
-        <h3 class="text-base font-bold text-slate-900">Borang Tempahan Temujanji Klinik Veterinar</h3>
-        <p class="text-xs text-slate-500 mt-0.5">Sila masukkan butiran haiwan kesayangan / ternakan dan pilih klinik jajahan berhampiran.</p>
+    <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+            <div class="flex items-center gap-2">
+                @if(Auth::user()->isStaff())
+                    <span class="px-2.5 py-0.5 rounded-lg bg-rose-100 text-rose-900 font-black text-[11px] uppercase tracking-wider">
+                        <i class="fa-solid fa-hospital-user mr-1"></i> Pendaftaran Walk-In / Admin
+                    </span>
+                    <span class="text-xs font-bold text-slate-700">&bull; {{ $adminKlinikNama ?? 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu' }}</span>
+                @else
+                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-black text-[11px] uppercase tracking-wider">
+                        <i class="fa-solid fa-calendar-plus mr-1"></i> Tempahan Awam &amp; Penternak
+                    </span>
+                @endif
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mt-1">Borang Tempahan Temujanji Klinik Veterinar</h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+                @if(Auth::user()->isStaff())
+                    Pendaftaran temujanji &amp; rawatan pesakit bagi pihak pemilik di {{ $adminKlinikNama ?? 'Klinik Haiwan' }}.
+                @else
+                    Sila masukkan butiran haiwan kesayangan / ternakan dan pilih klinik veterinar jajahan berhampiran.
+                @endif
+            </p>
+        </div>
     </div>
 
     <form action="{{ route('klinik.store') }}" method="POST" class="space-y-4 text-xs">
@@ -292,14 +312,19 @@
             </div>
         </div>
 
+        @if(!Auth::user()->isStaff())
         <div>
-            <label class="block font-bold text-slate-700 uppercase mb-1">Pilih Klinik / Pusat Veterinar Jajahan</label>
-            <select name="klinik_jajahan" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+            <label class="block font-bold text-slate-700 uppercase mb-1">Pilih Klinik / Pusat Veterinar Jajahan <span class="text-rose-500">*</span></label>
+            <select name="klinik_jajahan" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none font-semibold">
+                <option value="">-- Sila Pilih Klinik / Pusat Veterinar --</option>
                 @foreach($klinikList as $k)
-                    <option value="{{ $k }}">{{ $k }}</option>
+                    <option value="{{ $k }}" {{ old('klinik_jajahan') == $k ? 'selected' : '' }}>{{ $k }}</option>
                 @endforeach
             </select>
         </div>
+        @else
+        <input type="hidden" name="klinik_jajahan" value="{{ $adminKlinikNama ?? (Auth::user()->jajahan ? 'Pusat Veterinar Jajahan ' . Auth::user()->jajahan : 'Klinik Haiwan Ibu Pejabat JPVNK Kota Bharu') }}">
+        @endif
 
         <div class="pt-4 flex items-center justify-end gap-3">
             <a href="{{ route('klinik.index') }}" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 transition">
