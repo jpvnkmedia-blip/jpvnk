@@ -448,40 +448,6 @@
                 </div>
                 @endif
             </nav>
-
-            <!-- Role Switcher Shortcut Footer (Demo / Testing Helper) -->
-            <div class="p-3 bg-slate-950 border-t border-slate-800">
-                <form action="{{ route('auth.switch-role') }}" method="POST" class="space-y-1.5">
-                    @csrf
-                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                        <span><i class="fa-solid fa-shuffle mr-1 text-emerald-400"></i> Tukar Peranan Demo</span>
-                    </label>
-                    <select name="user_id" onchange="this.form.submit()" class="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
-                        @php
-                            $allDemoUsers = \App\Models\User::orderBy('id')->get();
-                        @endphp
-                        @foreach($allDemoUsers as $u)
-                            <option value="{{ $u->id }}" {{ Auth::id() === $u->id ? 'selected' : '' }}>
-                                @if($u->role === 'super_admin') 👑
-                                @elseif($u->role === 'admin_eptr') 🐄
-                                @elseif($u->role === 'admin_jajahan' || $u->role === 'admin_eptr_jajahan') 🏛️
-                                @elseif($u->role === 'admin_program') 🤝
-                                @elseif($u->role === 'admin_epu') 🐔
-                                @elseif($u->role === 'admin_kursus') 🎓
-                                @elseif($u->role === 'admin_klinik') 🩺
-                                @elseif($u->role === 'admin_pejabat') 🏢
-                                @elseif($u->role === 'admin_ubat') 💊
-                                @elseif($u->role === 'staf') 🧑‍💼
-                                @elseif($u->role === 'penternak') 🌾
-                                @elseif($u->role === 'usahawan') 💼
-                                @else 👤
-                                @endif
-                                {{ $u->role_label }} - {{ $u->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
         </aside>
 
         <!-- Main Content Area -->
