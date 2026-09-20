@@ -11,7 +11,7 @@ class PemanduController extends Controller
     public function index(Request $request)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan melihat dan menguruskan Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan melihat dan menguruskan Maklumat Pemandu.');
         }
 
         $query = Pemandu::query();
@@ -53,16 +53,16 @@ class PemanduController extends Controller
     public function create()
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mendaftar Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mendaftar Maklumat Pemandu.');
         }
 
-        return view('kenderaan.pemandu.create');
+        return redirect()->route('kenderaan.pemandu.index');
     }
 
     public function store(Request $request)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mendaftar Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mendaftar Maklumat Pemandu.');
         }
 
         $validated = $request->validate([
@@ -85,7 +85,7 @@ class PemanduController extends Controller
     public function show($id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan melihat Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan melihat Maklumat Pemandu.');
         }
 
         $pemandu = Pemandu::findOrFail($id);
@@ -95,7 +95,7 @@ class PemanduController extends Controller
     public function edit($id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mengemaskini Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mengemaskini Maklumat Pemandu.');
         }
 
         $pemandu = Pemandu::findOrFail($id);
@@ -105,7 +105,7 @@ class PemanduController extends Controller
     public function update(Request $request, $id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mengemaskini Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mengemaskini Maklumat Pemandu.');
         }
 
         $pemandu = Pemandu::findOrFail($id);
@@ -130,7 +130,7 @@ class PemanduController extends Controller
     public function destroy($id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan memadam Maklumat Pemandu.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan memadam Maklumat Pemandu.');
         }
 
         $pemandu = Pemandu::findOrFail($id);

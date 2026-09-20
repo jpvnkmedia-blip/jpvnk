@@ -97,10 +97,16 @@ class UserController extends Controller implements HasMiddleware
                     'icon' => 'fa-stethoscope text-pink-600',
                 ],
                 'admin_pejabat' => [
-                    'label' => 'Admin Pejabat & Kenderaan',
-                    'desc' => 'Pengurusan stor alatan pejabat, fleet kenderaan rasmi jabatan dan pemandu.',
+                    'label' => 'Admin Stor Pejabat',
+                    'desc' => 'Pengurusan inventori alatan & stor pejabat serta kelulusan permohonan stok bekalan staf.',
                     'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
-                    'icon' => 'fa-building text-indigo-600',
+                    'icon' => 'fa-boxes-stacked text-indigo-600',
+                ],
+                'admin_kenderaan' => [
+                    'label' => 'Admin Kenderaan & Fleet',
+                    'desc' => 'Pengurusan armada kenderaan rasmi jabatan, jadual pemandu dan kelulusan tempahan perjalanan.',
+                    'badge' => 'bg-blue-100 text-blue-800 border-blue-300',
+                    'icon' => 'fa-truck-pickup text-blue-600',
                 ],
                 'staf' => [
                     'label' => 'Kakitangan Jabatan (Staf)',
@@ -208,7 +214,7 @@ class UserController extends Controller implements HasMiddleware
             'super_admin', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
             'admin_program', 'admin_epu_negeri', 'admin_epu', 'pegawai_pelesen',
             'admin_epu_jajahan', 'pegawai_verifikasi_epu',
-            'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat',
+            'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat', 'admin_kenderaan',
             'admin_naimbif_negeri', 'admin_naimbif', 'admin_naimbif_jajahan', 'staf'
         ])->count();
         $totalPenternak = User::where('role', 'penternak')->count();

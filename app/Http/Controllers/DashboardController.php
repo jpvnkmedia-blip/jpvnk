@@ -114,6 +114,9 @@ class DashboardController extends Controller
             $lowStockPejabatCount = InventoriItem::where('jenis_stor', 'pejabat')->where(function ($q) {
                 $q->where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok');
             })->count();
+            $pendingPejabatRequests = \App\Models\InventoriPermohonan::where('jenis_stor', 'pejabat')->where('status', 'Menunggu Kelulusan')->count();
+            $totalPejabatPinjaman = \App\Models\InventoriPinjaman::whereHas('item', fn($q) => $q->where('jenis_stor', 'pejabat'))->where('status', 'Dipinjam')->count();
+            $recentPejabatPermohonan = \App\Models\InventoriPermohonan::where('jenis_stor', 'pejabat')->with(['user', 'item'])->latest()->take(6)->get();
 
             $totalUbatItems = InventoriItem::where('jenis_stor', 'ubat')->count();
             $lowStockUbatCount = InventoriItem::where('jenis_stor', 'ubat')->where(function ($q) {
@@ -136,7 +139,12 @@ class DashboardController extends Controller
 
             $totalVehicles = Kenderaan::count();
             $availableVehicles = Kenderaan::where('status', 'Sedia')->count();
-            $pendingVehicleBookings = KenderaanTempahan::where('status', 'Menunggu')->count();
+            $inUseVehicles = Kenderaan::where('status', 'Sedang Digunakan')->count();
+            $inServiceVehicles = Kenderaan::whereIn('status', ['Dalam Servis', 'Rosak'])->count();
+            $pendingVehicleBookings = KenderaanTempahan::whereIn('status', ['Menunggu', 'Menunggu Kelulusan'])->count();
+            $totalPemandu = \App\Models\Pemandu::count();
+            $activePemandu = \App\Models\Pemandu::whereIn('status', ['Aktif', 'Bertugas'])->count();
+            $recentFleet = Kenderaan::latest()->take(6)->get();
             $totalUsers = User::count();
 
             // NAIMbif Program Metrics (Staff / Admin)
@@ -227,15 +235,21 @@ class DashboardController extends Controller
 
             $totalInventoryItems = 0;
             $lowStockInventoryCount = 0;
-            $totalInventoryItems = 0;
-            $lowStockInventoryCount = 0;
             $totalPejabatItems = 0;
             $lowStockPejabatCount = 0;
+            $pendingPejabatRequests = 0;
+            $totalPejabatPinjaman = 0;
+            $recentPejabatPermohonan = collect();
             $totalUbatItems = 0;
             $lowStockUbatCount = 0;
             $totalVehicles = 0;
             $availableVehicles = 0;
+            $inUseVehicles = 0;
+            $inServiceVehicles = 0;
             $pendingVehicleBookings = 0;
+            $totalPemandu = 0;
+            $activePemandu = 0;
+            $recentFleet = collect();
             $totalUsers = 1;
 
             $totalNaimbifApps = \App\Models\NaimbifPermohonan::forUser()->count();
@@ -279,11 +293,19 @@ class DashboardController extends Controller
             'lowStockInventoryCount',
             'totalPejabatItems',
             'lowStockPejabatCount',
+            'pendingPejabatRequests',
+            'totalPejabatPinjaman',
+            'recentPejabatPermohonan',
             'totalUbatItems',
             'lowStockUbatCount',
             'totalVehicles',
             'availableVehicles',
+            'inUseVehicles',
+            'inServiceVehicles',
             'pendingVehicleBookings',
+            'totalPemandu',
+            'activePemandu',
+            'recentFleet',
             'totalUsers',
             'totalNaimbifApps',
             'totalNaimbifLulus',

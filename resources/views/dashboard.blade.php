@@ -24,7 +24,9 @@
             </h1>
             <p class="mt-2 text-sm text-slate-300 leading-relaxed">
                 @if($user->role === 'admin_pejabat')
-                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin Pejabat</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Inventori &amp; Stor Peralatan Pejabat</span> serta <span class="text-white font-semibold">Pengurusan Kenderaan Rasmi</span> JPVNK.
+                    Anda sedang mengakses sistem sebagai <span class="text-indigo-400 font-bold">Admin Stor Pejabat</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Inventori &amp; Stor Peralatan Pejabat</span> serta kelulusan permohonan bekalan staf JPVNK.
+                @elseif($user->role === 'admin_kenderaan')
+                    Anda sedang mengakses sistem sebagai <span class="text-blue-400 font-bold">Admin Kenderaan &amp; Fleet</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Armada Kenderaan Rasmi</span>, jadual pemandu serta kelulusan tempahan kenderaan JPVNK.
                 @elseif($user->role === 'admin_epu')
                     Anda sedang mengakses sistem sebagai <span class="text-amber-400 font-bold">Admin EPU Negeri</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Enakmen Penternakan Unggas (EPU)</span>, pendaftaran ladang ternakan unggas, semakan permohonan lesen, pengesahan bayaran fi, dan cetakan borang rasmi peringkat Negeri Kelantan.
                 @elseif($user->role === 'pegawai_verifikasi_epu')
@@ -58,10 +60,6 @@
                     <a href="{{ route('users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition hover:scale-102">
                         <i class="fa-solid fa-user-plus"></i>
                         <span>Tambah Pengguna Baharu</span>
-                    </a>
-                    <a href="{{ route('users.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold border border-amber-500/40 shadow-lg transition">
-                        <i class="fa-solid fa-users-gear"></i>
-                        <span>Pengurusan Pengguna</span>
                     </a>
                 @endif
                 @if($user->role === 'admin_naimbif_negeri' || $user->role === 'admin_naimbif')
@@ -272,14 +270,14 @@
         </div>
 
         <div class="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10 pointer-events-none hidden lg:block">
-            <i class="fa-solid {{ $user->role === 'admin_pejabat' ? 'fa-building-shield' : ($user->role === 'admin_program' ? 'fa-handshake-angle' : 'fa-cow') }} text-[280px]"></i>
+            <i class="fa-solid {{ $user->role === 'admin_pejabat' ? 'fa-boxes-stacked' : ($user->role === 'admin_kenderaan' ? 'fa-truck-pickup' : ($user->role === 'admin_program' ? 'fa-handshake-angle' : 'fa-cow')) }} text-[280px]"></i>
         </div>
     </div>
 
     @if($user->role === 'admin_pejabat')
-        <!-- Admin Pejabat KPI Cards Grid -->
+        <!-- Admin Stor Pejabat KPI Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- 1. Jumlah Item Inventori -->
+            <!-- 1. Jumlah Item Inventori Pejabat -->
             <a href="{{ route('inventori.pejabat.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-indigo-400 transition group flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-3">
                     <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -288,7 +286,7 @@
                     <span class="text-xs font-bold text-slate-400 uppercase">Stor Pejabat</span>
                 </div>
                 <div>
-                    <div class="text-3xl font-black text-slate-900">{{ $totalInventoryItems }}</div>
+                    <div class="text-3xl font-black text-slate-900">{{ $totalPejabatItems }}</div>
                     <div class="text-sm font-semibold text-slate-700">Jumlah Barangan Pejabat</div>
                     <div class="text-xs text-slate-500 mt-1">Katalog Peralatan Pejabat</div>
                 </div>
@@ -303,44 +301,44 @@
                     <span class="text-xs font-bold text-amber-600 uppercase">Amaran Stok</span>
                 </div>
                 <div>
-                    <div class="text-3xl font-black {{ $lowStockInventoryCount > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $lowStockInventoryCount }}</div>
+                    <div class="text-3xl font-black {{ $lowStockPejabatCount > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $lowStockPejabatCount }}</div>
                     <div class="text-sm font-semibold text-slate-700">Item Stok Rendah / Habis</div>
                     <div class="text-xs text-slate-500 mt-1">Perlu Pembekalan Semula</div>
                 </div>
             </a>
 
-            <!-- 3. Kenderaan Sedia -->
-            <a href="{{ route('kenderaan.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-400 transition group flex flex-col justify-between">
+            <!-- 3. Permohonan Menunggu Kelulusan -->
+            <a href="{{ route('inventori.pejabat.permohonan') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-400 transition group flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-truck-pickup"></i>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-clipboard-check"></i>
                     </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase">Kenderaan</span>
+                    <span class="text-xs font-bold text-blue-600 uppercase">Permohonan</span>
                 </div>
                 <div>
-                    <div class="text-3xl font-black text-slate-900">{{ $availableVehicles }} / {{ $totalVehicles }}</div>
-                    <div class="text-sm font-semibold text-slate-700">Kenderaan Sedia Digunakan</div>
-                    <div class="text-xs text-emerald-600 font-semibold mt-1">Armada Rasmi JPVNK</div>
+                    <div class="text-3xl font-black {{ $pendingPejabatRequests > 0 ? 'text-blue-600' : 'text-slate-900' }}">{{ $pendingPejabatRequests }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Permohonan Alatan Menunggu</div>
+                    <div class="text-xs text-slate-500 mt-1">Kelulusan Stor Pejabat</div>
                 </div>
             </a>
 
-            <!-- 4. Tempahan Menunggu -->
-            <a href="{{ route('kenderaan.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-400 transition group flex flex-col justify-between">
+            <!-- 4. Pinjaman Alatan Aktif -->
+            <a href="{{ route('inventori.pejabat.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-emerald-400 transition group flex flex-col justify-between">
                 <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-hand-holding-box"></i>
                     </div>
-                    <span class="text-xs font-bold text-blue-600 uppercase">Menunggu</span>
+                    <span class="text-xs font-bold text-emerald-600 uppercase">Pinjaman</span>
                 </div>
                 <div>
-                    <div class="text-3xl font-black {{ $pendingVehicleBookings > 0 ? 'text-blue-600' : 'text-slate-900' }}">{{ $pendingVehicleBookings }}</div>
-                    <div class="text-sm font-semibold text-slate-700">Tempahan Menunggu Kelulusan</div>
-                    <div class="text-xs text-slate-500 mt-1">Tindakan Admin Pejabat</div>
+                    <div class="text-3xl font-black text-slate-900">{{ $totalPejabatPinjaman }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Pinjaman Peralatan Aktif</div>
+                    <div class="text-xs text-slate-500 mt-1">Dalam Pegangan Staf Jabatan</div>
                 </div>
             </a>
         </div>
 
-        <!-- Admin Pejabat Lower Activity Section -->
+        <!-- Admin Stor Pejabat Lower Activity Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left: Inventori Pejabat Terkini -->
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
@@ -399,17 +397,126 @@
                 </div>
             </div>
 
-            <!-- Right: Permohonan Kenderaan Terkini -->
+            <!-- Right: Permohonan Stor Pejabat Terkini -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900">Permohonan Alatan Pejabat Terkini</h3>
+                    </div>
+                    <a href="{{ route('inventori.pejabat.permohonan') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold">
+                        Semua Permohonan &rarr;
+                    </a>
+                </div>
+
+                <div class="space-y-3">
+                    @forelse($recentPejabatPermohonan as $p)
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-indigo-50/30 transition flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-xs font-bold text-slate-900">{{ $p->no_permohonan ?? 'REQ-'.$p->id }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $p->status === 'Diluluskan' ? 'bg-emerald-100 text-emerald-800' : ($p->status === 'Menunggu Kelulusan' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800') }}">
+                                        {{ $p->status }}
+                                    </span>
+                                </div>
+                                <div class="text-xs font-medium text-slate-700 mt-1">
+                                    {{ $p->item->nama_item ?? 'Item Stor' }} ({{ $p->kuantiti_dimohon }} {{ $p->item->unit ?? 'unit' }})
+                                </div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    Pemohon: <span class="font-semibold text-slate-800">{{ $p->user->name ?? 'Staf' }}</span> &bull; Tarikh: {{ \Carbon\Carbon::parse($p->created_at)->format('d/m/Y') }}
+                                </div>
+                            </div>
+                            <a href="{{ route('inventori.pejabat.permohonan') }}" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-500 text-xs font-bold text-slate-700 hover:text-indigo-700 shadow-2xs transition">
+                                Urus &rarr;
+                            </a>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-slate-400 text-xs">
+                            Tiada permohonan alatan pejabat aktif.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    @elseif($user->role === 'admin_kenderaan')
+        <!-- Admin Kenderaan KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 1. Kenderaan Sedia Digunakan -->
+            <a href="{{ route('kenderaan.fleet') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-teal-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-truck-pickup"></i>
+                    </div>
+                    <span class="text-xs font-bold text-teal-600 uppercase">Armada Kenderaan</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-slate-900">{{ $availableVehicles }} / {{ $totalVehicles }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Kenderaan Sedia Digunakan</div>
+                    <div class="text-xs text-slate-500 mt-1">{{ $totalVehicles }} Jumlah Kenderaan Jabatan</div>
+                </div>
+            </a>
+
+            <!-- 2. Tempahan Menunggu Kelulusan -->
+            <a href="{{ route('kenderaan.index', ['status' => 'Menunggu']) }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-amber-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <span class="text-xs font-bold text-amber-600 uppercase">Menunggu Tindakan</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black {{ $pendingVehicleBookings > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $pendingVehicleBookings }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Tempahan Menunggu Kelulusan</div>
+                    <div class="text-xs text-slate-500 mt-1">Perlu Semakan Admin Kenderaan</div>
+                </div>
+            </a>
+
+            <!-- 3. Kenderaan Sedang Digunakan -->
+            <a href="{{ route('kenderaan.fleet', ['status' => 'Sedang Digunakan']) }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <span class="text-xs font-bold text-blue-600 uppercase">Dalam Perjalanan</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-slate-900">{{ $inUseVehicles }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Kenderaan Sedang Digunakan</div>
+                    <div class="text-xs text-slate-500 mt-1">Tugasan Luar / Rasmi</div>
+                </div>
+            </a>
+
+            <!-- 4. Pemandu Jabatan -->
+            <a href="{{ route('kenderaan.pemandu.index') }}" class="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-emerald-400 transition group flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-600 uppercase">Pemandu Jabatan</span>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-slate-900">{{ $activePemandu }} / {{ $totalPemandu }}</div>
+                    <div class="text-sm font-semibold text-slate-700">Pemandu Aktif & Bertugas</div>
+                    <div class="text-xs text-slate-500 mt-1">{{ $totalPemandu }} Pemandu Berdaftar</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Admin Kenderaan Lower Activity Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left: Permohonan Kenderaan Terkini -->
             <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
-                            <i class="fa-solid fa-truck-pickup"></i>
+                            <i class="fa-solid fa-clock-rotate-left"></i>
                         </div>
                         <h3 class="text-base font-bold text-slate-900">Tempahan Kenderaan Rasmi Terkini</h3>
                     </div>
                     <a href="{{ route('kenderaan.index') }}" class="text-xs text-teal-600 hover:text-teal-800 font-bold">
-                        Urus Kenderaan &rarr;
+                        Semua Tempahan &rarr;
                     </a>
                 </div>
 
@@ -424,7 +531,7 @@
                                     </span>
                                 </div>
                                 <div class="text-xs font-medium text-slate-700 mt-1">
-                                    {{ $tk->kenderaan->model ?? 'Kenderaan Jabatan' }} ({{ $tk->kenderaan->no_pendaftaran ?? 'N/A' }})
+                                    {{ $tk->kenderaan->model ?? 'Kenderaan Jabatan' }} ({{ $tk->kenderaan->no_pendaftaran ?? 'N/A' }}) &bull; Destinasi: <span class="font-bold text-slate-800">{{ $tk->destinasi }}</span>
                                 </div>
                                 <div class="text-[11px] text-slate-500 mt-0.5">
                                     Pemohon: <span class="font-semibold text-slate-800">{{ $tk->pemohon->name ?? 'Pegawai' }}</span> &bull; Tarikh: {{ \Carbon\Carbon::parse($tk->tarikh_mula)->format('d/m/Y') }}
@@ -437,6 +544,49 @@
                     @empty
                         <div class="py-8 text-center text-slate-400 text-xs">
                             Tiada tempahan kenderaan aktif.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Right: Status Armada Kenderaan Rasmi -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-truck-pickup"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900">Armada Kenderaan Jabatan</h3>
+                    </div>
+                    <a href="{{ route('kenderaan.fleet') }}" class="text-xs text-teal-600 hover:text-teal-800 font-bold">
+                        Urus Armada &rarr;
+                    </a>
+                </div>
+
+                <div class="space-y-3">
+                    @forelse($recentFleet as $vk)
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-teal-50/30 transition flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-xs text-slate-900">{{ $vk->no_pendaftaran }}</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $vk->status === 'Sedia' ? 'bg-emerald-100 text-emerald-800' : ($vk->status === 'Sedang Digunakan' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800') }}">
+                                        {{ $vk->status }}
+                                    </span>
+                                </div>
+                                <div class="text-xs font-medium text-slate-700 mt-1">
+                                    {{ $vk->model }} ({{ $vk->jenis_kenderaan }}) &bull; Penempatan: {{ $vk->jajahan_penempatan }}
+                                </div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    Kapasiti: {{ $vk->kapasiti_penumpang }} Orang &bull; Odometer: {{ number_format($vk->odometer_semasa_km) }} KM
+                                </div>
+                            </div>
+                            <a href="{{ route('kenderaan.fleet') }}" class="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-teal-500 text-xs font-bold text-slate-700 hover:text-teal-700 shadow-2xs transition">
+                                Lihat &rarr;
+                            </a>
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-slate-400 text-xs">
+                            Tiada rekod kenderaan dijumpai.
                         </div>
                     @endforelse
                 </div>

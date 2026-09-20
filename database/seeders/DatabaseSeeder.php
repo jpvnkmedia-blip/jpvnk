@@ -62,6 +62,21 @@ class DatabaseSeeder extends Seeder
             'address' => 'Bahagian Pengurusan & Stor Peralatan Pejabat, Ibu Pejabat JPVNK Kota Bharu',
             'jajahan' => 'Kota Bharu',
             'role' => 'admin_pejabat',
+            'roles' => ['admin_pejabat'],
+            'auth_provider' => 'manual',
+            'status' => 'Aktif',
+            'password' => $password,
+        ]);
+
+        $adminKenderaan = User::create([
+            'name' => 'En. Razak bin Che Dollah',
+            'email' => 'adminkenderaan@veterinar.kelantan.gov.my',
+            'ic_number' => '840215035577',
+            'phone' => '019-9882211',
+            'address' => 'Unit Pengurusan Kenderaan & Fleet Rasmi, Ibu Pejabat JPVNK Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'role' => 'admin_kenderaan',
+            'roles' => ['admin_kenderaan'],
             'auth_provider' => 'manual',
             'status' => 'Aktif',
             'password' => $password,

@@ -20,8 +20,8 @@ class KlinikController extends Controller implements HasMiddleware
             function (Request $request, Closure $next) {
                 if (Auth::check()) {
                     $user = Auth::user();
-                    if ($user->role === 'admin_pejabat') {
-                        return redirect()->route('inventori.index')->with('error', 'Akses Ditolak: Peranan Admin Pejabat dikhaskan untuk Pengurusan Pejabat (Inventori & Kenderaan Rasmi) sahaja.');
+                    if (in_array($user->role, ['admin_pejabat', 'admin_kenderaan'])) {
+                        return redirect()->route($user->role === 'admin_kenderaan' ? 'kenderaan.index' : 'inventori.index')->with('error', 'Akses Ditolak: Peranan ' . $user->role_label . ' dikhaskan untuk Pengurusan Pentadbiran sahaja.');
                     }
                     if (!$user->canAccessKlinik()) {
                         abort(403, 'Akses Ditolak: Peranan ' . ($user->role_label ?? $user->role) . ' tidak dibenarkan mengakses modul Klinik Haiwan.');
@@ -36,9 +36,9 @@ class KlinikController extends Controller implements HasMiddleware
     {
         $user = Auth::user();
 
-        // Admin Pejabat hanya dibenarkan menguruskan Pejabat (Inventori & Kenderaan Rasmi)
-        if ($user->role === 'admin_pejabat') {
-            return redirect()->route('inventori.index')->with('error', 'Akses Ditolak: Peranan Admin Pejabat dikhaskan untuk Pengurusan Pejabat (Inventori & Kenderaan Rasmi) sahaja.');
+        // Admin Pejabat & Admin Kenderaan hanya dibenarkan menguruskan Pentadbiran
+        if (in_array($user->role, ['admin_pejabat', 'admin_kenderaan'])) {
+            return redirect()->route($user->role === 'admin_kenderaan' ? 'kenderaan.index' : 'inventori.index')->with('error', 'Akses Ditolak: Peranan ' . $user->role_label . ' dikhaskan untuk Pengurusan Pentadbiran sahaja.');
         }
 
         $query = KlinikTemujanji::with('pemilik', 'rawatan');

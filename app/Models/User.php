@@ -96,6 +96,7 @@ class User extends Authenticatable
             'admin_ubat',
             'admin_klinik',
             'admin_pejabat',
+            'admin_kenderaan',
         ]);
     }
 
@@ -165,7 +166,12 @@ class User extends Authenticatable
 
     public function isAdminPejabat(): bool
     {
-        return $this->hasAnyRole(['super_admin', 'admin_pejabat']);
+        return $this->hasAnyRole(['super_admin', 'admin_pejabat', 'admin_stor_pejabat']);
+    }
+
+    public function isAdminKenderaan(): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'admin_kenderaan']);
     }
 
     public function isAdminEptr(): bool
@@ -295,6 +301,7 @@ class User extends Authenticatable
         return $this->hasAnyRole([
             'super_admin',
             'admin_pejabat',
+            'admin_stor_pejabat',
         ]);
     }
 
@@ -313,6 +320,11 @@ class User extends Authenticatable
             return true;
         }
         $blocked = [
+            'admin_epu',
+            'admin_epu_negeri',
+            'admin_epu_jajahan',
+            'pegawai_pelesen',
+            'pegawai_verifikasi_epu',
             'admin_eptr',
             'admin_program',
             'admin_kursus',
@@ -333,8 +345,8 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
-            'admin_pejabat',
-        ]);
+            'admin_kenderaan',
+        ]) || $this->canBookVehicle();
     }
 
     public function canAccessPengurusanPejabat(): bool
@@ -346,7 +358,7 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([
             'super_admin',
-            'admin_pejabat',
+            'admin_kenderaan',
         ]);
     }
 
@@ -365,6 +377,7 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
             'staf',
@@ -387,6 +400,7 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
             'staf',
@@ -405,6 +419,7 @@ class User extends Authenticatable
             'admin_program',
             'admin_kursus',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
             'staf',
@@ -427,6 +442,7 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_program',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
         ];
@@ -449,6 +465,7 @@ class User extends Authenticatable
             'admin_program',
             'admin_kursus',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'staf',
         ];
@@ -501,6 +518,7 @@ class User extends Authenticatable
         return $this->hasAnyRole([
             'super_admin',
             'admin_pejabat',
+            'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
             'admin_eptr',
@@ -538,7 +556,8 @@ class User extends Authenticatable
     {
         return match ($role) {
             'super_admin' => 'Super Admin',
-            'admin_pejabat' => 'Admin Pejabat (Stor Pejabat & Kenderaan)',
+            'admin_pejabat', 'admin_stor_pejabat' => 'Admin Stor Pejabat',
+            'admin_kenderaan' => 'Admin Kenderaan & Fleet',
             'admin_ubat' => 'Admin Stor Ubat & Farmasi Veterinar',
             'admin_klinik' => 'Admin Klinik Haiwan & Rawatan',
             'admin_eptr' => 'Admin EPTR Negeri',

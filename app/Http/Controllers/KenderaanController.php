@@ -185,11 +185,11 @@ class KenderaanController extends Controller implements HasMiddleware
         return view('kenderaan.show', compact('tempahan', 'availableKenderaan', 'availableFleet', 'fleet', 'pemanduList'));
     }
 
-    // Kelulusan & Penugasan Pemandu (Admin Pejabat / Super Admin)
+    // Kelulusan & Penugasan Pemandu (Admin Kenderaan / Super Admin)
     public function approve(Request $request, $id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan membuat kelulusan tempahan kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan membuat kelulusan tempahan kenderaan.');
         }
 
         $tempahan = KenderaanTempahan::findOrFail($id);
@@ -245,7 +245,7 @@ class KenderaanController extends Controller implements HasMiddleware
     public function tolak(Request $request, $id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan menolak tempahan kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan menolak tempahan kenderaan.');
         }
 
         $tempahan = KenderaanTempahan::findOrFail($id);
@@ -293,7 +293,7 @@ class KenderaanController extends Controller implements HasMiddleware
     public function fleetIndex(Request $request)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan melihat dan menguruskan Fleet Kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan melihat dan menguruskan Fleet Kenderaan.');
         }
 
         $query = Kenderaan::query();
@@ -339,7 +339,7 @@ class KenderaanController extends Controller implements HasMiddleware
     public function storeKenderaan(Request $request)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mendaftar kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mendaftar kenderaan.');
         }
 
         $validated = $request->validate([
@@ -365,7 +365,7 @@ class KenderaanController extends Controller implements HasMiddleware
     public function updateKenderaan(Request $request, $id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mengemaskini kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan mengemaskini kenderaan.');
         }
 
         $kenderaan = Kenderaan::findOrFail($id);
@@ -393,7 +393,7 @@ class KenderaanController extends Controller implements HasMiddleware
     public function destroyKenderaan($id)
     {
         if (!Auth::user()->canManageKenderaanFleet()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan memadam kenderaan.');
+            abort(403, 'Akses Ditolak: Hanya Admin Kenderaan dan Super Admin dibenarkan memadam kenderaan.');
         }
 
         $kenderaan = Kenderaan::findOrFail($id);

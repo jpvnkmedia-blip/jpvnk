@@ -732,12 +732,12 @@ class JpvnkUnifiedSystemTest extends TestCase
         $getKlinik->assertRedirect(route('inventori.index'));
         $getKlinik->assertSessionHas('error');
 
-        // 7. Dashboard memaparkan maklumat Pengurusan Pejabat bagi Admin Pejabat
+        // 7. Dashboard memaparkan maklumat Pengurusan Stor Pejabat bagi Admin Pejabat
         $getDashboard = $this->actingAs($adminPejabat)->get('/dashboard');
         $getDashboard->assertStatus(200);
-        $getDashboard->assertSee('Admin Pejabat');
-        $getDashboard->assertSee('Jumlah Item');
-        $getDashboard->assertSee('Kenderaan Sedia Digunakan');
+        $getDashboard->assertSee('Admin Stor Pejabat');
+        $getDashboard->assertSee('Jumlah Barangan Pejabat');
+        $getDashboard->assertSee('Stor Pejabat');
     }
 
     public function test_kenderaan_tempahan_create_store_show_flow()
@@ -770,7 +770,7 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_pegawai_kelulusan_dan_penolakan_tempahan_kenderaan()
     {
-        $adminPejabat = User::where('role', 'admin_pejabat')->first();
+        $adminKenderaan = User::where('role', 'admin_kenderaan')->first() ?: User::factory()->create(['role' => 'admin_kenderaan', 'email' => 'adminkenderaan_test@veterinar.kelantan.gov.my']);
         $penternak = User::where('role', 'penternak')->first();
         $kenderaan = \App\Models\Kenderaan::where('status', 'Sedia')->first();
 
@@ -801,8 +801,8 @@ class JpvnkUnifiedSystemTest extends TestCase
             'status' => 'Menunggu',
         ]);
 
-        // 2. Pegawai Luluskan Tempahan 1 dengan tugasan kenderaan dan pemandu
-        $postLulus = $this->actingAs($adminPejabat)->post("/kenderaan/tempahan/{$tempahan1->id}/kelulusan", [
+        // 2. Pegawai Kenderaan Luluskan Tempahan 1 dengan tugasan kenderaan dan pemandu
+        $postLulus = $this->actingAs($adminKenderaan)->post("/kenderaan/tempahan/{$tempahan1->id}/kelulusan", [
             'status' => 'Diluluskan',
             'kenderaan_id' => $kenderaan->id,
             'pemandu_nama' => 'En. Razak Pemandu Khas',
@@ -815,10 +815,10 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->assertEquals('Diluluskan', $tempahan1->status);
         $this->assertEquals($kenderaan->id, $tempahan1->kenderaan_id);
         $this->assertEquals('En. Razak Pemandu Khas', $tempahan1->pemandu_nama);
-        $this->assertEquals($adminPejabat->id, $tempahan1->diluluskan_oleh);
+        $this->assertEquals($adminKenderaan->id, $tempahan1->diluluskan_oleh);
 
-        // 3. Pegawai Tolak Tempahan 2 dengan sebab penolakan
-        $postTolak = $this->actingAs($adminPejabat)->post("/kenderaan/tempahan/{$tempahan2->id}/tolak", [
+        // 3. Pegawai Kenderaan Tolak Tempahan 2 dengan sebab penolakan
+        $postTolak = $this->actingAs($adminKenderaan)->post("/kenderaan/tempahan/{$tempahan2->id}/tolak", [
             'sebab_tolak' => 'Tiada kenderaan 4x4 sedia pada tarikh tersebut kerana bertindih operasi.',
         ]);
         $postTolak->assertRedirect();
@@ -827,34 +827,34 @@ class JpvnkUnifiedSystemTest extends TestCase
         $tempahan2->refresh();
         $this->assertEquals('Ditolak', $tempahan2->status);
         $this->assertStringContainsString('Tiada kenderaan 4x4', $tempahan2->catatan_kelulusan);
-        $this->assertEquals($adminPejabat->id, $tempahan2->diluluskan_oleh);
+        $this->assertEquals($adminKenderaan->id, $tempahan2->diluluskan_oleh);
 
         // 4. Semak paparan index mengandungi penapis dan butang tindakan
-        $getIndex = $this->actingAs($adminPejabat)->get('/kenderaan');
+        $getIndex = $this->actingAs($adminKenderaan)->get('/kenderaan');
         $getIndex->assertStatus(200);
         $getIndex->assertSee('Menunggu Kelulusan');
         $getIndex->assertSee('Diluluskan');
         $getIndex->assertSee('Ditolak');
 
         // 5. Semak paparan butiran show memaparkan maklumat pegawai pelulus
-        $getShow = $this->actingAs($adminPejabat)->get("/kenderaan/tempahan/{$tempahan1->id}");
+        $getShow = $this->actingAs($adminKenderaan)->get("/kenderaan/tempahan/{$tempahan1->id}");
         $getShow->assertStatus(200);
         $getShow->assertSee('Permohonan Tempahan Telah Diluluskan');
-        $getShow->assertSee($adminPejabat->name);
+        $getShow->assertSee($adminKenderaan->name);
     }
 
     public function test_pengurusan_maklumat_pemandu_jabatan()
     {
-        $adminPejabat = User::where('role', 'admin_pejabat')->first();
+        $adminKenderaan = User::where('role', 'admin_kenderaan')->first() ?: User::factory()->create(['role' => 'admin_kenderaan', 'email' => 'adminkenderaan_test@veterinar.kelantan.gov.my']);
 
         // 1. Semak paparan senarai pemandu
-        $getIndex = $this->actingAs($adminPejabat)->get('/kenderaan/pemandu');
+        $getIndex = $this->actingAs($adminKenderaan)->get('/kenderaan/pemandu');
         $getIndex->assertStatus(200);
         $getIndex->assertSee('Direktori Pemandu Rasmi Jabatan');
         $getIndex->assertSee('En. Che Rosli bin Dollah');
 
         // 2. Tambah maklumat pemandu baharu
-        $postStore = $this->actingAs($adminPejabat)->post('/kenderaan/pemandu', [
+        $postStore = $this->actingAs($adminKenderaan)->post('/kenderaan/pemandu', [
             'nama' => 'En. Zulkifli bin Mat Yasin',
             'no_kp' => '870101035599',
             'no_pekerja' => 'VET-DVR-005',
@@ -877,7 +877,7 @@ class JpvnkUnifiedSystemTest extends TestCase
         $pemandu = \App\Models\Pemandu::where('no_kp', '870101035599')->first();
 
         // 3. Kemaskini maklumat pemandu
-        $putUpdate = $this->actingAs($adminPejabat)->put("/kenderaan/pemandu/{$pemandu->id}", [
+        $putUpdate = $this->actingAs($adminKenderaan)->put("/kenderaan/pemandu/{$pemandu->id}", [
             'nama' => 'En. Zulkifli bin Mat Yasin (Kanan)',
             'no_kp' => '870101035599',
             'no_pekerja' => 'VET-DVR-005',
@@ -897,7 +897,7 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->assertEquals('D, E, GDL, PSV', $pemandu->kelas_lesen);
 
         // 4. Padam maklumat pemandu
-        $delete = $this->actingAs($adminPejabat)->delete("/kenderaan/pemandu/{$pemandu->id}");
+        $delete = $this->actingAs($adminKenderaan)->delete("/kenderaan/pemandu/{$pemandu->id}");
         $delete->assertRedirect(route('kenderaan.pemandu.index'));
         $delete->assertSessionHas('success');
 
@@ -908,16 +908,16 @@ class JpvnkUnifiedSystemTest extends TestCase
 
     public function test_pengurusan_maklumat_fleet_kenderaan_jabatan()
     {
-        $adminPejabat = User::where('role', 'admin_pejabat')->first();
+        $adminKenderaan = User::where('role', 'admin_kenderaan')->first() ?: User::factory()->create(['role' => 'admin_kenderaan', 'email' => 'adminkenderaan_test@veterinar.kelantan.gov.my']);
 
         // 1. Semak paparan senarai fleet kenderaan
-        $getFleet = $this->actingAs($adminPejabat)->get('/kenderaan/fleet');
+        $getFleet = $this->actingAs($adminKenderaan)->get('/kenderaan/fleet');
         $getFleet->assertStatus(200);
         $getFleet->assertSee('Pengurusan Fleet Kenderaan Rasmi');
         $getFleet->assertSee('DDX 8812');
 
         // 2. Tambah kenderaan baharu
-        $postStore = $this->actingAs($adminPejabat)->post('/kenderaan/kenderaan-baru', [
+        $postStore = $this->actingAs($adminKenderaan)->post('/kenderaan/kenderaan-baru', [
             'no_pendaftaran' => 'DEA 9999',
             'jenis_kenderaan' => 'Pacuan 4 Roda (4x4)',
             'model' => 'Isuzu D-Max 3.0 4x4 X-Terrain',
@@ -943,7 +943,7 @@ class JpvnkUnifiedSystemTest extends TestCase
         $kenderaan = \App\Models\Kenderaan::where('no_pendaftaran', 'DEA 9999')->first();
 
         // 3. Kemaskini maklumat kenderaan
-        $putUpdate = $this->actingAs($adminPejabat)->put("/kenderaan/kenderaan/{$kenderaan->id}", [
+        $putUpdate = $this->actingAs($adminKenderaan)->put("/kenderaan/kenderaan/{$kenderaan->id}", [
             'no_pendaftaran' => 'DEA 9999',
             'jenis_kenderaan' => 'Pacuan 4 Roda (4x4)',
             'model' => 'Isuzu D-Max 3.0 4x4 X-Terrain (Kemaskini)',
@@ -966,7 +966,7 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->assertEquals(13200, $kenderaan->odometer_semasa_km);
 
         // 4. Padam kenderaan
-        $delete = $this->actingAs($adminPejabat)->delete("/kenderaan/kenderaan/{$kenderaan->id}");
+        $delete = $this->actingAs($adminKenderaan)->delete("/kenderaan/kenderaan/{$kenderaan->id}");
         $delete->assertRedirect();
         $delete->assertSessionHas('success');
 
@@ -1048,10 +1048,15 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->actingAs($adminEpu)->get('/kenderaan/fleet')->assertStatus(403);
         $this->actingAs($adminEpu)->get('/kenderaan/pemandu')->assertStatus(403);
 
-        // Admin Pejabat & Super Admin BOLEH akses semua modul fleet dan pemandu
+        // Admin Kenderaan & Super Admin BOLEH akses semua modul fleet dan pemandu
+        $adminKenderaan = User::where('role', 'admin_kenderaan')->first() ?: User::factory()->create(['role' => 'admin_kenderaan', 'email' => 'adminkenderaan_test2@veterinar.kelantan.gov.my']);
+        $this->actingAs($adminKenderaan)->get('/kenderaan/fleet')->assertStatus(200);
+        $this->actingAs($adminKenderaan)->get('/kenderaan/pemandu')->assertStatus(200);
+
+        // Admin Pejabat DISEKAT daripada urusan fleet dan pemandu
         $adminPejabat = User::where('role', 'admin_pejabat')->first();
-        $this->actingAs($adminPejabat)->get('/kenderaan/fleet')->assertStatus(200);
-        $this->actingAs($adminPejabat)->get('/kenderaan/pemandu')->assertStatus(200);
+        $this->actingAs($adminPejabat)->get('/kenderaan/fleet')->assertStatus(403);
+        $this->actingAs($adminPejabat)->get('/kenderaan/pemandu')->assertStatus(403);
 
         $superAdmin = User::where('role', 'super_admin')->first();
         $this->actingAs($superAdmin)->get('/kenderaan/fleet')->assertStatus(200);
