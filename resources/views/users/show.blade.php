@@ -13,9 +13,18 @@
                 {{ strtoupper(substr($targetUser->name, 0, 1)) }}
             </div>
             <div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold uppercase mb-1">
-                    {{ $targetUser->role_label }}
-                </span>
+                <div class="flex flex-wrap gap-1 mb-1.5">
+                    @forelse($targetUser->roles_data as $rd)
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[11px] font-bold bg-white/15 border-white/30 text-amber-300">
+                            <i class="fa-solid {{ $rd['icon'] }} text-[10px]"></i>
+                            <span>{{ $rd['label'] }}</span>
+                        </span>
+                    @empty
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold uppercase mb-1">
+                            {{ $targetUser->role_label }}
+                        </span>
+                    @endforelse
+                </div>
                 <h2 class="text-2xl font-black">{{ $targetUser->name }}</h2>
                 <div class="text-xs text-slate-300 flex items-center gap-2 mt-0.5">
                     <span><i class="fa-solid fa-id-card mr-1 text-slate-400"></i>{{ $targetUser->ic_number ?? '-' }}</span>

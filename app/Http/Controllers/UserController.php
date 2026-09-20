@@ -151,18 +151,42 @@ class UserController extends Controller implements HasMiddleware
 
         // Tapis Peranan (Role)
         if ($request->filled('role') && $request->role !== 'semua') {
-            if ($request->role === 'admin_jajahan') {
-                $query->whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan']);
-            } elseif ($request->role === 'admin_epu_negeri') {
-                $query->whereIn('role', ['admin_epu_negeri', 'admin_epu', 'pegawai_pelesen']);
-            } elseif ($request->role === 'admin_epu_jajahan') {
-                $query->whereIn('role', ['admin_epu_jajahan', 'pegawai_verifikasi_epu']);
-            } elseif ($request->role === 'admin_naimbif_negeri') {
-                $query->whereIn('role', ['admin_naimbif_negeri', 'admin_naimbif']);
-            } elseif ($request->role === 'admin_naimbif_jajahan') {
-                $query->whereIn('role', ['admin_naimbif_jajahan']);
+            $selectedRole = $request->role;
+            if ($selectedRole === 'admin_jajahan') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan'])
+                      ->orWhereJsonContains('roles', 'admin_jajahan')
+                      ->orWhereJsonContains('roles', 'admin_eptr_jajahan');
+                });
+            } elseif ($selectedRole === 'admin_epu_negeri') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['admin_epu_negeri', 'admin_epu', 'pegawai_pelesen'])
+                      ->orWhereJsonContains('roles', 'admin_epu_negeri')
+                      ->orWhereJsonContains('roles', 'admin_epu')
+                      ->orWhereJsonContains('roles', 'pegawai_pelesen');
+                });
+            } elseif ($selectedRole === 'admin_epu_jajahan') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['admin_epu_jajahan', 'pegawai_verifikasi_epu'])
+                      ->orWhereJsonContains('roles', 'admin_epu_jajahan')
+                      ->orWhereJsonContains('roles', 'pegawai_verifikasi_epu');
+                });
+            } elseif ($selectedRole === 'admin_naimbif_negeri') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['admin_naimbif_negeri', 'admin_naimbif'])
+                      ->orWhereJsonContains('roles', 'admin_naimbif_negeri')
+                      ->orWhereJsonContains('roles', 'admin_naimbif');
+                });
+            } elseif ($selectedRole === 'admin_naimbif_jajahan') {
+                $query->where(function ($q) {
+                    $q->where('role', 'admin_naimbif_jajahan')
+                      ->orWhereJsonContains('roles', 'admin_naimbif_jajahan');
+                });
             } else {
-                $query->where('role', $request->role);
+                $query->where(function ($q) use ($selectedRole) {
+                    $q->where('role', $selectedRole)
+                      ->orWhereJsonContains('roles', $selectedRole);
+                });
             }
         }
 
@@ -223,6 +247,16 @@ class UserController extends Controller implements HasMiddleware
         $cleanIc = str_replace(['-', ' '], '', $request->input('ic_number', ''));
         $request->merge(['ic_number' => $cleanIc]);
 
+        // Sokong kedua-dua input roles (array) dan role tunggal (backward compatibility)
+        $rolesInput = $request->input('roles');
+        if (empty($rolesInput) && $request->filled('role')) {
+            $rolesInput = is_array($request->input('role')) ? $request->input('role') : [$request->input('role')];
+        }
+        if (!is_array($rolesInput)) {
+            $rolesInput = $rolesInput ? [$rolesInput] : [];
+        }
+        $request->merge(['roles' => $rolesInput]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
@@ -230,7 +264,8 @@ class UserController extends Controller implements HasMiddleware
             'phone' => ['required', 'string', 'max:25'],
             'address' => ['required', 'string'],
             'jajahan' => ['required', 'string'],
-            'role' => ['required', 'string'],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string'],
             'status' => ['required', 'in:Aktif,Tidak Aktif'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
         ], [
@@ -242,7 +277,8 @@ class UserController extends Controller implements HasMiddleware
             'phone.required' => 'No. Telefon wajib diisi.',
             'address.required' => 'Alamat kediaman / pejabat wajib diisi.',
             'jajahan.required' => 'Sila pilih Jajahan.',
-            'role.required' => 'Sila pilih peranan pengguna.',
+            'roles.required' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
+            'roles.min' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
             'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
             'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
         ]);
@@ -251,6 +287,8 @@ class UserController extends Controller implements HasMiddleware
             ? $validated['password']
             : User::generateDefaultPassword($validated['ic_number']);
 
+        $primaryRole = in_array('super_admin', $validated['roles']) ? 'super_admin' : $validated['roles'][0];
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -258,14 +296,15 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $validated['phone'],
             'address' => $validated['address'],
             'jajahan' => $validated['jajahan'],
-            'role' => $validated['role'],
+            'role' => $primaryRole,
+            'roles' => $validated['roles'],
             'auth_provider' => 'manual',
             'status' => $validated['status'],
             'password' => Hash::make($finalPassword),
         ]);
 
-        // Jika peranan penternak, cipta atau pautkan profil Pemunya Ternakan
-        if ($user->role === 'penternak') {
+        // Jika peranan penternak dipilih, cipta atau pautkan profil Pemunya Ternakan
+        if (in_array('penternak', $validated['roles'])) {
             Pemunya::firstOrCreate(
                 ['no_kp' => $user->ic_number],
                 [
@@ -315,6 +354,16 @@ class UserController extends Controller implements HasMiddleware
         $cleanIc = str_replace(['-', ' '], '', $request->input('ic_number', ''));
         $request->merge(['ic_number' => $cleanIc]);
 
+        // Sokong kedua-dua input roles (array) dan role tunggal (backward compatibility)
+        $rolesInput = $request->input('roles');
+        if (empty($rolesInput) && $request->filled('role')) {
+            $rolesInput = is_array($request->input('role')) ? $request->input('role') : [$request->input('role')];
+        }
+        if (!is_array($rolesInput)) {
+            $rolesInput = $rolesInput ? [$rolesInput] : [];
+        }
+        $request->merge(['roles' => $rolesInput]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
@@ -322,7 +371,8 @@ class UserController extends Controller implements HasMiddleware
             'phone' => ['required', 'string', 'max:25'],
             'address' => ['required', 'string'],
             'jajahan' => ['required', 'string'],
-            'role' => ['required', 'string'],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string'],
             'status' => ['required', 'in:Aktif,Tidak Aktif'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
         ], [
@@ -331,19 +381,23 @@ class UserController extends Controller implements HasMiddleware
             'email.unique' => 'Alamat emel ini telah pun digunakan oleh pengguna lain.',
             'ic_number.required' => 'No. Kad Pengenalan wajib diisi.',
             'ic_number.unique' => 'No. Kad Pengenalan ini telah pun didaftarkan.',
+            'roles.required' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
+            'roles.min' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
             'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
             'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
         ]);
 
         // Lindungi akaun sendiri dari diturunkan taraf atau dinyahaktif
         if ($currentUser->id === $targetUser->id) {
-            if ($validated['role'] !== 'super_admin') {
-                return back()->with('error', 'Akses Ditolak: Anda tidak boleh mengubah peranan akaun Super Admin anda sendiri.');
+            if (!in_array('super_admin', $validated['roles'])) {
+                return back()->with('error', 'Akses Ditolak: Anda tidak boleh membuang peranan Super Admin daripada akaun anda sendiri.');
             }
             if ($validated['status'] !== 'Aktif') {
                 return back()->with('error', 'Akses Ditolak: Anda tidak boleh menyahaktifkan akaun anda sendiri.');
             }
         }
+
+        $primaryRole = in_array('super_admin', $validated['roles']) ? 'super_admin' : $validated['roles'][0];
 
         $targetUser->name = $validated['name'];
         $targetUser->email = $validated['email'];
@@ -351,7 +405,8 @@ class UserController extends Controller implements HasMiddleware
         $targetUser->phone = $validated['phone'];
         $targetUser->address = $validated['address'];
         $targetUser->jajahan = $validated['jajahan'];
-        $targetUser->role = $validated['role'];
+        $targetUser->role = $primaryRole;
+        $targetUser->roles = $validated['roles'];
         $targetUser->status = $validated['status'];
 
         if (!empty($validated['password'])) {
@@ -361,7 +416,7 @@ class UserController extends Controller implements HasMiddleware
         $targetUser->save();
 
         // Kemaskini atau cipta profil Pemunya jika peranan adalah penternak
-        if ($targetUser->role === 'penternak') {
+        if (in_array('penternak', $validated['roles'])) {
             if ($targetUser->pemunya) {
                 $targetUser->pemunya->update([
                     'nama' => $targetUser->name,

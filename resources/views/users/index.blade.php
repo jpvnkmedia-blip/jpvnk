@@ -138,21 +138,18 @@
                                 {{ $u->ic_number ?? '-' }}
                             </td>
                             <td class="px-4 py-3.5">
-                                @php
-                                    $roleBadge = 'bg-slate-100 text-slate-800 border-slate-200';
-                                    $roleIcon = 'fa-user';
-                                    foreach ($roleDefinitions as $grp => $rDefs) {
-                                        if (isset($rDefs[$u->role])) {
-                                            $roleBadge = $rDefs[$u->role]['badge'];
-                                            $roleIcon = $rDefs[$u->role]['icon'];
-                                            break;
-                                        }
-                                    }
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $roleBadge }}">
-                                    <i class="fa-solid {{ $roleIcon }} text-[10px]"></i>
-                                    <span>{{ $u->role_label }}</span>
-                                </span>
+                                <div class="flex flex-wrap gap-1.5 max-w-xs">
+                                    @forelse($u->roles_data as $rd)
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $rd['badge'] }}">
+                                            <i class="fa-solid {{ $rd['icon'] }} text-[9px]"></i>
+                                            <span>{{ $rd['label'] }}</span>
+                                        </span>
+                                    @empty
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-slate-100 text-slate-700">
+                                            {{ $u->role_label }}
+                                        </span>
+                                    @endforelse
+                                </div>
                             </td>
                             <td class="px-4 py-3.5 font-medium text-slate-700">
                                 {{ $u->jajahan ?? 'Seluruh Kelantan' }}

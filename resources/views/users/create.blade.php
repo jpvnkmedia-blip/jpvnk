@@ -5,10 +5,25 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6" x-data="{
-    selectedRole: '{{ old('role', 'staf') }}',
+    selectedRoles: {{ json_encode(old('roles', [old('role', 'staf')])) }},
     selectedJajahan: '{{ old('jajahan', 'Kota Bharu') }}',
     status: '{{ old('status', 'Aktif') }}',
     icNumber: '{{ old('ic_number', '') }}',
+    toggleRole(role) {
+        if (this.selectedRoles.includes(role)) {
+            if (this.selectedRoles.length > 1) {
+                this.selectedRoles = this.selectedRoles.filter(r => r !== role);
+            }
+        } else {
+            this.selectedRoles.push(role);
+        }
+    },
+    hasRole(role) {
+        return this.selectedRoles.includes(role);
+    },
+    resetRoles() {
+        this.selectedRoles = ['staf'];
+    },
     get defaultPasswordPreview() {
         const clean = (this.icNumber || '').replace(/[^0-9]/g, '');
         const last4 = clean.length >= 4 ? clean.slice(-4) : (clean.length > 0 ? clean.padStart(4, '0') : 'XXXX');
@@ -83,9 +98,26 @@
 
             <!-- Section 2: Pemilihan Peranan (Role) & Kebenaran Akses -->
             <div class="pt-4 border-t border-slate-100">
-                <div class="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 text-slate-800 font-bold text-sm">
-                    <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-black">2</span>
-                    <span>Pemilihan Peranan (Role) &amp; Akses Sistem</span>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-slate-100 gap-2">
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                        <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center text-xs font-black">2</span>
+                        <span>Pemilihan Peranan (Role) &amp; Akses Sistem</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                            <span x-text="selectedRoles.length">1</span> Peranan Dipilih
+                        </span>
+                        <button type="button" @click="resetRoles()" class="text-[10px] text-slate-500 hover:text-slate-800 underline">
+                            Set Semula
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3 p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 text-amber-900 text-xs flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-amber-600 text-sm"></i>
+                        <span><b>Sokongan Berbilang Peranan:</b> Anda boleh memilih <b>lebih daripada 1 peranan</b> untuk membolehkan pengguna/pegawai menguruskan beberapa modul sistem serentak.</span>
+                    </div>
                 </div>
 
                 <div class="space-y-4">
@@ -97,9 +129,9 @@
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach($roles as $rKey => $rMeta)
-                                    <label class="relative flex items-start p-3.5 rounded-2xl border cursor-pointer transition"
-                                           :class="selectedRole === '{{ $rKey }}' ? 'bg-amber-50/70 border-amber-400 ring-2 ring-amber-400/50 shadow-xs' : 'bg-slate-50/50 border-slate-200 hover:bg-slate-50'">
-                                        <input type="radio" name="role" value="{{ $rKey }}" x-model="selectedRole" class="mt-0.5 text-amber-600 focus:ring-amber-500">
+                                    <label class="relative flex items-start p-3.5 rounded-2xl border cursor-pointer transition select-none"
+                                           :class="hasRole('{{ $rKey }}') ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-400/50 shadow-xs' : 'bg-slate-50/50 border-slate-200 hover:bg-slate-50'">
+                                        <input type="checkbox" name="roles[]" value="{{ $rKey }}" :checked="hasRole('{{ $rKey }}')" @change="toggleRole('{{ $rKey }}')" class="mt-0.5 rounded text-amber-600 focus:ring-amber-500">
                                         <div class="ml-3 min-w-0 flex-1">
                                             <div class="flex items-center gap-1.5">
                                                 <i class="fa-solid {{ $rMeta['icon'] }} text-xs"></i>
@@ -115,7 +147,7 @@
                 </div>
 
                 <!-- Info Box for Penternak Role -->
-                <div x-show="selectedRole === 'penternak'" x-transition class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs">
+                <div x-show="hasRole('penternak')" x-transition class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-900 text-xs">
                     <div class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-cow text-xs"></i>
                     </div>
