@@ -37,15 +37,9 @@
         <!-- Quick Summary Box -->
         <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15 text-xs shrink-0 self-stretch md:self-auto flex flex-col justify-center space-y-1.5 relative z-10">
             <div class="flex justify-between items-center gap-4 text-slate-300">
-                <span>Kaedah Log Masuk:</span>
-                <span class="font-bold text-white capitalize flex items-center gap-1">
-                    @if($user->auth_provider === 'google')
-                        <i class="fa-brands fa-google text-red-400"></i> Google
-                    @elseif($user->auth_provider === 'mydigital_id')
-                        <i class="fa-solid fa-id-card text-blue-400"></i> MyDigital ID
-                    @else
-                        <i class="fa-solid fa-key text-amber-400"></i> Kata Laluan Manual
-                    @endif
+                <span>Status Akaun:</span>
+                <span class="font-bold text-emerald-300 capitalize flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> {{ $user->status ?? 'Aktif' }}
                 </span>
             </div>
             <div class="flex justify-between items-center gap-4 text-slate-300">

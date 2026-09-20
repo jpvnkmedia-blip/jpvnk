@@ -500,17 +500,6 @@
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <!-- Provider Badge -->
-                    <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ Auth::user()->auth_provider === 'google' ? 'bg-red-50 text-red-700 border border-red-200' : (Auth::user()->auth_provider === 'mydigital_id' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
-                        @if(Auth::user()->auth_provider === 'google')
-                            <i class="fa-brands fa-google text-red-500"></i> Google Account
-                        @elseif(Auth::user()->auth_provider === 'mydigital_id')
-                            <i class="fa-solid fa-id-card text-blue-600"></i> MyDigital ID
-                        @else
-                            <i class="fa-solid fa-envelope text-slate-500"></i> Manual ID
-                        @endif
-                    </span>
-
                     <!-- Notification Bell Dropdown -->
                     <div x-data="{
                         notifOpen: false,

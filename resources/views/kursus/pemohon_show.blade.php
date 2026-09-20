@@ -206,15 +206,9 @@
                     </div>
 
                     <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kaedah Log Masuk / Identiti</span>
-                        <span class="text-xs font-bold text-slate-900 mt-0.5 block flex items-center gap-1.5">
-                            @if(($application->user->auth_provider ?? '') === 'google')
-                                <i class="fa-brands fa-google text-red-500"></i> Google SSO
-                            @elseif(($application->user->auth_provider ?? '') === 'mydigital_id')
-                                <i class="fa-solid fa-id-card text-blue-600"></i> MyDigital ID
-                            @else
-                                <i class="fa-solid fa-envelope text-slate-500"></i> Manual ID
-                            @endif
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status Akaun Pengguna</span>
+                        <span class="text-xs font-bold text-emerald-700 mt-0.5 block flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> Akaun Berdaftar
                         </span>
                     </div>
                 </div>
