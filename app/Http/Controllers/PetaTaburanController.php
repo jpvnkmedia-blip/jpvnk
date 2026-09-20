@@ -36,6 +36,10 @@ class PetaTaburanController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user || !$user->canAccessPetaTaburan()) {
+            abort(403, 'Akses Ditolak: Peta Taburan Penternak (GIS) hanya boleh diakses oleh Super Admin, Pengarah, Admin EPTR Negeri, Admin EPU Negeri, dan Admin NAIMbif Negeri.');
+        }
+
         // 1. Dapatkan Data Penternak & Ladang EPU (Unggas)
         $epuQuery = EpuLadang::with(['pemilik', 'permohonanList', 'permohonanTerkini']);
         $ladangEpuList = $epuQuery->get();

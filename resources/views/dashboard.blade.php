@@ -50,7 +50,7 @@
 
             <!-- Quick Action Buttons -->
             <div class="mt-5 flex flex-wrap gap-2.5">
-                @if($user->isStaff() || $user->isSuperAdmin() || $user->role === 'pegawai_pelesen')
+                @if($user->canAccessPetaTaburan())
                     <a href="{{ route('peta.taburan') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition hover:scale-102">
                         <i class="fa-solid fa-map-location-dot"></i>
                         <span>Peta Taburan Penternak (GIS)</span>

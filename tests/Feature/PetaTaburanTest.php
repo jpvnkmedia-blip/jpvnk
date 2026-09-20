@@ -23,31 +23,63 @@ class PetaTaburanTest extends TestCase
         $responseAlias->assertRedirect(route('login'));
     }
 
-    public function test_pengarah_or_pegawai_pelesen_can_view_peta_taburan(): void
+    public function test_state_level_admins_and_pengarah_can_view_peta_taburan(): void
     {
-        $pengarah = User::factory()->create([
-            'role' => 'pegawai_pelesen',
-            'email' => 'pengarah@dvs.gov.my',
-        ]);
+        $allowedRoles = [
+            'super_admin',
+            'pengarah',
+            'admin_eptr_negeri',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+        ];
 
-        $response = $this->actingAs($pengarah)->get(route('peta.taburan'));
-        $response->assertStatus(200);
-        $response->assertSee('Peta Taburan Penternak', false);
-        $response->assertSee('gisMap', false);
-        $response->assertSee('Skrin Penuh', false);
-        $response->assertSee('Penapis Taburan Penternak', false);
-        $response->assertViewHas(['allMarkers', 'availableLivestockTypes', 'jajahanList', 'stats', 'jajahanStats']);
+        foreach ($allowedRoles as $role) {
+            $user = User::factory()->create([
+                'role' => $role,
+            ]);
+
+            $response = $this->actingAs($user)->get(route('peta.taburan'));
+            $response->assertStatus(200);
+            $response->assertSee('Peta Taburan Penternak', false);
+            $response->assertSee('gisMap', false);
+        }
     }
 
-    public function test_super_admin_and_staff_can_view_peta_taburan(): void
+    public function test_jajahan_admins_and_general_staff_are_forbidden_from_peta_taburan(): void
     {
-        $admin = User::factory()->create([
-            'role' => 'super_admin',
-        ]);
+        $blockedRoles = [
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+            'admin_epu_jajahan',
+            'pegawai_verifikasi_epu',
+            'admin_naimbif_jajahan',
+            'admin_pejabat',
+            'admin_kenderaan',
+            'admin_ubat',
+            'admin_klinik',
+            'admin_kursus',
+            'admin_program',
+            'staf',
+            'penternak',
+            'usahawan',
+            'orang_awam',
+        ];
 
-        $response = $this->actingAs($admin)->get(route('pengarah.peta'));
-        $response->assertStatus(200);
-        $response->assertSee('Peta Taburan Penternak', false);
+        foreach ($blockedRoles as $role) {
+            $user = User::factory()->create([
+                'role' => $role,
+                'jajahan' => 'Kota Bharu',
+            ]);
+
+            $response = $this->actingAs($user)->get(route('peta.taburan'));
+            $response->assertStatus(403);
+
+            $responseAlias = $this->actingAs($user)->get(route('pengarah.peta'));
+            $responseAlias->assertStatus(403);
+        }
     }
 
     public function test_peta_taburan_aggregates_epu_and_eptr_data_correctly(): void

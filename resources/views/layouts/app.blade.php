@@ -160,8 +160,8 @@
                     @endif
                 </a>
 
-                <!-- Peta Taburan Penternak GIS (Pengarah / Eksekutif / Staf) -->
-                @if(Auth::user()->isStaff() || Auth::user()->isSuperAdmin() || Auth::user()->role === 'pegawai_pelesen')
+                <!-- Peta Taburan Penternak GIS (Pengarah / Eksekutif Negeri) -->
+                @if(Auth::user()->canAccessPetaTaburan())
                 <a href="{{ route('peta.taburan') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('peta.*') || request()->routeIs('pengarah.peta') ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-map-location-dot w-5 text-center text-base text-emerald-400"></i>

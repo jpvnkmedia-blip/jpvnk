@@ -296,6 +296,30 @@ class User extends Authenticatable
         return $this->hasAnyRole(['super_admin', 'admin_klinik']);
     }
 
+    public function canAccessPetaTaburan(): bool
+    {
+        $allowedRoles = [
+            'super_admin',
+            'pengarah',
+            'admin_eptr_negeri',
+            'admin_epu_negeri',
+            'admin_epu',
+            'pegawai_pelesen',
+            'admin_naimbif_negeri',
+            'admin_naimbif',
+        ];
+
+        if ($this->hasAnyRole($allowedRoles)) {
+            return true;
+        }
+
+        if ($this->hasRole('admin_eptr') && empty($this->jajahan)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function canAccessStorPejabat(): bool
     {
         return $this->hasAnyRole([
