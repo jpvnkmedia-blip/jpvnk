@@ -18,9 +18,19 @@ services:
       - key: LOG_CHANNEL
         value: stderr
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        value: mysql-1b9c9db7-jpvnkmedia-2aba.k.aivencloud.com
+      - key: DB_PORT
+        value: 27306
       - key: DB_DATABASE
-        value: /var/www/html/database/database.sqlite
+        value: defaultdb
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false
+      - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+        value: false
       - key: SESSION_DRIVER
         value: cookie
       - key: CACHE_STORE

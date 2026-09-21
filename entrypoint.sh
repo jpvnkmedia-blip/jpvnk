@@ -31,6 +31,10 @@ php artisan storage:link --force || true
 echo "Running migrations..."
 php artisan migrate --force || true
 
+# Auto-seed initial data if users table is empty
+echo "Checking and seeding initial data if needed..."
+php artisan tinker --execute="if (\App\Models\User::count() === 0) { \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]); }" || true
+
 # Ensure permissions again after migration
 chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
