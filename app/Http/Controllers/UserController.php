@@ -327,7 +327,7 @@ class UserController extends Controller implements HasMiddleware
 
         $signaturePath = null;
         if ($request->hasFile('signature')) {
-            $signaturePath = $request->file('signature')->store('signatures', 'public');
+            $signaturePath = $this->uploadFileSafely($request->file('signature'), 'signatures');
         }
 
         $user = User::create([
@@ -460,10 +460,13 @@ class UserController extends Controller implements HasMiddleware
         }
 
         if ($request->hasFile('signature')) {
-            if ($targetUser->signature && Storage::disk('public')->exists($targetUser->signature)) {
-                Storage::disk('public')->delete($targetUser->signature);
+            $newSignature = $this->uploadFileSafely($request->file('signature'), 'signatures');
+            if ($newSignature) {
+                if (!empty($targetUser->signature) && is_string($targetUser->signature) && Storage::disk('public')->exists($targetUser->signature)) {
+                    Storage::disk('public')->delete($targetUser->signature);
+                }
+                $targetUser->signature = $newSignature;
             }
-            $targetUser->signature = $request->file('signature')->store('signatures', 'public');
         }
 
         $targetUser->save();
@@ -521,8 +524,39 @@ class UserController extends Controller implements HasMiddleware
         }
 
         $name = $targetUser->name;
+        if (!empty($targetUser->signature) && is_string($targetUser->signature) && Storage::disk('public')->exists($targetUser->signature)) {
+            Storage::disk('public')->delete($targetUser->signature);
+        }
         $targetUser->delete();
 
         return redirect()->route('users.index')->with('success', "Akaun pengguna {$name} telah berjaya dipadam dari sistem.");
+    }
+
+    /**
+     * Simpan fail muat naik dengan selamat
+     */
+    protected function uploadFileSafely($file, string $folder = 'signatures'): ?string
+    {
+        if (!$file || !$file->isValid()) {
+            return null;
+        }
+
+        $extension = $file->getClientOriginalExtension() ?: 'png';
+        $filename = time() . '_' . uniqid() . '.' . $extension;
+
+        try {
+            return $file->storeAs($folder, $filename, 'public');
+        } catch (\Throwable $e) {
+            try {
+                $targetDir = storage_path('app/public/' . $folder);
+                if (!file_exists($targetDir)) {
+                    @mkdir($targetDir, 0755, true);
+                }
+                $file->move($targetDir, $filename);
+                return $folder . '/' . $filename;
+            } catch (\Throwable $inner) {
+                return null;
+            }
+        }
     }
 }

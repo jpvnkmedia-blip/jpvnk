@@ -168,4 +168,25 @@ class UserMultiRolesTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Dr. Multi Pegawai Ubat & Pejabat');
     }
+
+    public function test_update_user_without_providing_signature_file()
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+        $targetUser = User::where('role', '!=', 'super_admin')->first();
+
+        $response = $this->actingAs($superAdmin)->put(route('users.update', $targetUser->id), [
+            'name' => $targetUser->name . ' Updated',
+            'email' => $targetUser->email,
+            'ic_number' => $targetUser->ic_number,
+            'phone' => $targetUser->phone ?? '0191234567',
+            'address' => $targetUser->address ?? 'Alamat Test',
+            'jajahan' => $targetUser->jajahan ?? 'Kota Bharu',
+            'roles' => $targetUser->getRolesList(),
+            'status' => 'Aktif',
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+        $targetUser->refresh();
+        $this->assertStringContainsString('Updated', $targetUser->name);
+    }
 }
