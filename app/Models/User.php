@@ -28,6 +28,7 @@ class User extends Authenticatable
         'auth_provider',
         'provider_id',
         'avatar',
+        'signature',
         'status',
         'password',
     ];
@@ -264,11 +265,28 @@ class User extends Authenticatable
 
     public function canPerformVerifikasi(?string $ladangJajahan = null): bool
     {
-        if ($this->isSuperAdmin() || $this->hasRole(['admin_epu', 'admin_epu_negeri'])) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
-        if ($this->hasRole(['pegawai_verifikasi_epu', 'admin_epu_jajahan', 'admin_jajahan', 'admin_eptr_jajahan'])) {
+        // Pegawai Pelesen / Pengarah DVS tidak boleh ubah status Pegawai Verifikasi Jajahan
+        $myRoles = $this->getRolesList();
+        $isPurePelesen = (in_array('pengarah', $myRoles) || in_array('pegawai_pelesen', $myRoles))
+            && !in_array('pegawai_verifikasi_epu', $myRoles)
+            && !in_array('admin_epu_jajahan', $myRoles)
+            && !in_array('admin_epu', $myRoles)
+            && !in_array('admin_epu_negeri', $myRoles);
+
+        if ($isPurePelesen) {
+            return false;
+        }
+
+        // Admin EPU Negeri mempunyai bidang kuasa seluruh negeri
+        if ($this->hasAnyRole(['admin_epu', 'admin_epu_negeri'])) {
+            return true;
+        }
+
+        if ($this->hasAnyRole(['pegawai_verifikasi_epu', 'admin_epu_jajahan', 'admin_jajahan', 'admin_eptr_jajahan'])) {
             if ($ladangJajahan && !empty($this->jajahan)) {
                 return strcasecmp($this->jajahan, $ladangJajahan) === 0;
             }

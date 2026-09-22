@@ -7,6 +7,7 @@ use App\Models\Pemunya;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -299,6 +300,7 @@ class UserController extends Controller implements HasMiddleware
             'roles.*' => ['string'],
             'status' => ['required', 'in:Aktif,Tidak Aktif'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
+            'signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
             'name.required' => 'Nama penuh pengguna wajib diisi.',
             'email.required' => 'Alamat emel wajib diisi.',
@@ -312,6 +314,9 @@ class UserController extends Controller implements HasMiddleware
             'roles.min' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
             'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
             'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
+            'signature.image' => 'Fail tandatangan mestilah imej yang sah.',
+            'signature.mimes' => 'Format tandatangan mestilah JPEG, PNG, JPG atau WEBP.',
+            'signature.max' => 'Saiz fail tandatangan tidak boleh melebihi 2MB.',
         ]);
 
         $finalPassword = !empty($validated['password'])
@@ -319,6 +324,11 @@ class UserController extends Controller implements HasMiddleware
             : User::generateDefaultPassword($validated['ic_number']);
 
         $primaryRole = in_array('super_admin', $validated['roles']) ? 'super_admin' : $validated['roles'][0];
+
+        $signaturePath = null;
+        if ($request->hasFile('signature')) {
+            $signaturePath = $request->file('signature')->store('signatures', 'public');
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -332,6 +342,7 @@ class UserController extends Controller implements HasMiddleware
             'auth_provider' => 'manual',
             'status' => $validated['status'],
             'password' => Hash::make($finalPassword),
+            'signature' => $signaturePath,
         ]);
 
         // Jika peranan penternak dipilih, cipta atau pautkan profil Pemunya Ternakan
@@ -406,6 +417,7 @@ class UserController extends Controller implements HasMiddleware
             'roles.*' => ['string'],
             'status' => ['required', 'in:Aktif,Tidak Aktif'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
+            'signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
             'name.required' => 'Nama penuh pengguna wajib diisi.',
             'email.required' => 'Alamat emel wajib diisi.',
@@ -416,6 +428,9 @@ class UserController extends Controller implements HasMiddleware
             'roles.min' => 'Sila pilih sekurang-kurangnya satu peranan untuk pengguna.',
             'password.confirmed' => 'Pengesahan kata laluan tidak sepadan.',
             'password.min' => 'Kata laluan mestilah sekurang-kurangnya 6 aksara.',
+            'signature.image' => 'Fail tandatangan mestilah imej yang sah.',
+            'signature.mimes' => 'Format tandatangan mestilah JPEG, PNG, JPG atau WEBP.',
+            'signature.max' => 'Saiz fail tandatangan tidak boleh melebihi 2MB.',
         ]);
 
         // Lindungi akaun sendiri dari diturunkan taraf atau dinyahaktif
@@ -442,6 +457,13 @@ class UserController extends Controller implements HasMiddleware
 
         if (!empty($validated['password'])) {
             $targetUser->password = Hash::make($validated['password']);
+        }
+
+        if ($request->hasFile('signature')) {
+            if ($targetUser->signature && Storage::disk('public')->exists($targetUser->signature)) {
+                Storage::disk('public')->delete($targetUser->signature);
+            }
+            $targetUser->signature = $request->file('signature')->store('signatures', 'public');
         }
 
         $targetUser->save();

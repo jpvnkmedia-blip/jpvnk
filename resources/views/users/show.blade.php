@@ -80,10 +80,18 @@
                         {{ $targetUser->status ?? 'Aktif' }}
                     </span>
                 </div>
-                <div class="flex justify-between py-1">
+                <div class="flex justify-between py-1 border-b border-slate-50">
                     <span class="text-slate-500">Tarikh Daftar</span>
                     <span class="text-slate-700 text-right">{{ $targetUser->created_at ? $targetUser->created_at->format('d/m/Y h:i A') : '-' }}</span>
                 </div>
+                @if($targetUser->signature)
+                    <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                        <span class="text-slate-500">Tandatangan Digital</span>
+                        <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-xl shadow-xs">
+                            <img src="{{ asset('storage/' . $targetUser->signature) }}" alt="Tandatangan {{ $targetUser->name }}" class="h-10 max-w-[140px] object-contain">
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="pt-2">

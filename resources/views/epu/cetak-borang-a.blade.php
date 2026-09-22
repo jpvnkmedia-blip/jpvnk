@@ -65,7 +65,6 @@
         <!-- Top Running Header -->
         <div class="flex justify-between items-start font-bold uppercase text-[12px] mb-4">
             <span>ENAKMEN PERLADANGAN UNGGAS 2005</span>
-            <span class="text-sm">61</span>
         </div>
 
         <!-- Title Block -->
@@ -304,14 +303,28 @@
                     <div class="dotted-line w-full mt-1.5 min-h-[1.3em]"></div>
                 </div>
 
+                @php
+                    $pegawaiPelesen = $permohonan->pelulus 
+                        ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first() 
+                        ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first();
+                @endphp
+
                 <div class="grid grid-cols-2 gap-8 pt-6 items-end">
                     <div class="flex items-baseline">
                         <span class="mr-2">Tarikh:</span>
                         <span class="dotted-line flex-1 font-mono px-2">{{ $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : '' }}</span>
                     </div>
                     <div class="text-center">
+                        @if($pegawaiPelesen && $pegawaiPelesen->signature)
+                            <div class="flex flex-col items-center justify-center -mb-2">
+                                <img src="{{ asset('storage/' . $pegawaiPelesen->signature) }}" alt="Tandatangan Pegawai Pelesen" class="h-16 max-w-[180px] object-contain">
+                            </div>
+                        @endif
                         <div class="dotted-line w-full mb-1"></div>
                         <span class="italic text-[12px] font-bold block">Pegawai Pelesen</span>
+                        @if($pegawaiPelesen)
+                            <span class="text-[11px] font-semibold text-slate-800 block">({{ $pegawaiPelesen->name }})</span>
+                        @endif
                     </div>
                 </div>
             </div>

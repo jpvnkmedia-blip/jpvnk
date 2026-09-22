@@ -38,7 +38,7 @@
 
     <!-- Edit Form -->
     <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
-        <form action="{{ route('users.update', $targetUser->id) }}" method="POST" class="space-y-6 text-xs">
+        <form action="{{ route('users.update', $targetUser->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6 text-xs">
             @csrf
             @method('PUT')
 
@@ -160,6 +160,34 @@
                             <option value="Tidak Aktif">Tidak Aktif (Digantung)</option>
                         </select>
                     </div>
+                </div>
+
+                <!-- Digital Signature Section -->
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <label class="block font-bold text-slate-700 uppercase mb-1">
+                        <span>Tandatangan Digital</span>
+                        <span class="text-[10px] text-slate-400 font-normal">(Pilihan - Khusus untuk Pegawai Pelesen / Pengarah / Pegawai Pengesah)</span>
+                    </label>
+
+                    @if($targetUser->signature)
+                        <div class="mb-3 flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl w-fit">
+                            <div class="bg-white border border-slate-200 p-1.5 rounded-xl shadow-xs">
+                                <img src="{{ asset('storage/' . $targetUser->signature) }}" alt="Tandatangan {{ $targetUser->name }}" class="h-14 max-w-[200px] object-contain">
+                            </div>
+                            <div class="text-[11px] text-slate-600">
+                                <p class="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                    <span>Tandatangan Digital Telah Dimuat Naik</span>
+                                </p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Pilih fail baharu di bawah jika anda ingin menukar imej tandatangan sedia ada.</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="flex items-center gap-4">
+                        <input type="file" name="signature" accept="image/png,image/jpeg,image/jpg,image/webp" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Format fail: PNG, JPG, JPEG, atau WEBP (Maksimum 2MB). Tandatangan ini akan dipaparkan secara rasmi pada Borang A EPU di bahagian Pegawai Pelesen.</p>
                 </div>
             </div>
 

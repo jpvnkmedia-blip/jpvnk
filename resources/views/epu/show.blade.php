@@ -356,7 +356,26 @@
                     </div>
                 @endif
 
-                @if($canVerifikasi)
+                @if($p->status === 'Diluluskan' || $p->status_kelulusan_pelesen === 'Lulus')
+                    <!-- Locked Verification View when Fully Approved -->
+                    <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-emerald-950 text-xs space-y-2">
+                        <div class="font-bold flex items-center justify-between text-emerald-900">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-emerald-600"></i> Rekod Verifikasi Terkunci (Permohonan Telah Lulus)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 border border-emerald-300">Muktamad</span>
+                        </div>
+                        <p class="text-[11px] text-emerald-800">Status verifikasi tidak boleh diubah kerana permohonan lesen EPU ini telah diluluskan sepenuhnya.</p>
+                        <div class="pt-2 border-t border-emerald-200/60 space-y-1.5 text-[11px]">
+                            <div>Status Semakan PPVJ: <span class="font-bold px-2 py-0.5 rounded bg-white border border-emerald-300 text-emerald-900">{{ $p->status_verifikasi ?? 'Patuh' }}</span></div>
+                            @if($p->catatan_verifikasi)
+                                <div>Catatan Verifikasi: <span class="text-slate-800 font-semibold">{{ $p->catatan_verifikasi }}</span></div>
+                            @endif
+                            @if($p->tindakan_penambahbaikan)
+                                <div>Tindakan Penambahbaikan: <span class="text-slate-800 font-semibold">{{ $p->tindakan_penambahbaikan }}</span></div>
+                            @endif
+                            <div>Status Penilaian: <span class="font-bold text-emerald-700">{{ $p->status_penilaian_ladang ?? 'Dihantar ke Pegawai Pelesen' }}</span></div>
+                        </div>
+                    </div>
+                @elseif($canVerifikasi)
                     <!-- Active Form for Pegawai Verifikasi PPVJ -->
                     <form action="{{ route('epu.verifikasi', $p->id) }}" method="POST" class="space-y-3">
                         @csrf
@@ -454,7 +473,24 @@
                     </div>
                 @endif
 
-                @if($canPelesen)
+                @if($p->status === 'Diluluskan' || $p->status_kelulusan_pelesen === 'Lulus')
+                    <!-- Locked Decision View when Fully Approved -->
+                    <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-emerald-950 text-xs space-y-2">
+                        <div class="font-bold flex items-center justify-between text-emerald-900">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-stamp text-emerald-600"></i> Keputusan Pegawai Pelesen Terkunci</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 border border-emerald-300">Lulus Sepenuhnya</span>
+                        </div>
+                        <p class="text-[11px] text-emerald-800">Permohonan lesen EPU ini telah diluluskan secara muktamad oleh Pegawai Pelesen / Pengarah DVS.</p>
+                        <div class="pt-2 border-t border-emerald-200/60 space-y-1.5 text-[11px]">
+                            @if($p->syarat_khas_lesen)
+                                <div>Syarat Khas Lesen: <span class="text-slate-800 font-semibold whitespace-pre-line">{{ $p->syarat_khas_lesen }}</span></div>
+                            @endif
+                            @if($p->catatan_pegawai)
+                                <div>Catatan Rasmi: <span class="text-slate-800 font-semibold">{{ $p->catatan_pegawai }}</span></div>
+                            @endif
+                        </div>
+                    </div>
+                @elseif($canPelesen)
                     <!-- Active Decision Form for Pegawai Pelesen / Pengarah -->
                     <form action="{{ route('epu.keputusan-pelesen', $p->id) }}" method="POST" class="space-y-3">
                         @csrf

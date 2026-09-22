@@ -499,8 +499,12 @@ class EpuController extends Controller implements HasMiddleware
         $user = Auth::user();
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
 
+        if ($permohonan->status === 'Diluluskan' || $permohonan->status_kelulusan_pelesen === 'Lulus') {
+            abort(403, 'Akses Ditolak: Status Verifikasi Pegawai Verifikasi Jajahan tidak boleh diubah lagi kerana permohonan EPU ini telah diluluskan sepenuhnya.');
+        }
+
         if (!$user->canPerformVerifikasi($permohonan->ladang->jajahan)) {
-            abort(403, 'Akses Ditolak: Pegawai Pelesen / Pengarah tidak dibenarkan mengubahsuai semakan kelengkapan dan verifikasi kepatuhan tapak. Tindakan ini dikhaskan untuk Pegawai Verifikasi PPVJ (' . $permohonan->ladang->jajahan . ').');
+            abort(403, 'Akses Ditolak: Pegawai Pelesen / Pengarah DVS tidak dibenarkan mengubah status Pegawai Verifikasi Jajahan. Tindakan ini dikhaskan untuk Pegawai Verifikasi PPVJ (' . $permohonan->ladang->jajahan . ').');
         }
 
         $validated = $request->validate([
@@ -609,6 +613,10 @@ class EpuController extends Controller implements HasMiddleware
         $user = Auth::user();
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
 
+        if ($permohonan->status === 'Diluluskan' || $permohonan->status_kelulusan_pelesen === 'Lulus') {
+            abort(403, 'Akses Ditolak: Permohonan EPU ini telah diluluskan sepenuhnya.');
+        }
+
         if (!$user->canPerformVerifikasi($permohonan->ladang->jajahan)) {
             abort(403, 'Akses Ditolak: Hanya Pegawai Verifikasi PPVJ dibenarkan menghantar penilaian ladang ke Pegawai Pelesen.');
         }
@@ -660,6 +668,11 @@ class EpuController extends Controller implements HasMiddleware
         }
 
         $permohonan = EpuPermohonan::with('ladang.pemilik')->findOrFail($id);
+
+        if ($permohonan->status === 'Diluluskan' || $permohonan->status_kelulusan_pelesen === 'Lulus') {
+            abort(403, 'Akses Ditolak: Rekod Keputusan Pegawai Pelesen tidak boleh diubah lagi kerana permohonan EPU ini telah diluluskan sepenuhnya.');
+        }
+
         $validated = $request->validate([
             'keputusan' => 'required|in:Lulus,Gagal',
             'catatan_pegawai' => 'nullable|string',
@@ -985,25 +998,46 @@ class EpuController extends Controller implements HasMiddleware
     }
 
     /**
-     * Hantar notifikasi kepada pegawai EPU berkaitan (Admin EPU Negeri, Admin EPU Jajahan, Pegawai Pelesen, Super Admin)
+     * Hantar notifikasi kepada pegawai EPU berkaitan (Admin EPU Negeri, Admin EPU Jajahan, Pegawai Pelesen, Pengarah, Super Admin)
      */
     private function notifyEpuOfficers(array $roles, ?string $jajahan, string $title, string $message, ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald', ?int $excludeUserId = null): void
     {
         $rolesExpanded = $roles;
         if (in_array('admin_epu', $roles)) {
             $rolesExpanded[] = 'admin_epu_negeri';
+            $rolesExpanded[] = 'pegawai_pelesen';
+            $rolesExpanded[] = 'pengarah';
         }
         if (in_array('pegawai_verifikasi_epu', $roles)) {
             $rolesExpanded[] = 'admin_epu_jajahan';
         }
-        $query = User::whereIn('role', array_unique($rolesExpanded));
+        $rolesExpanded[] = 'super_admin';
+        $rolesExpanded = array_values(array_unique($rolesExpanded));
 
-        if ($jajahan && (in_array('pegawai_verifikasi_epu', $roles) || in_array('admin_epu_jajahan', $roles))) {
+        $query = User::where(function ($q) use ($rolesExpanded) {
+            $q->whereIn('role', $rolesExpanded);
+            foreach ($rolesExpanded as $r) {
+                $q->orWhereJsonContains('roles', $r);
+            }
+        });
+
+        if ($jajahan) {
             $query->where(function ($q) use ($jajahan) {
-                $q->where('jajahan', $jajahan)
-                  ->orWhereNull('jajahan')
-                  ->orWhere('jajahan', '')
-                  ->orWhereIn('role', ['admin_epu', 'admin_epu_negeri', 'pegawai_pelesen', 'super_admin']);
+                $q->where(function ($sub) use ($jajahan) {
+                    $sub->where(function ($roleSub) {
+                        $roleSub->whereIn('role', ['pegawai_verifikasi_epu', 'admin_epu_jajahan'])
+                                ->orWhereJsonContains('roles', 'pegawai_verifikasi_epu')
+                                ->orWhereJsonContains('roles', 'admin_epu_jajahan');
+                    })->where('jajahan', $jajahan);
+                })
+                ->orWhere(function ($stateSub) {
+                    $stateSub->whereIn('role', ['admin_epu', 'admin_epu_negeri', 'pengarah', 'pegawai_pelesen', 'super_admin'])
+                             ->orWhereJsonContains('roles', 'admin_epu')
+                             ->orWhereJsonContains('roles', 'admin_epu_negeri')
+                             ->orWhereJsonContains('roles', 'pengarah')
+                             ->orWhereJsonContains('roles', 'pegawai_pelesen')
+                             ->orWhereJsonContains('roles', 'super_admin');
+                });
             });
         }
 
