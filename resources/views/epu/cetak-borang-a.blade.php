@@ -10,12 +10,12 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm 12mm 8mm 12mm;
+            margin: 10mm 15mm;
         }
         body {
             font-family: 'Times New Roman', Times, serif;
             color: #000;
-            background-color: #fff;
+            background: #f1f5f9;
             line-height: 1.25;
         }
         .dotted-line {
@@ -27,8 +27,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 15px;
+            width: 22px;
+            height: 14px;
             border: 1px solid #000;
             margin: 0 4px;
             font-size: 10px;
@@ -36,6 +36,10 @@
             vertical-align: middle;
         }
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 15mm;
+            }
             .no-print {
                 display: none !important;
             }
@@ -45,38 +49,52 @@
                 background: #fff !important;
                 font-size: 11px !important;
                 line-height: 1.25 !important;
-            }
-            .page-container {
                 width: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .sheet {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: #fff !important;
                 box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
             .page-1 {
                 page-break-after: always !important;
                 break-after: page !important;
+                page-break-before: avoid !important;
+                break-before: avoid !important;
             }
             .page-2 {
-                page-break-before: always !important;
-                break-before: page !important;
+                page-break-before: auto !important;
+                break-before: auto !important;
                 page-break-after: avoid !important;
                 break-after: avoid !important;
             }
         }
     </style>
 </head>
-<body class="p-4 sm:p-6 max-w-4xl mx-auto text-[12px]">
+<body class="p-4 sm:p-8 flex flex-col items-center text-[12px]">
 
-    <!-- Print Floating Buttons -->
-    <div class="no-print fixed top-5 right-5 flex gap-2 z-50 bg-white/95 p-3 rounded-2xl shadow-xl border border-slate-200">
-        <button onclick="window.print()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
-            <i class="fa-solid fa-print"></i> Cetak Borang A
+    <!-- Print Floating Action Bar (Screen Only) -->
+    <div class="no-print mb-6 flex gap-3 z-50">
+        <button onclick="window.print()" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold text-sm rounded-xl shadow-lg transition flex items-center gap-2">
+            <i class="fa-solid fa-print text-amber-400"></i>
+            <span>Cetak Borang A (2 Muka Surat)</span>
         </button>
-        <button onclick="window.close()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-sans font-bold text-xs rounded-xl transition">
+        <button onclick="window.close()" class="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-sans font-bold text-sm rounded-xl shadow-sm transition">
             Tutup
         </button>
     </div>
 
     <!-- ================= PAGE 1 (Image 1) ================= -->
-    <div class="page-container page-1 relative">
+    <div class="sheet page-1 max-w-[210mm] w-full bg-white p-8 sm:p-12 shadow-2xl mb-8 print:mb-0 print:p-0 print:shadow-none">
         <!-- Top Running Header -->
         <div class="flex justify-between items-start font-bold uppercase text-[11px] mb-2">
             <span>ENAKMEN PERLADANGAN UNGGAS 2005</span>
@@ -246,7 +264,7 @@
     </div>
 
     <!-- ================= PAGE 2 (Image 2) ================= -->
-    <div class="page-container page-2 pt-1">
+    <div class="sheet page-2 max-w-[210mm] w-full bg-white p-8 sm:p-12 shadow-2xl print:p-0 print:shadow-none">
         
         <!-- Section 4: Aktiviti Berkaitan -->
         <div class="space-y-1.5">
@@ -430,4 +448,5 @@
 
 </body>
 </html>
+
 
