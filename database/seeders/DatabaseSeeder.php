@@ -68,6 +68,20 @@ class DatabaseSeeder extends Seeder
             'password' => $password,
         ]);
 
+        $pegawaiPengesahPejabat = User::create([
+            'name' => 'En. Zakaria bin Hamzah',
+            'email' => 'pengesah.pejabat@veterinar.kelantan.gov.my',
+            'ic_number' => '810415035599',
+            'phone' => '019-9227788',
+            'address' => 'Unit Pentadbiran Am & Pengesahan Perolehan, Ibu Pejabat JPVNK Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'role' => 'pegawai_pengesah_pejabat',
+            'roles' => ['pegawai_pengesah_pejabat'],
+            'auth_provider' => 'manual',
+            'status' => 'Aktif',
+            'password' => $password,
+        ]);
+
         $adminKenderaan = User::create([
             'name' => 'En. Razak bin Che Dollah',
             'email' => 'adminkenderaan@veterinar.kelantan.gov.my',

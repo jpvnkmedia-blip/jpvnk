@@ -97,6 +97,7 @@ class User extends Authenticatable
             'admin_ubat',
             'admin_klinik',
             'admin_pejabat',
+            'pegawai_pengesah_pejabat',
             'admin_kenderaan',
         ]);
     }
@@ -104,6 +105,21 @@ class User extends Authenticatable
     public function isPengarah(): bool
     {
         return $this->hasAnyRole(['pengarah', 'super_admin']);
+    }
+
+    public function isPegawaiPengesahPejabat(): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']);
+    }
+
+    public function canInputStorPejabat(): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'admin_pejabat', 'admin_stor_pejabat']);
+    }
+
+    public function canApprovePermohonanPejabat(): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']);
     }
 
     public function isPegawaiJajahan(): bool
@@ -167,7 +183,7 @@ class User extends Authenticatable
 
     public function isAdminPejabat(): bool
     {
-        return $this->hasAnyRole(['super_admin', 'admin_pejabat', 'admin_stor_pejabat']);
+        return $this->hasAnyRole(['super_admin', 'admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']);
     }
 
     public function isAdminKenderaan(): bool
@@ -327,6 +343,8 @@ class User extends Authenticatable
             'super_admin',
             'admin_pejabat',
             'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
         ]);
     }
 
@@ -348,6 +366,8 @@ class User extends Authenticatable
             'pengarah',
             'admin_pejabat',
             'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_epu',
             'admin_epu_negeri',
             'admin_epu_jajahan',
@@ -406,6 +426,9 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
@@ -429,6 +452,9 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
@@ -448,6 +474,9 @@ class User extends Authenticatable
             'admin_program',
             'admin_kursus',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
@@ -472,6 +501,9 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_program',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
@@ -496,6 +528,9 @@ class User extends Authenticatable
             'admin_program',
             'admin_kursus',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'staf',
@@ -550,6 +585,9 @@ class User extends Authenticatable
             'super_admin',
             'pengarah',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',
@@ -589,7 +627,8 @@ class User extends Authenticatable
         return match ($role) {
             'super_admin' => 'Super Admin',
             'pengarah' => 'Pengarah Perkhidmatan Veterinar Negeri',
-            'admin_pejabat', 'admin_stor_pejabat' => 'Admin Stor Pejabat',
+            'admin_pejabat', 'admin_stor_pejabat' => 'Pegawai Stor Pejabat (Kemasukan Data)',
+            'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat' => 'Pegawai Pengesah & Pelulus Stor Pejabat',
             'admin_kenderaan' => 'Admin Kenderaan & Fleet',
             'admin_ubat' => 'Admin Stor Ubat & Farmasi Veterinar',
             'admin_klinik' => 'Admin Klinik Haiwan & Rawatan',
@@ -721,6 +760,9 @@ class User extends Authenticatable
             'pegawai_verifikasi_epu',
             'admin_kursus',
             'admin_pejabat',
+            'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat',
+            'admin_pelulus_pejabat',
             'admin_kenderaan',
             'admin_ubat',
             'admin_klinik',

@@ -12,6 +12,11 @@
             &larr; Kembali ke {{ $item->isStorUbat() ? 'Stor Ubat & Farmasi' : 'Stor Peralatan Pejabat' }}
         </a>
 
+        @php
+            $canManageItem = $item->isStorUbat() ? Auth::user()->canAccessStorUbat() : Auth::user()->canInputStorPejabat();
+        @endphp
+
+        @if($canManageItem)
         <div class="flex flex-wrap items-center gap-2">
             <!-- Butang Rekod Stok Masuk -->
             <button @click="modalMasuk = true" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
@@ -40,6 +45,13 @@
                 </button>
             </form>
         </div>
+        @else
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200">
+                <i class="fa-solid fa-eye mr-1"></i> Paparan Semakan Pegawai
+            </span>
+        </div>
+        @endif
     </div>
 
     <!-- Item Overview Card -->
@@ -193,7 +205,7 @@
                             <span>Pinjam: {{ $pj->tarikh_pinjam ? $pj->tarikh_pinjam->format('d/m/Y') : '-' }}</span>
                             <span>Jangka Pulang: {{ $pj->tarikh_jangka_pulang ? $pj->tarikh_jangka_pulang->format('d/m/Y') : '-' }}</span>
                         </div>
-                        @if($pj->status === 'Dipinjam')
+                        @if($pj->status === 'Dipinjam' && $canManageItem)
                             <form action="{{ route('inventori.pinjaman.pulang', $pj->id) }}" method="POST" class="pt-1.5 border-t border-slate-200/60 flex justify-end">
                                 @csrf
                                 <button type="submit" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-xs transition flex items-center gap-1">

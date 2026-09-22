@@ -11,9 +11,17 @@
         <div>
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 font-black text-xs uppercase tracking-wider">
-                    <i class="fa-solid fa-boxes-stacked mr-1"></i> Admin Stor Pejabat
+                    <i class="fa-solid fa-boxes-stacked mr-1"></i> Stor Pejabat
                 </span>
-                <span class="text-xs text-slate-500 font-semibold">Semakan &amp; Kelulusan Permohonan Staf Jabatan</span>
+                <span class="text-xs text-slate-500 font-semibold">
+                    @if(Auth::user()->isPegawaiPengesahPejabat() && !Auth::user()->canInputStorPejabat())
+                        Peranan: Pegawai Pengesah &amp; Pelulus Permohonan
+                    @elseif(Auth::user()->canInputStorPejabat() && !Auth::user()->canApprovePermohonanPejabat())
+                        Peranan: Pegawai Stor (Kemasukan Data &amp; Serahan Stok)
+                    @else
+                        Semakan &amp; Kelulusan Permohonan Staf Jabatan
+                    @endif
+                </span>
             </div>
             <h2 class="text-xl font-extrabold text-slate-900 mt-1">Pengurusan Permohonan Barangan Pejabat</h2>
             <p class="text-xs text-slate-500 mt-0.5">Semak permohonan alatan tulis, kertas, toner dan perabot pejabat daripada pegawai &amp; unit jabatan untuk kelulusan dan penyerahan stok.</p>
@@ -144,20 +152,32 @@
                             </td>
                             <td class="px-5 py-3.5 text-right whitespace-nowrap space-x-1">
                                 @if($p->isPending())
-                                    <!-- Lulus Button -->
-                                    <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'lulus'" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-check"></i> Lulus
-                                    </button>
+                                    @if(Auth::user()->canApprovePermohonanPejabat())
+                                        <!-- Lulus Button -->
+                                        <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'lulus'" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-check"></i> Lulus
+                                        </button>
 
-                                    <!-- Tolak Button -->
-                                    <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'tolak'" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-xmark"></i> Tolak
-                                    </button>
+                                        <!-- Tolak Button -->
+                                        <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'tolak'" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-xmark"></i> Tolak
+                                        </button>
+                                    @else
+                                        <span class="text-amber-600 text-xs font-bold inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-clock"></i> Menunggu Kelulusan Pegawai Pengesah
+                                        </span>
+                                    @endif
                                 @elseif($p->isApproved())
-                                    <!-- Serah Stok Button -->
-                                    <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_diluluskan ?? $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'serah'" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition inline-flex items-center gap-1">
-                                        <i class="fa-solid fa-hand-holding-box"></i> Serah Stok
-                                    </button>
+                                    @if(Auth::user()->canInputStorPejabat())
+                                        <!-- Serah Stok Button -->
+                                        <button @click="modalAction = true; permohonanId = {{ $p->id }}; noPermohonan = '{{ $p->no_permohonan }}'; namaPemohon = '{{ addslashes($p->pemohon->name ?? '') }}'; namaItem = '{{ addslashes($p->item->nama_item ?? '') }}'; unit = '{{ $p->item->unit ?? 'Unit' }}'; kuantitiDiluluskan = {{ $p->kuantiti_diluluskan ?? $p->kuantiti_dimohon }}; maxStok = {{ $p->item->kuantiti_semasa ?? 1 }}; tindakan = 'serah'" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-hand-holding-box"></i> Serah Stok
+                                        </button>
+                                    @else
+                                        <span class="text-blue-600 text-xs font-bold inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-hourglass-half"></i> Menunggu Serahan Pegawai Stor
+                                        </span>
+                                    @endif
                                 @else
                                     <span class="text-slate-400 text-xs font-semibold">Selesai</span>
                                 @endif

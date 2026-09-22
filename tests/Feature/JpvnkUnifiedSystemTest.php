@@ -1748,6 +1748,7 @@ class JpvnkUnifiedSystemTest extends TestCase
     public function test_admin_requisition_approval_and_automatic_stock_deduction_flow()
     {
         $adminPejabat = User::where('role', 'admin_pejabat')->first();
+        $pegawaiPengesah = User::where('role', 'pegawai_pengesah_pejabat')->first();
         $adminUbat = User::where('role', 'admin_ubat')->first();
         $adminKursus = User::where('role', 'admin_kursus')->first();
 
@@ -1773,8 +1774,15 @@ class JpvnkUnifiedSystemTest extends TestCase
         ]);
         $respUbatCubaLulus->assertStatus(403);
 
-        // 2. Admin Pejabat luluskan permohonan stor pejabat
-        $respLulus = $this->actingAs($adminPejabat)->post("/inventori/permohonan/{$permohonan->id}/status", [
+        // 2. Admin Kemasukan Data cuba luluskan permohonan stor pejabat -> 403 Forbidden (Pemisahan Tugas)
+        $respAdminPejabatCubaLulus = $this->actingAs($adminPejabat)->post("/inventori/permohonan/{$permohonan->id}/status", [
+            'tindakan' => 'lulus',
+            'kuantiti_diluluskan' => 4,
+        ]);
+        $respAdminPejabatCubaLulus->assertStatus(403);
+
+        // 3. Pegawai Pengesah & Pelulus Stor Pejabat luluskan permohonan
+        $respLulus = $this->actingAs($pegawaiPengesah)->post("/inventori/permohonan/{$permohonan->id}/status", [
             'tindakan' => 'lulus',
             'kuantiti_diluluskan' => 4,
             'catatan_pegawai' => 'Diluluskan penuh untuk kursus.',
@@ -1785,7 +1793,14 @@ class JpvnkUnifiedSystemTest extends TestCase
         $this->assertEquals('Diluluskan', $permohonan->status);
         $this->assertEquals(4, $permohonan->kuantiti_diluluskan);
 
-        // 3. Admin Pejabat serahkan stok -> Baki inventori ditolak automatik & rekod Stok Keluar dicipta
+        // 4. Pegawai Pengesah cuba serahkan stok -> 403 Forbidden (Hanya Pegawai Stor / Kemasukan Data dibenarkan)
+        $respPengesahCubaSerah = $this->actingAs($pegawaiPengesah)->post("/inventori/permohonan/{$permohonan->id}/status", [
+            'tindakan' => 'serah',
+            'kuantiti_diluluskan' => 4,
+        ]);
+        $respPengesahCubaSerah->assertStatus(403);
+
+        // 5. Pegawai Stor Pejabat serahkan stok -> Baki inventori ditolak automatik & rekod Stok Keluar dicipta
         $respSerah = $this->actingAs($adminPejabat)->post("/inventori/permohonan/{$permohonan->id}/status", [
             'tindakan' => 'serah',
             'kuantiti_diluluskan' => 4,

@@ -133,7 +133,7 @@ class DashboardController extends Controller
                 $q->where('status', 'Stok Rendah')->orWhere('status', 'Habis Stok');
             })->count();
 
-            if ($user->role === 'admin_pejabat') {
+            if (in_array($user->role, ['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']) || $user->hasAnyRole(['admin_pejabat', 'pegawai_pengesah_pejabat'])) {
                 $totalInventoryItems = $totalPejabatItems;
                 $lowStockInventoryCount = $lowStockPejabatCount;
                 $recentInventory = InventoriItem::where('jenis_stor', 'pejabat')->latest()->take(6)->get();

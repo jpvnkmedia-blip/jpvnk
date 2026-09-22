@@ -186,7 +186,7 @@
                 </a>
                 @endif
 
-                @if(Auth::user()->role !== 'admin_pejabat')
+                @if(!Auth::user()->hasAnyRole(['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']))
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     Perkhidmatan Veterinar
                 </div>
@@ -451,9 +451,11 @@
                         <a href="{{ route('inventori.pejabat.permohonan') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('inventori.pejabat.permohonan') ? 'text-indigo-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Kelulusan Permohonan
                         </a>
+                        @if(Auth::user()->canInputStorPejabat())
                         <a href="{{ route('inventori.pejabat.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('inventori.pejabat.create') ? 'text-indigo-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Daftar Barangan Baharu
                         </a>
+                        @endif
                     </div>
                 </div>
                 @endif

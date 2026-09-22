@@ -109,8 +109,8 @@ class InventoriController extends Controller implements HasMiddleware
 
     public function createPejabat()
     {
-        if (!Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mendaftar barangan Stor Pejabat.');
+        if (!Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) dan Super Admin dibenarkan mendaftar barangan Stor Pejabat.');
         }
 
         $kategoriList = [
@@ -126,8 +126,8 @@ class InventoriController extends Controller implements HasMiddleware
 
     public function storePejabat(Request $request)
     {
-        if (!Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan mendaftar barangan Stor Pejabat.');
+        if (!Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) dan Super Admin dibenarkan mendaftar barangan Stor Pejabat.');
         }
 
         $validated = $request->validate([
@@ -157,7 +157,7 @@ class InventoriController extends Controller implements HasMiddleware
             'lokasi_rak' => $validated['lokasi_rak'] ?? 'Stor Pejabat JPVNK',
             'jajahan' => $validated['jajahan'] ?? 'Ibu Pejabat Kota Bharu',
             'status' => 'Mencukupi',
-            'deskripsi' => $validated['deskripsi'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
         ]);
 
         $item->updateStatusStock();
@@ -301,7 +301,7 @@ class InventoriController extends Controller implements HasMiddleware
             'lokasi_rak' => $validated['lokasi_rak'] ?? 'Bilik Farmasi & Stor Ubat JPVNK',
             'jajahan' => $validated['jajahan'] ?? 'Ibu Pejabat Kota Bharu',
             'status' => 'Mencukupi',
-            'deskripsi' => $validated['deskripsi'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
         ]);
 
         $item->updateStatusStock();
@@ -482,8 +482,8 @@ class InventoriController extends Controller implements HasMiddleware
 
     public function senaraiPermohonanPejabat(Request $request)
     {
-        if (!Auth::user()->canManagePermohonanPejabat()) {
-            abort(403, 'Akses Ditolak: Hanya Admin Pejabat dan Super Admin dibenarkan menguruskan permohonan Stor Pejabat.');
+        if (!Auth::user()->canAccessStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pengurusan Stor Pejabat dan Super Admin dibenarkan melihat senarai permohonan.');
         }
 
         $query = InventoriPermohonan::where('jenis_stor', 'pejabat')->with(['pemohon', 'item', 'pelulus']);
@@ -567,8 +567,8 @@ class InventoriController extends Controller implements HasMiddleware
     {
         $permohonan = InventoriPermohonan::with(['item', 'pemohon'])->findOrFail($id);
 
-        if ($permohonan->isStorPejabat() && !Auth::user()->canManagePermohonanPejabat()) {
-            abort(403, 'Akses Ditolak: Anda tidak dibenarkan menguruskan permohonan Stor Pejabat.');
+        if ($permohonan->isStorPejabat() && !Auth::user()->canAccessStorPejabat()) {
+            abort(403, 'Akses Ditolak: Anda tidak dibenarkan mengakses permohonan Stor Pejabat.');
         }
 
         if ($permohonan->isStorUbat() && !Auth::user()->canManagePermohonanUbat()) {
@@ -584,6 +584,10 @@ class InventoriController extends Controller implements HasMiddleware
         $item = $permohonan->item;
 
         if ($validated['tindakan'] === 'lulus') {
+            if ($permohonan->isStorPejabat() && !Auth::user()->canApprovePermohonanPejabat()) {
+                abort(403, 'Akses Ditolak: Hanya Pegawai Pengesah & Pelulus atau Super Admin yang dibenarkan meluluskan permohonan alatan pejabat.');
+            }
+
             $kuantitiDiluluskan = $validated['kuantiti_diluluskan'] ?? $permohonan->kuantiti_dimohon;
             $permohonan->update([
                 'status' => 'Diluluskan',
@@ -595,6 +599,10 @@ class InventoriController extends Controller implements HasMiddleware
 
             return back()->with('success', "Permohonan {$permohonan->no_permohonan} berjaya DILULUSKAN ({$kuantitiDiluluskan} {$item->unit}).");
         } elseif ($validated['tindakan'] === 'tolak') {
+            if ($permohonan->isStorPejabat() && !Auth::user()->canApprovePermohonanPejabat()) {
+                abort(403, 'Akses Ditolak: Hanya Pegawai Pengesah & Pelulus atau Super Admin yang dibenarkan menolak permohonan alatan pejabat.');
+            }
+
             $permohonan->update([
                 'status' => 'Ditolak',
                 'catatan_pegawai' => $validated['catatan_pegawai'] ?? 'Permohonan tidak dapat diluluskan atas faktor kekangan stok/keperluan.',
@@ -604,6 +612,10 @@ class InventoriController extends Controller implements HasMiddleware
 
             return back()->with('success', "Permohonan {$permohonan->no_permohonan} telah DITOLAK.");
         } elseif ($validated['tindakan'] === 'serah') {
+            if ($permohonan->isStorPejabat() && !Auth::user()->canInputStorPejabat()) {
+                abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) atau Super Admin yang dibenarkan melaksanakan serahan stok inventori.');
+            }
+
             $kuantitiSerah = $validated['kuantiti_diluluskan'] ?? ($permohonan->kuantiti_diluluskan ?? $permohonan->kuantiti_dimohon);
 
             if ($item->kuantiti_semasa < $kuantitiSerah) {
@@ -681,8 +693,8 @@ class InventoriController extends Controller implements HasMiddleware
     {
         $item = InventoriItem::findOrFail($id);
 
-        if ($item->isStorPejabat() && !Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak: Anda tidak dibenarkan menguruskan transaksi Stor Peralatan Pejabat.');
+        if ($item->isStorPejabat() && !Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) atau Super Admin dibenarkan menguruskan transaksi stok masuk/keluar.');
         }
 
         if ($item->isStorUbat() && !Auth::user()->canAccessStorUbat()) {
@@ -730,8 +742,8 @@ class InventoriController extends Controller implements HasMiddleware
     {
         $item = InventoriItem::findOrFail($id);
 
-        if ($item->isStorPejabat() && !Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak: Anda tidak dibenarkan menguruskan pinjaman Stor Peralatan Pejabat.');
+        if ($item->isStorPejabat() && !Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) atau Super Admin dibenarkan menguruskan pinjaman aset/peralatan.');
         }
 
         if ($item->isStorUbat() && !Auth::user()->canAccessStorUbat()) {
@@ -774,8 +786,8 @@ class InventoriController extends Controller implements HasMiddleware
         $pinjaman = InventoriPinjaman::with('item')->findOrFail($id);
         $item = $pinjaman->item;
 
-        if ($item->isStorPejabat() && !Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak.');
+        if ($item->isStorPejabat() && !Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) atau Super Admin dibenarkan mengesahkan pemulangan pinjaman.');
         }
 
         if ($item->isStorUbat() && !Auth::user()->canAccessStorUbat()) {
@@ -799,8 +811,8 @@ class InventoriController extends Controller implements HasMiddleware
     {
         $item = InventoriItem::findOrFail($id);
 
-        if ($item->isStorPejabat() && !Auth::user()->canAccessStorPejabat()) {
-            abort(403, 'Akses Ditolak.');
+        if ($item->isStorPejabat() && !Auth::user()->canInputStorPejabat()) {
+            abort(403, 'Akses Ditolak: Hanya Pegawai Stor Pejabat (Kemasukan Data) atau Super Admin dibenarkan memadam barangan stor.');
         }
 
         if ($item->isStorUbat() && !Auth::user()->canAccessStorUbat()) {

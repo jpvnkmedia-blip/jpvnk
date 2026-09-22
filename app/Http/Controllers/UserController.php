@@ -103,10 +103,16 @@ class UserController extends Controller implements HasMiddleware
                     'icon' => 'fa-stethoscope text-pink-600',
                 ],
                 'admin_pejabat' => [
-                    'label' => 'Admin Stor Pejabat',
-                    'desc' => 'Pengurusan inventori alatan & stor pejabat serta kelulusan permohonan stok bekalan staf.',
+                    'label' => 'Pegawai Stor Pejabat (Kemasukan Data)',
+                    'desc' => 'Pendaftaran stok alatan pejabat, kemasukan data transaksi, rekod pinjaman dan serahan bekalan.',
                     'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
                     'icon' => 'fa-boxes-stacked text-indigo-600',
+                ],
+                'pegawai_pengesah_pejabat' => [
+                    'label' => 'Pegawai Pengesah & Pelulus Stor Pejabat',
+                    'desc' => 'Semakan, pengesahan dan kelulusan atau penolakan permohonan stok alatan pejabat daripada kakitangan.',
+                    'badge' => 'bg-teal-100 text-teal-800 border-teal-300',
+                    'icon' => 'fa-clipboard-check text-teal-600',
                 ],
                 'admin_kenderaan' => [
                     'label' => 'Admin Kenderaan & Fleet',
@@ -194,6 +200,18 @@ class UserController extends Controller implements HasMiddleware
                     $q->where('role', 'admin_naimbif_jajahan')
                       ->orWhereJsonContains('roles', 'admin_naimbif_jajahan');
                 });
+            } elseif ($selectedRole === 'admin_pejabat') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['admin_pejabat', 'admin_stor_pejabat'])
+                      ->orWhereJsonContains('roles', 'admin_pejabat')
+                      ->orWhereJsonContains('roles', 'admin_stor_pejabat');
+                });
+            } elseif ($selectedRole === 'pegawai_pengesah_pejabat') {
+                $query->where(function ($q) {
+                    $q->whereIn('role', ['pegawai_pengesah_pejabat', 'admin_pelulus_pejabat'])
+                      ->orWhereJsonContains('roles', 'pegawai_pengesah_pejabat')
+                      ->orWhereJsonContains('roles', 'admin_pelulus_pejabat');
+                });
             } else {
                 $query->where(function ($q) use ($selectedRole) {
                     $q->where('role', $selectedRole)
@@ -217,10 +235,11 @@ class UserController extends Controller implements HasMiddleware
         // Statistik Keseluruhan
         $totalUsers = User::count();
         $totalStaff = User::whereIn('role', [
-            'super_admin', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
+            'super_admin', 'pengarah', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
             'admin_program', 'admin_epu_negeri', 'admin_epu', 'pegawai_pelesen',
             'admin_epu_jajahan', 'pegawai_verifikasi_epu',
-            'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat', 'admin_kenderaan',
+            'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat', 'admin_stor_pejabat',
+            'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat', 'admin_kenderaan',
             'admin_naimbif_negeri', 'admin_naimbif', 'admin_naimbif_jajahan', 'staf'
         ])->count();
         $totalPenternak = User::where('role', 'penternak')->count();

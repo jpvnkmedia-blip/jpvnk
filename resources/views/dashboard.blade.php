@@ -140,18 +140,20 @@
                         <i class="fa-solid fa-handshake-angle"></i>
                         <span>Senarai Surat Perjanjian</span>
                     </a>
-                @elseif($user->role === 'admin_pejabat')
+                @elseif(in_array($user->role, ['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']))
                     <a href="{{ route('inventori.pejabat.permohonan') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
                         <i class="fa-solid fa-clipboard-check"></i>
-                        <span>Kelulusan Permohonan Pejabat</span>
+                        <span>{{ $user->canApprovePermohonanPejabat() && !$user->canInputStorPejabat() ? 'Pengesahan Permohonan Pejabat' : 'Permohonan & Serahan Stok' }}</span>
                     </a>
+                    @if($user->canInputStorPejabat())
                     <a href="{{ route('inventori.pejabat.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">
                         <i class="fa-solid fa-plus-circle"></i>
                         <span>Daftar Barangan Pejabat</span>
                     </a>
+                    @endif
                     <a href="{{ route('inventori.pejabat.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow-lg transition">
                         <i class="fa-solid fa-boxes-stacked"></i>
-                        <span>Stor Peralatan Pejabat</span>
+                        <span>Katalog Stor Pejabat</span>
                     </a>
                 @elseif($user->role === 'admin_kenderaan')
                     <a href="{{ route('kenderaan.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
@@ -295,11 +297,11 @@
         </div>
 
         <div class="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10 pointer-events-none hidden lg:block">
-            <i class="fa-solid {{ $user->role === 'admin_pejabat' ? 'fa-boxes-stacked' : ($user->role === 'admin_kenderaan' ? 'fa-truck-pickup' : ($user->role === 'admin_program' ? 'fa-handshake-angle' : 'fa-cow')) }} text-[280px]"></i>
+            <i class="fa-solid {{ in_array($user->role, ['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']) ? 'fa-boxes-stacked' : ($user->role === 'admin_kenderaan' ? 'fa-truck-pickup' : ($user->role === 'admin_program' ? 'fa-handshake-angle' : 'fa-cow')) }} text-[280px]"></i>
         </div>
     </div>
 
-    @if($user->role === 'admin_pejabat')
+    @if(in_array($user->role, ['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']))
         <!-- Admin Stor Pejabat KPI Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- 1. Jumlah Item Inventori Pejabat -->

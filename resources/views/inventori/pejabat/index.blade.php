@@ -18,7 +18,7 @@
             <h2 class="text-xl font-extrabold text-slate-900 mt-1">Pengurusan Inventori &amp; Aset Pejabat</h2>
             <p class="text-xs text-slate-500 mt-0.5">Kawalan bekalan alat tulis, kertas, toner pencetak, perabot pejabat dan aset IT jabatan.</p>
         </div>
-        @if(Auth::user()->canAccessStorPejabat())
+        @if(Auth::user()->canInputStorPejabat())
             <a href="{{ route('inventori.pejabat.create') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-lg shadow-indigo-700/30 transition flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle"></i>
                 <span>Daftar Barangan Pejabat Baharu</span>
@@ -136,7 +136,11 @@
                             </td>
                             <td class="px-5 py-3.5 text-right space-x-1 whitespace-nowrap">
                                 <a href="{{ route('inventori.show', $item->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold transition">
-                                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Stok Masuk / Keluar
+                                    @if(Auth::user()->canInputStorPejabat())
+                                        <i class="fa-solid fa-arrow-right-arrow-left"></i> Stok Masuk / Keluar
+                                    @else
+                                        <i class="fa-solid fa-eye"></i> Lihat Butiran Stok
+                                    @endif
                                 </a>
                             </td>
                         </tr>
