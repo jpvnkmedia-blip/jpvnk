@@ -189,4 +189,25 @@ class UserMultiRolesTest extends TestCase
         $targetUser->refresh();
         $this->assertStringContainsString('Updated', $targetUser->name);
     }
+
+    public function test_super_admin_sidebar_contains_all_module_menus()
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+
+        $response = $this->actingAs($superAdmin)->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        // Semak semua modul perkhidmatan veterinar wujud dalam sidebar Super Admin
+        $response->assertSee('Perkhidmatan Veterinar');
+        $response->assertSee('EPTR Ruminan');
+        $response->assertSee('Program Pawah');
+        $response->assertSee('Program NAIMbif');
+        $response->assertSee('EPU Unggas');
+        $response->assertSee('Kursus Ternakan');
+        $response->assertSee('Klinik Haiwan');
+        $response->assertSee('Stor Ubat &amp; Farmasi', false);
+        $response->assertSee('Stor Pejabat');
+        $response->assertSee('Kenderaan Rasmi');
+        $response->assertSee('Pengurusan Pengguna');
+    }
 }

@@ -186,7 +186,7 @@
                 </a>
                 @endif
 
-                @if(!Auth::user()->hasAnyRole(['admin_pejabat', 'admin_stor_pejabat', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']))
+                @if(Auth::user()->canAccessEptr() || Auth::user()->canAccessPawah() || Auth::user()->canAccessNaimbif() || Auth::user()->canAccessEpu() || Auth::user()->canAccessKursus() || Auth::user()->canAccessKlinik() || Auth::user()->canAccessStorUbat())
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     Perkhidmatan Veterinar
                 </div>
