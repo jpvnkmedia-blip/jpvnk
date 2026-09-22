@@ -5,15 +5,13 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6" x-data="{
-    selectedRoles: {{ json_encode(old('roles', [old('role', 'staf')])) }},
+    selectedRoles: {{ json_encode(old('roles', old('role') ? [old('role')] : [])) }},
     selectedJajahan: '{{ old('jajahan', 'Kota Bharu') }}',
     status: '{{ old('status', 'Aktif') }}',
     icNumber: '{{ old('ic_number', '') }}',
     toggleRole(role) {
         if (this.selectedRoles.includes(role)) {
-            if (this.selectedRoles.length > 1) {
-                this.selectedRoles = this.selectedRoles.filter(r => r !== role);
-            }
+            this.selectedRoles = this.selectedRoles.filter(r => r !== role);
         } else {
             this.selectedRoles.push(role);
         }
@@ -22,7 +20,7 @@
         return this.selectedRoles.includes(role);
     },
     resetRoles() {
-        this.selectedRoles = ['staf'];
+        this.selectedRoles = [];
     },
     get defaultPasswordPreview() {
         const clean = (this.icNumber || '').replace(/[^0-9]/g, '');
@@ -105,7 +103,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                            <span x-text="selectedRoles.length">1</span> Peranan Dipilih
+                            <span x-text="selectedRoles.length">0</span> Peranan Dipilih
                         </span>
                         <button type="button" @click="resetRoles()" class="text-[10px] text-slate-500 hover:text-slate-800 underline">
                             Set Semula

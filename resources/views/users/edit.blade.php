@@ -10,9 +10,7 @@
     status: '{{ old('status', $targetUser->status ?? 'Aktif') }}',
     toggleRole(role) {
         if (this.selectedRoles.includes(role)) {
-            if (this.selectedRoles.length > 1) {
-                this.selectedRoles = this.selectedRoles.filter(r => r !== role);
-            }
+            this.selectedRoles = this.selectedRoles.filter(r => r !== role);
         } else {
             this.selectedRoles.push(role);
         }
