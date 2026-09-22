@@ -16,22 +16,22 @@
             font-family: 'Times New Roman', Times, serif;
             color: #000;
             background: #f1f5f9;
-            line-height: 1.25;
+            line-height: 1.35;
         }
         .dotted-line {
-            border-bottom: 1px dotted #333;
+            border-bottom: 1px dotted #222;
             display: inline-block;
-            min-height: 1.15em;
+            min-height: 1.25em;
         }
         .checkbox-box {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
-            height: 14px;
+            width: 26px;
+            height: 16px;
             border: 1px solid #000;
             margin: 0 4px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             vertical-align: middle;
         }
@@ -47,8 +47,8 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 background: #fff !important;
-                font-size: 11px !important;
-                line-height: 1.25 !important;
+                font-size: 12.5px !important;
+                line-height: 1.35 !important;
                 width: 100% !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -80,7 +80,7 @@
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 flex flex-col items-center text-[12px]">
+<body class="p-4 sm:p-8 flex flex-col items-center text-[13px]">
 
     <!-- Print Floating Action Bar (Screen Only) -->
     <div class="no-print mb-6 flex gap-3 z-50">
@@ -96,29 +96,29 @@
     <!-- ================= PAGE 1 (Image 1) ================= -->
     <div class="sheet page-1 max-w-[210mm] w-full bg-white p-8 sm:p-12 shadow-2xl mb-8 print:mb-0 print:p-0 print:shadow-none">
         <!-- Top Running Header -->
-        <div class="flex justify-between items-start font-bold uppercase text-[11px] mb-2">
+        <div class="flex justify-between items-start font-bold uppercase text-[12px] mb-3">
             <span>ENAKMEN PERLADANGAN UNGGAS 2005</span>
         </div>
 
         <!-- Title Block -->
-        <div class="text-center space-y-0.5 mb-3">
-            <p class="font-bold text-[12px] tracking-wider">JADUAL PERTAMA</p>
-            <p class="font-bold text-[12px]">ENAKMEN PERLADANGAN UNGGAS 2005</p>
-            <p class="text-[11px] italic">(Subseksyen 6(1) dan 6(2))</p>
-            <p class="font-bold text-[13px] mt-1.5 uppercase">
+        <div class="text-center space-y-1 mb-5">
+            <p class="font-bold text-[13px] tracking-wider">JADUAL PERTAMA</p>
+            <p class="font-bold text-[13px]">ENAKMEN PERLADANGAN UNGGAS 2005</p>
+            <p class="text-[12px] italic">(Subseksyen 6(1) dan 6(2))</p>
+            <p class="font-bold text-[14px] mt-2 uppercase">
                 PERMOHONAN LESEN PERLADANGAN UNGGAS DAN<br>AKTIVITI-AKTIVITI BERKAITAN
             </p>
-            <p class="font-bold text-[12px] mt-0.5">(Borang A)</p>
+            <p class="font-bold text-[13px] mt-1">(Borang A)</p>
         </div>
 
         <!-- Section 1: Pemohon -->
-        <div class="space-y-1.5">
+        <div class="space-y-2.5 text-[13px]">
             <div class="flex items-baseline">
                 <span class="font-bold mr-1">1.</span>
                 <span class="font-bold mr-2">Saya:</span>
                 <span class="dotted-line flex-1 font-bold px-2 uppercase">{{ $ladang->pemilik->name ?? $ladang->nama_pemohon_atau_syarikat }}</span>
             </div>
-            <div class="text-center text-[10px] italic text-slate-600 -mt-1 mb-1">
+            <div class="text-center text-[11px] italic text-slate-600 -mt-1 mb-2">
                 (Nama penuh ditulis dengan huruf besar)
             </div>
 
@@ -143,9 +143,10 @@
                     <span class="font-bold mr-2 whitespace-nowrap">Alamat Surat Menyurat:</span>
                     <span class="dotted-line flex-1 px-2">{{ $ladang->pemilik->address ?? $ladang->alamat_ladang }}</span>
                 </div>
-                <div class="dotted-line w-full mt-1 min-h-[1.2em] px-2">
+                <div class="dotted-line w-full mt-1.5 min-h-[1.3em] px-2">
                     {{ $ladang->pemilik->poskod ?? $ladang->poskod ?? '' }} {{ $ladang->pemilik->negeri ?? $ladang->negeri ?? '' }}
                 </div>
+                <div class="dotted-line w-full mt-1.5 min-h-[1.3em]"></div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 items-baseline">
@@ -164,8 +165,8 @@
                 <span class="dotted-line flex-1 px-2">{{ $ladang->pemilik->email ?? '-' }}</span>
             </div>
 
-            <div class="pt-0.5">
-                <span class="font-bold block mb-1">Bentuk Perniagaan:</span>
+            <div class="pt-1">
+                <span class="font-bold block mb-1.5">Bentuk Perniagaan:</span>
                 <div class="flex items-center gap-6 pl-4">
                     <div class="flex items-center">
                         <span>Milik Tunggal</span>
@@ -184,7 +185,7 @@
         </div>
 
         <!-- Section 2: Butir-butir Penternakan -->
-        <div class="space-y-1 mt-2.5 pt-1">
+        <div class="space-y-2 mt-4 pt-2 text-[13px]">
             <p class="font-bold">2. Butir-butir Penternakan:</p>
 
             <div class="flex items-baseline pl-4">
@@ -192,9 +193,9 @@
                 <span class="dotted-line flex-1 font-bold px-2 uppercase">{{ $permohonan->jenis_unggas }}</span>
             </div>
 
-            <div class="pl-4 pt-0.5">
-                <span class="block mb-1">Jurusan dan aktiviti:</span>
-                <div class="grid grid-cols-4 gap-2 text-[11px]">
+            <div class="pl-4 pt-1">
+                <span class="block mb-1.5">Jurusan dan aktiviti:</span>
+                <div class="grid grid-cols-4 gap-2 text-[12px]">
                     <div class="flex items-center">
                         <span>Pedaging</span>
                         <span class="checkbox-box">{{ $permohonan->jurusan_aktiviti === 'Pedaging' ? '✓' : '' }}</span>
@@ -212,7 +213,7 @@
                         <span class="checkbox-box">{{ $permohonan->jurusan_aktiviti === 'Haceri (Penetasan)' ? '✓' : '' }}</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mt-1.5 text-[11px]">
+                <div class="grid grid-cols-2 gap-2 mt-2 text-[12px]">
                     <div class="flex items-center">
                         <span>Loji Penyembelihan</span>
                         <span class="checkbox-box"></span>
@@ -226,7 +227,7 @@
         </div>
 
         <!-- Section 3: Butir-butir Ladang/Loji -->
-        <div class="space-y-1 mt-2.5 pt-1">
+        <div class="space-y-2 mt-4 pt-2 text-[13px]">
             <p class="font-bold">3. Butir–butir Ladang/Loji:</p>
 
             <div class="flex items-baseline pl-4">
@@ -267,7 +268,7 @@
     <div class="sheet page-2 max-w-[210mm] w-full bg-white p-8 sm:p-12 shadow-2xl print:p-0 print:shadow-none">
         
         <!-- Section 4: Aktiviti Berkaitan -->
-        <div class="space-y-1.5">
+        <div class="space-y-2 text-[12.5px]">
             <p class="font-bold">4. Aktiviti berkaitan:</p>
 
             <div class="flex items-baseline pl-4">
@@ -285,28 +286,29 @@
                     <span class="mr-2 whitespace-nowrap">Alamat premis perniagaan:</span>
                     <span class="dotted-line flex-1 px-2">{{ $ladang->alamat_premis_perniagaan ?: $ladang->alamat_ladang }}</span>
                 </div>
+                <div class="dotted-line w-full mt-1 min-h-[1.2em]"></div>
             </div>
 
             <!-- Tarikh & Tandatangan Pemohon -->
-            <div class="grid grid-cols-2 gap-8 pt-3 mt-1.5 items-end">
+            <div class="grid grid-cols-2 gap-8 pt-4 mt-2 items-end">
                 <div class="flex items-baseline">
                     <span class="font-bold mr-2">Tarikh:</span>
                     <span class="dotted-line flex-1 font-mono px-2 font-bold">{{ $permohonan->created_at->format('d/m/Y') }}</span>
                 </div>
                 <div class="text-center">
                     <div class="dotted-line w-full mb-1"></div>
-                    <span class="italic text-[11px] font-bold block">Tandatangan Pemohon dan Cop Syarikat</span>
+                    <span class="italic text-[11.5px] font-bold block">Tandatangan Pemohon dan Cop Syarikat</span>
                 </div>
             </div>
         </div>
 
         <!-- UNTUK KEGUNAAN RASMI PEJABAT -->
-        <div class="mt-2.5 pt-2 border-t-2 border-black">
-            <p class="text-center font-bold text-[12px] uppercase tracking-wider mb-2">
+        <div class="mt-4 pt-3 border-t-2 border-black">
+            <p class="text-center font-bold text-[12.5px] uppercase tracking-wider mb-2.5">
                 UNTUK KEGUNAAN RASMI PEJABAT
             </p>
 
-            <div class="space-y-1.5 text-[11.5px]">
+            <div class="space-y-2 text-[12px]">
                 <div class="flex items-baseline">
                     <span class="mr-2 whitespace-nowrap">Tarikh permohonan diterima:</span>
                     <span class="dotted-line flex-1 font-mono font-bold px-2">{{ $permohonan->created_at->format('d/m/Y') }}</span>
@@ -329,6 +331,7 @@
                         <span class="mr-2">Catatan:</span>
                         <span class="dotted-line flex-1 px-2">{{ $permohonan->catatan_pegawai ?? $permohonan->syarat_khas_lesen ?? '-' }}</span>
                     </div>
+                    <div class="dotted-line w-full mt-1 min-h-[1.2em]"></div>
                 </div>
 
                 @php
@@ -376,21 +379,21 @@
                     }
                 @endphp
 
-                <div class="grid grid-cols-2 gap-8 pt-2 items-end">
+                <div class="grid grid-cols-2 gap-8 pt-3 items-end">
                     <div class="flex items-baseline">
                         <span class="mr-2">Tarikh:</span>
                         <span class="dotted-line flex-1 font-mono px-2">{{ $permohonan->status === 'Diluluskan' && $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : '' }}</span>
                     </div>
                     <div class="text-center">
-                        <div class="min-h-[44px] flex flex-col items-center justify-end">
+                        <div class="min-h-[48px] flex flex-col items-center justify-end">
                             @if($sigSrc && $permohonan->status === 'Diluluskan')
-                                <img src="{{ $sigSrc }}" alt="Tandatangan Pegawai Pelesen" class="h-11 max-w-[150px] object-contain -mb-1">
+                                <img src="{{ $sigSrc }}" alt="Tandatangan Pegawai Pelesen" class="h-12 max-w-[150px] object-contain -mb-1">
                             @endif
                         </div>
                         <div class="dotted-line w-full mb-0.5"></div>
-                        <span class="italic text-[11px] font-bold block">Pegawai Pelesen</span>
+                        <span class="italic text-[11.5px] font-bold block">Pegawai Pelesen</span>
                         @if($pegawaiPelesen && $permohonan->status === 'Diluluskan')
-                            <span class="text-[10.5px] font-semibold text-slate-800 block">({{ $pegawaiPelesen->name }})</span>
+                            <span class="text-[11px] font-semibold text-slate-800 block">({{ $pegawaiPelesen->name }})</span>
                         @endif
                     </div>
                 </div>
@@ -398,14 +401,14 @@
         </div>
 
         <!-- Syarat Lampiran (a) - (f) -->
-        <div class="mt-2.5 pt-2 border-t border-slate-300 text-[10px] leading-tight">
+        <div class="mt-3 pt-2.5 border-t border-slate-300 text-[10.5px] leading-snug">
             <p class="font-bold mb-1">Permohonan hendaklah dikemukakan berserta dengan butiran berikut:</p>
             <ol class="list-none space-y-1 pl-1">
                 <li class="flex items-start">
                     <span class="italic mr-1.5 font-bold">(a)</span>
                     <div>
                         <span>satu cadangan pelan susun atur menunjukkan—</span>
-                        <ul class="list-none space-y-0.5 pl-3 mt-0.5 text-[9.5px]">
+                        <ul class="list-none space-y-0.5 pl-3 mt-0.5 text-[10px]">
                             <li class="flex items-start">
                                 <span class="italic mr-1.5">(i)</span>
                                 <span>sempadan ladang dan sempadan tanah di mana ladang akan didirikan;</span>

@@ -314,4 +314,58 @@ class EpuEnhancementsTest extends TestCase
         $response->assertDontSee(asset('storage/' . $pelesen->signature));
         $response->assertDontSee('Dr Pegawai Pelesen DVS');
     }
+
+    public function test_borang_a_can_only_be_viewed_by_admin_epu_jajahan_admin_epu_negeri_and_super_admin()
+    {
+        Storage::fake('public');
+        $superAdmin = User::where('role', 'super_admin')->first();
+        $adminEpuNegeri = User::where('role', 'admin_epu')->first();
+        $adminEpuJajahan = User::where('role', 'admin_epu_jajahan')->first();
+        $penternak = User::where('role', 'penternak')->first();
+        $pegawaiPelesen = User::where('role', 'pegawai_pelesen')->first();
+
+        $ladang = EpuLadang::create([
+            'user_id' => $penternak->id,
+            'nama_pemohon_atau_syarikat' => 'Ladang Hak Akses',
+            'nama_ladang' => 'Ladang Akses KB',
+            'alamat_ladang' => 'Lot 88, Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'kategori_unggas' => 'Ayam Pedaging',
+            'kapasiti_ternakan' => 5000,
+            'status_ladang' => 'Aktif',
+            'status' => 'Aktif',
+        ]);
+
+        EpuPermohonan::create([
+            'epu_ladang_id' => $ladang->id,
+            'no_rujukan_permohonan' => 'EPU/2026/09/AKSES01',
+            'jenis_permohonan' => 'Lesen Baharu',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'bilangan_semasa_unggas' => 5000,
+            'kapasiti_ladang' => 5000,
+            'status' => 'Diluluskan',
+            'status_verifikasi' => 'Patuh',
+            'status_kelulusan_pelesen' => 'Lulus',
+        ]);
+
+        // 1. Super Admin can view -> 200
+        $this->actingAs($superAdmin)->get(route('epu.cetak-borang-a', $ladang->id))->assertStatus(200);
+
+        // 2. Admin EPU Negeri can view -> 200
+        $this->actingAs($adminEpuNegeri)->get(route('epu.cetak-borang-a', $ladang->id))->assertStatus(200);
+
+        // 3. Admin EPU Jajahan can view -> 200
+        if ($adminEpuJajahan) {
+            $this->actingAs($adminEpuJajahan)->get(route('epu.cetak-borang-a', $ladang->id))->assertStatus(200);
+        }
+
+        // 4. Penternak cannot view -> 403 Forbidden
+        $this->actingAs($penternak)->get(route('epu.cetak-borang-a', $ladang->id))->assertStatus(403);
+
+        // 5. Pegawai Pelesen cannot view -> 403 Forbidden
+        if ($pegawaiPelesen) {
+            $this->actingAs($pegawaiPelesen)->get(route('epu.cetak-borang-a', $ladang->id))->assertStatus(403);
+        }
+    }
 }
