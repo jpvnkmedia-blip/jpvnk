@@ -255,5 +255,63 @@ class EpuEnhancementsTest extends TestCase
         $newPelesen->refresh();
         $this->assertEquals('Dato Dr Pelesen Negeri Dikemaskini', $newPelesen->name);
         Storage::disk('public')->assertExists($newPelesen->signature);
+
+        // 6. Test Cetak Lesen EPU (Borang B) includes digital signature
+        $lesenResp = $this->actingAs($adminEpu)->get(route('epu.cetak-lesen', $permohonan->id));
+        $lesenResp->assertStatus(200);
+        $lesenResp->assertSee(asset('storage/' . $newPelesen->signature));
+        $lesenResp->assertSee('Dato Dr Pelesen Negeri Dikemaskini');
+    }
+
+    public function test_borang_a_does_not_render_digital_signature_if_application_is_not_approved()
+    {
+        Storage::fake('public');
+        $superAdmin = User::where('role', 'super_admin')->first();
+        $adminEpu = User::where('role', 'admin_epu')->first();
+        $penternak = User::where('role', 'penternak')->first();
+
+        // Create a pelesen with signature
+        $pelesen = User::create([
+            'name' => 'Dr Pegawai Pelesen DVS',
+            'email' => 'pelesen.test@dvs.gov.my',
+            'ic_number' => '800101035544',
+            'phone' => '019-9998844',
+            'address' => 'Kota Bharu',
+            'role' => 'pegawai_pelesen',
+            'roles' => ['pegawai_pelesen'],
+            'status' => 'Aktif',
+            'signature' => 'signatures/pelesen_test.png',
+        ]);
+
+        $ladang = EpuLadang::create([
+            'user_id' => $penternak->id,
+            'nama_pemohon_atau_syarikat' => 'Ladang Belum Lulus',
+            'nama_ladang' => 'Ladang Ayam Segar',
+            'alamat_ladang' => 'Lot 101, Tumpat',
+            'jajahan' => 'Tumpat',
+            'kategori_unggas' => 'Ayam Pedaging',
+            'kapasiti_ternakan' => 5000,
+            'status_ladang' => 'Aktif',
+            'status' => 'Aktif',
+        ]);
+
+        $permohonan = EpuPermohonan::create([
+            'epu_ladang_id' => $ladang->id,
+            'no_rujukan_permohonan' => 'EPU/2026/09/PENDING01',
+            'jenis_permohonan' => 'Lesen Baharu',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'bilangan_semasa_unggas' => 3000,
+            'kapasiti_ladang' => 5000,
+            'status' => 'Dihantar', // Belum lulus
+            'status_verifikasi' => 'Menunggu Verifikasi',
+        ]);
+
+        $response = $this->actingAs($adminEpu)->get(route('epu.cetak-borang-a', $ladang->id));
+        $response->assertStatus(200);
+
+        // Signature and name must NOT be rendered when status is not Diluluskan
+        $response->assertDontSee(asset('storage/' . $pelesen->signature));
+        $response->assertDontSee('Dr Pegawai Pelesen DVS');
     }
 }

@@ -103,15 +103,64 @@
         </div>
 
         <!-- Footer / Signature -->
-        <div class="mt-8 pt-8 flex justify-between items-end">
-            <div class="text-[10px] text-slate-500">
-                <div>Tarikh Dikeluarkan: {{ $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : date('d/m/Y') }}</div>
-                <div>Pangkalan Data Bersepadu JPVNK</div>
+        @php
+            $pengarah = null;
+            if ($permohonan->pelulus && !empty($permohonan->pelulus->signature)) {
+                $pengarah = $permohonan->pelulus;
+            }
+            if (!$pengarah) {
+                $pengarah = \App\Models\User::where(function($q) {
+                        $q->where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah');
+                    })
+                    ->whereNotNull('signature')
+                    ->where('signature', '!=', '')
+                    ->first();
+            }
+            if (!$pengarah) {
+                $pengarah = \App\Models\User::where(function($q) {
+                        $q->where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen');
+                    })
+                    ->whereNotNull('signature')
+                    ->where('signature', '!=', '')
+                    ->first();
+            }
+            if (!$pengarah) {
+                $pengarah = \App\Models\User::whereNotNull('signature')->where('signature', '!=', '')->first()
+                    ?? $permohonan->pelulus
+                    ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first()
+                    ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first();
+            }
+
+            $sigSrc = null;
+            if ($pengarah && !empty($pengarah->signature)) {
+                $diskPath = storage_path('app/public/' . $pengarah->signature);
+                if (file_exists($diskPath)) {
+                    $ext = pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'png';
+                    $sigSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($diskPath));
+                } else {
+                    $sigSrc = asset('storage/' . $pengarah->signature);
+                }
+            }
+        @endphp
+
+        <div class="mt-6 pt-4 flex justify-between items-end border-t border-slate-200">
+            <div class="text-[10px] text-slate-500 space-y-1">
+                <div><span class="font-bold text-slate-700">Tarikh Dikeluarkan:</span> {{ $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : date('d/m/Y') }}</div>
+                <div><span class="font-bold text-slate-700">Status Kelulusan:</span> {{ $permohonan->status ?? 'Diluluskan' }}</div>
+                <div class="text-slate-400 italic">Pangkalan Data Bersepadu JPVNK (e-Unggas)</div>
             </div>
-            <div class="text-center w-64">
-                <div class="h-16 border-b border-slate-400"></div>
-                <div class="font-bold mt-1">Pengarah Perkhidmatan Veterinar</div>
-                <div class="text-[10px]">Negeri Kelantan Darul Naim</div>
+            <div class="text-center w-72">
+                <div class="min-h-[56px] flex flex-col items-center justify-end">
+                    @if($sigSrc)
+                        <img src="{{ $sigSrc }}" alt="Tandatangan Digital Pengarah" class="h-14 max-w-[180px] object-contain -mb-1">
+                    @endif
+                </div>
+                <div class="border-b-2 border-slate-800 w-full mb-1"></div>
+                @if($pengarah && $pengarah->name)
+                    <div class="font-bold text-xs uppercase text-slate-900">({{ $pengarah->name }})</div>
+                @endif
+                <div class="font-bold text-[11px] text-slate-800">Pengarah Perkhidmatan Veterinar</div>
+                <div class="text-[10px] text-slate-600">Negeri Kelantan Darul Naim</div>
             </div>
         </div>
 

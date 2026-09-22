@@ -315,41 +315,45 @@
 
                 @php
                     // Dapatkan Pegawai Pelesen / Pengarah dengan tandatangan digital berdaftar
+                    // HANYA dipaparkan sekiranya permohonan telah diluluskan sepenuhnya
                     $pegawaiPelesen = null;
-                    if ($permohonan->pelulus && !empty($permohonan->pelulus->signature)) {
-                        $pegawaiPelesen = $permohonan->pelulus;
-                    }
-                    if (!$pegawaiPelesen) {
-                        $pegawaiPelesen = \App\Models\User::where(function($q) {
-                                $q->where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen');
-                            })
-                            ->whereNotNull('signature')
-                            ->where('signature', '!=', '')
-                            ->first();
-                    }
-                    if (!$pegawaiPelesen) {
-                        $pegawaiPelesen = \App\Models\User::where(function($q) {
-                                $q->where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah');
-                            })
-                            ->whereNotNull('signature')
-                            ->where('signature', '!=', '')
-                            ->first();
-                    }
-                    if (!$pegawaiPelesen) {
-                        $pegawaiPelesen = \App\Models\User::whereNotNull('signature')->where('signature', '!=', '')->first()
-                            ?? $permohonan->pelulus
-                            ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first() 
-                            ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first();
-                    }
-
                     $sigSrc = null;
-                    if ($pegawaiPelesen && !empty($pegawaiPelesen->signature)) {
-                        $diskPath = storage_path('app/public/' . $pegawaiPelesen->signature);
-                        if (file_exists($diskPath)) {
-                            $ext = pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'png';
-                            $sigSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($diskPath));
-                        } else {
-                            $sigSrc = asset('storage/' . $pegawaiPelesen->signature);
+
+                    if ($permohonan->status === 'Diluluskan') {
+                        if ($permohonan->pelulus && !empty($permohonan->pelulus->signature)) {
+                            $pegawaiPelesen = $permohonan->pelulus;
+                        }
+                        if (!$pegawaiPelesen) {
+                            $pegawaiPelesen = \App\Models\User::where(function($q) {
+                                    $q->where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen');
+                                })
+                                ->whereNotNull('signature')
+                                ->where('signature', '!=', '')
+                                ->first();
+                        }
+                        if (!$pegawaiPelesen) {
+                            $pegawaiPelesen = \App\Models\User::where(function($q) {
+                                    $q->where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah');
+                                })
+                                ->whereNotNull('signature')
+                                ->where('signature', '!=', '')
+                                ->first();
+                        }
+                        if (!$pegawaiPelesen) {
+                            $pegawaiPelesen = \App\Models\User::whereNotNull('signature')->where('signature', '!=', '')->first()
+                                ?? $permohonan->pelulus
+                                ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first() 
+                                ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first();
+                        }
+
+                        if ($pegawaiPelesen && !empty($pegawaiPelesen->signature)) {
+                            $diskPath = storage_path('app/public/' . $pegawaiPelesen->signature);
+                            if (file_exists($diskPath)) {
+                                $ext = pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'png';
+                                $sigSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($diskPath));
+                            } else {
+                                $sigSrc = asset('storage/' . $pegawaiPelesen->signature);
+                            }
                         }
                     }
                 @endphp
@@ -357,17 +361,17 @@
                 <div class="grid grid-cols-2 gap-8 pt-2 items-end">
                     <div class="flex items-baseline">
                         <span class="mr-2">Tarikh:</span>
-                        <span class="dotted-line flex-1 font-mono px-2">{{ $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : '' }}</span>
+                        <span class="dotted-line flex-1 font-mono px-2">{{ $permohonan->status === 'Diluluskan' && $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : '' }}</span>
                     </div>
                     <div class="text-center">
-                        @if($sigSrc)
-                            <div class="flex flex-col items-center justify-center -mb-2">
-                                <img src="{{ $sigSrc }}" alt="Tandatangan Pegawai Pelesen" class="h-11 max-w-[150px] object-contain">
-                            </div>
-                        @endif
+                        <div class="min-h-[44px] flex flex-col items-center justify-end">
+                            @if($sigSrc && $permohonan->status === 'Diluluskan')
+                                <img src="{{ $sigSrc }}" alt="Tandatangan Pegawai Pelesen" class="h-11 max-w-[150px] object-contain -mb-1">
+                            @endif
+                        </div>
                         <div class="dotted-line w-full mb-0.5"></div>
                         <span class="italic text-[11px] font-bold block">Pegawai Pelesen</span>
-                        @if($pegawaiPelesen)
+                        @if($pegawaiPelesen && $permohonan->status === 'Diluluskan')
                             <span class="text-[10.5px] font-semibold text-slate-800 block">({{ $pegawaiPelesen->name }})</span>
                         @endif
                     </div>
