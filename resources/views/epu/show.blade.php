@@ -675,8 +675,10 @@
                         </span>
                         @if($p->resit_bayaran_fi)
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Tersedia</span>
-                        @else
+                        @elseif($p->status === 'Diluluskan')
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Belum Ada Fail</span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300">Menunggu Kelulusan</span>
                         @endif
                     </div>
                     <p class="text-[11px] text-slate-500">No. Resit: <b class="font-mono text-slate-800">{{ $p->no_resit_bayaran ?? 'Belum Dijana' }}</b> (RM {{ number_format($p->yuran_lesen, 2) }})</p>
@@ -687,7 +689,7 @@
                             <a href="{{ asset('storage/' . $p->resit_bayaran_fi) }}" target="_blank" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
                                 <i class="fa-solid fa-file-invoice-dollar"></i> Buka Gambar / Fail Resit
                             </a>
-                            @if(!$isStaff || $isOwner)
+                            @if(($p->status === 'Diluluskan') && (!$isStaff || $isOwner))
                                 <form action="{{ route('epu.bayar-fi', $p->id) }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200">
                                     @csrf
                                     <input type="file" name="resit_bayaran_fi" required accept="image/*,.pdf" class="text-[10px] text-slate-600 file:mr-1 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 file:text-slate-700 w-full">
@@ -698,18 +700,30 @@
                             @endif
                         </div>
                     @else
-                        @if(!$isStaff || $isOwner)
-                            <form action="{{ route('epu.bayar-fi', $p->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
-                                @csrf
-                                <input type="file" name="resit_bayaran_fi" required accept="image/*,.pdf" class="w-full text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-900 hover:file:bg-amber-200 bg-white p-1 rounded-xl border border-amber-300">
-                                <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i> Muat Naik Gambar / Resit
-                                </button>
-                            </form>
+                        @if($p->status === 'Diluluskan')
+                            @if(!$isStaff || $isOwner)
+                                <form action="{{ route('epu.bayar-fi', $p->id) }}" method="POST" enctype="multipart/form-data" class="space-y-2">
+                                    @csrf
+                                    <input type="file" name="resit_bayaran_fi" required accept="image/*,.pdf" class="w-full text-xs text-slate-700 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-900 hover:file:bg-amber-200 bg-white p-1 rounded-xl border border-amber-300">
+                                    <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 text-xs">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Muat Naik Gambar / Resit
+                                    </button>
+                                </form>
+                            @else
+                                <span class="w-full py-2 bg-slate-100 text-slate-500 font-semibold rounded-xl flex items-center justify-center text-xs gap-1.5">
+                                    <i class="fa-solid fa-hourglass-half text-amber-500"></i> Belum Dimuat Naik oleh Pemohon
+                                </span>
+                            @endif
                         @else
-                            <span class="w-full py-2 bg-slate-100 text-slate-500 font-semibold rounded-xl flex items-center justify-center text-xs gap-1.5">
-                                <i class="fa-solid fa-hourglass-half text-amber-500"></i> Belum Dimuat Naik oleh Pemohon
-                            </span>
+                            <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-[11px] text-amber-900 space-y-1">
+                                <div class="flex items-center gap-1.5 font-bold text-amber-800">
+                                    <i class="fa-solid fa-lock text-amber-600"></i>
+                                    <span>Belum Boleh Dimuat Naik</span>
+                                </div>
+                                <p class="text-[10px] text-amber-700 leading-relaxed">
+                                    Gambar / Fail resit bayaran fi belum boleh dimuat naik oleh pemohon selagi permohonan belum diluluskan oleh Pegawai Pelesen / Pengarah DVS.
+                                </p>
+                            </div>
                         @endif
                     @endif
                 </div>

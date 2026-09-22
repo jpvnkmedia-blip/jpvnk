@@ -470,4 +470,51 @@ class EpuFlowchartWorkflowTest extends TestCase
         $permohonan->refresh();
         $this->assertEquals('Selesai Bayar', $permohonan->status_bayaran_fi);
     }
+
+    public function test_applicant_cannot_upload_receipt_before_application_is_approved_by_pegawai_pelesen_or_pengarah(): void
+    {
+        $penternak = User::where('role', 'penternak')->first();
+
+        $ladang = EpuLadang::create([
+            'user_id' => $penternak->id,
+            'nama_pemohon_atau_syarikat' => 'Ladang Ayam - Jais Test',
+            'nama_ladang' => 'Ladang Ayam - Jais Test',
+            'alamat_ladang' => 'Kampung Padang Temusu',
+            'jajahan' => 'Kota Bharu',
+            'kategori_unggas' => 'Ayam Pedaging',
+            'kapasiti_ternakan' => 5000,
+            'status_ladang' => 'Aktif',
+            'status' => 'Aktif',
+        ]);
+
+        $permohonan = EpuPermohonan::create([
+            'epu_ladang_id' => $ladang->id,
+            'no_rujukan_permohonan' => 'EPU/2026/09/JAIS01',
+            'jenis_permohonan' => 'Lesen Baharu',
+            'jenis_unggas' => 'Ayam',
+            'jurusan_aktiviti' => 'Pedaging',
+            'bilangan_semasa_unggas' => 4000,
+            'kapasiti_ladang' => 5000,
+            'yuran_lesen' => 100.00,
+            'status' => 'Dihantar', // Belum diluluskan
+            'status_penilaian_ladang' => 'Dihantar ke Pegawai Pelesen',
+            'status_bayaran_fi' => 'Belum Bayar',
+        ]);
+
+        // 1. Pemohon tengok halaman - borang upload disekat, mesej amaran dipaparkan
+        $resp = $this->actingAs($penternak)->get("/epu/ladang/{$ladang->id}");
+        $resp->assertStatus(200);
+        $resp->assertSee('Belum Boleh Dimuat Naik');
+        $resp->assertSee('Gambar / Fail resit bayaran fi belum boleh dimuat naik oleh pemohon selagi permohonan belum diluluskan oleh Pegawai Pelesen / Pengarah DVS');
+
+        // 2. Pemohon cuba hantar fail resit bayaran sebelum diluluskan -> Disekat dengan ralat
+        $resit = UploadedFile::fake()->create('resit_bayaran.pdf', 200, 'application/pdf');
+        $uploadResp = $this->actingAs($penternak)->post("/epu/permohonan/{$permohonan->id}/bayar-fi", [
+            'no_resit_bayaran' => 'RES-JAIS-001',
+            'resit_bayaran_fi' => $resit,
+        ]);
+        $uploadResp->assertRedirect();
+        $uploadResp->assertSessionHas('error');
+        $this->assertNull($permohonan->fresh()->resit_bayaran_fi);
+    }
 }

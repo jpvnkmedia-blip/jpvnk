@@ -914,6 +914,11 @@ class EpuController extends Controller implements HasMiddleware
             abort(403, 'Akses Ditolak: Resit bayaran fi hanya boleh dimuat naik oleh pemohon.');
         }
 
+        // Resit bayaran fi belum boleh dimuat naik selagi tidak diluluskan oleh Pegawai Pelesen / Pengarah DVS
+        if ($permohonan->status !== 'Diluluskan') {
+            return back()->with('error', 'Akses Ditolak: Resit bayaran fi belum boleh dimuat naik selagi permohonan belum diluluskan oleh Pegawai Pelesen / Pengarah DVS.');
+        }
+
         $validated = $request->validate([
             'resit_bayaran_fi' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'no_resit_bayaran' => 'nullable|string|max:50',

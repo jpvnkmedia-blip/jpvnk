@@ -304,9 +304,44 @@
                 </div>
 
                 @php
-                    $pegawaiPelesen = $permohonan->pelulus 
-                        ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first() 
-                        ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first();
+                    // Dapatkan Pegawai Pelesen / Pengarah dengan tandatangan digital berdaftar
+                    $pegawaiPelesen = null;
+                    if ($permohonan->pelulus && !empty($permohonan->pelulus->signature)) {
+                        $pegawaiPelesen = $permohonan->pelulus;
+                    }
+                    if (!$pegawaiPelesen) {
+                        $pegawaiPelesen = \App\Models\User::where(function($q) {
+                                $q->where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen');
+                            })
+                            ->whereNotNull('signature')
+                            ->where('signature', '!=', '')
+                            ->first();
+                    }
+                    if (!$pegawaiPelesen) {
+                        $pegawaiPelesen = \App\Models\User::where(function($q) {
+                                $q->where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah');
+                            })
+                            ->whereNotNull('signature')
+                            ->where('signature', '!=', '')
+                            ->first();
+                    }
+                    if (!$pegawaiPelesen) {
+                        $pegawaiPelesen = \App\Models\User::whereNotNull('signature')->where('signature', '!=', '')->first()
+                            ?? $permohonan->pelulus
+                            ?? \App\Models\User::where('role', 'pegawai_pelesen')->orWhereJsonContains('roles', 'pegawai_pelesen')->first() 
+                            ?? \App\Models\User::where('role', 'pengarah')->orWhereJsonContains('roles', 'pengarah')->first();
+                    }
+
+                    $sigSrc = null;
+                    if ($pegawaiPelesen && !empty($pegawaiPelesen->signature)) {
+                        $diskPath = storage_path('app/public/' . $pegawaiPelesen->signature);
+                        if (file_exists($diskPath)) {
+                            $ext = pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'png';
+                            $sigSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($diskPath));
+                        } else {
+                            $sigSrc = asset('storage/' . $pegawaiPelesen->signature);
+                        }
+                    }
                 @endphp
 
                 <div class="grid grid-cols-2 gap-8 pt-6 items-end">
@@ -315,9 +350,9 @@
                         <span class="dotted-line flex-1 font-mono px-2">{{ $permohonan->tarikh_kelulusan ? $permohonan->tarikh_kelulusan->format('d/m/Y') : '' }}</span>
                     </div>
                     <div class="text-center">
-                        @if($pegawaiPelesen && $pegawaiPelesen->signature)
+                        @if($sigSrc)
                             <div class="flex flex-col items-center justify-center -mb-2">
-                                <img src="{{ asset('storage/' . $pegawaiPelesen->signature) }}" alt="Tandatangan Pegawai Pelesen" class="h-16 max-w-[180px] object-contain">
+                                <img src="{{ $sigSrc }}" alt="Tandatangan Pegawai Pelesen" class="h-16 max-w-[180px] object-contain">
                             </div>
                         @endif
                         <div class="dotted-line w-full mb-1"></div>
