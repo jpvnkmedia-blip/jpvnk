@@ -12,6 +12,7 @@
             <h2 class="text-xl font-extrabold text-slate-900">Surat Perjanjian &amp; Pemantauan Program Pawah</h2>
             <p class="text-xs text-slate-500 mt-0.5">Pengurusan skim pawah ternakan berhubung terus dengan pendaftaran lembu EPTR</p>
         </div>
+        @if(!Auth::user()->isPurePengarah())
         <div>
             @if(Auth::user()->isStaff())
                 <a href="{{ route('pawah.create') }}" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-lg shadow-emerald-700/30 transition flex items-center gap-2">
@@ -25,6 +26,7 @@
                 </a>
             @endif
         </div>
+        @endif
     </div>
 
     <!-- KPI Metrics -->

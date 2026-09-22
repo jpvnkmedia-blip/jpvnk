@@ -32,10 +32,14 @@ class NaimbifPublicController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan penyertaan Ladang Bridlot NAIMbif.');
+        }
+
         $jajahans = NaimbifPermohonan::JAJAHAN_LIST;
         $bakas = NaimbifPermohonan::BAKA_LIST;
 
-        $user = Auth::user();
         $pemunya = null;
         if ($user) {
             $pemunya = Pemunya::where('user_id', $user->id)
@@ -273,6 +277,11 @@ class NaimbifPublicController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan penyertaan Ladang Bridlot NAIMbif.');
+        }
+
         $rules = [
             // Maklumat Peserta
             'nama' => 'required|string|max:255',

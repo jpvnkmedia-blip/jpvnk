@@ -23,6 +23,12 @@
     receiptFileName: '',
     receiptFileSize: '',
     
+    get isTempohPemutihan() {
+        let now = new Date();
+        let start = new Date('2026-09-20T00:00:00');
+        let end = new Date('2026-12-31T23:59:59');
+        return now >= start && now <= end;
+    },
     get isRuminanBesar() {
         let key = this.selectedJenis.toLowerCase();
         return key.includes('lembu') || key.includes('kerbau');
@@ -34,6 +40,9 @@
         return this.isRuminanBesar ? 8.00 : 5.00;
     },
     get fiDaftarLewat() {
+        if (this.isTempohPemutihan) {
+            return 0.00;
+        }
         return this.isRuminanBesar ? 12.00 : 10.00;
     },
     get totalFi() {
@@ -502,6 +511,17 @@
                         </div>
                     </div>
 
+                    <!-- Banner Tempoh Pemutihan EPTR -->
+                    <template x-if="isTempohPemutihan">
+                        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white font-black text-[9px] uppercase tracking-wider">Pemutihan EPTR</span>
+                                <span class="text-xs font-bold text-emerald-950">Tempoh Pemutihan Berlangsung (20 Sept &ndash; 31 Dis 2026): Denda lewat pendaftaran dikecualikan 100% (RM 0.00)!</span>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-300">Denda Lewat: RM 0.00</span>
+                        </div>
+                    </template>
+
                     <!-- Ringkasan Pengiraan Fi -->
                     <div class="p-3.5 bg-gradient-to-r from-slate-900 to-emerald-950 text-white rounded-xl shadow-xs flex items-center justify-between">
                         <div class="space-y-0.5">
@@ -510,7 +530,14 @@
                             </div>
                             <div class="text-[10px] text-slate-400">
                                 <span x-show="kategoriDaftar === 'biasa'">Pendaftaran Pertama: Daftar (RM2.00) + Penandaan Tag (<span x-text="'RM ' + fiTagging.toFixed(2)"></span>)</span>
-                                <span x-show="kategoriDaftar === 'lewat'">Pendaftaran Lewat: Daftar &amp; Tag (<span x-text="'RM ' + (fiDaftar + fiTagging).toFixed(2)"></span>) + Denda Lewat Seksyen 7 (<span x-text="'RM ' + fiDaftarLewat.toFixed(2)"></span>)</span>
+                                <span x-show="kategoriDaftar === 'lewat'">
+                                    <template x-if="isTempohPemutihan">
+                                        <span>Pendaftaran Lewat: Daftar &amp; Tag (<span x-text="'RM ' + (fiDaftar + fiTagging).toFixed(2)"></span>) + <span class="text-emerald-300 font-bold">Denda Lewat Pemutihan (RM 0.00)</span></span>
+                                    </template>
+                                    <template x-if="!isTempohPemutihan">
+                                        <span>Pendaftaran Lewat: Daftar &amp; Tag (<span x-text="'RM ' + (fiDaftar + fiTagging).toFixed(2)"></span>) + Denda Lewat Seksyen 7 (<span x-text="'RM ' + fiDaftarLewat.toFixed(2)"></span>)</span>
+                                    </template>
+                                </span>
                             </div>
                         </div>
                         <div class="text-right">

@@ -130,6 +130,10 @@ class PawahController extends Controller implements HasMiddleware
     public function create()
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat Pendaftaran Surat Perjanjian Lembu Pawah.');
+        }
+
         $pesertaList = User::whereIn('role', ['penternak', 'usahawan', 'orang_awam'])->orderBy('name')->get();
         
         // Pilihan Ternakan Lembu daripada EPTR yang didaftarkan (Ternakan aktif baka betina/induk)
@@ -189,6 +193,9 @@ class PawahController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat Pendaftaran Surat Perjanjian Lembu Pawah.');
+        }
 
         // 1. Permohonan Program Pawah oleh Orang Awam / Penternak / Usahawan
         if (!$user->isStaff()) {

@@ -17,12 +17,14 @@
                 Pengurusan dan pemantauan menyeluruh aktiviti vaksinasi (FMD, Hawar Berdarah), kawalan parasit (Deworming), rawatan klinikal, dan surveilans penyakit ternakan Negeri Kelantan.
             </p>
         </div>
+        @if(!Auth::user()->isPurePengarah())
         <div class="flex items-center gap-2 shrink-0">
             <a href="{{ route('eptr.kesihatan.create') }}" class="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-xs shadow-lg transition flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle"></i>
                 <span>Rekod Rawatan / Vaksinasi Baru</span>
             </a>
         </div>
+        @endif
     </div>
 
     <!-- Statistics Cards -->

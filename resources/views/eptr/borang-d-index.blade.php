@@ -49,10 +49,12 @@
                     <span x-show="selectedIds.length > 0" class="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]" x-text="selectedIds.length"></span>
                 </button>
             @endif
+            @if(!Auth::user()->isPurePengarah())
             <a href="{{ route('eptr.borang-d.create') }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-lg shadow-amber-700/30 transition flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle"></i>
                 <span>Mohon Permit & SKV Sembelih</span>
             </a>
+            @endif
         </div>
     </div>
 

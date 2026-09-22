@@ -14,10 +14,12 @@
                 {{ in_array(Auth::user()->role, ['admin_epu_jajahan', 'pegawai_verifikasi_epu']) ? 'Pengurusan premis, verifikasi tapak kepatuhan & laporan pemeriksaan Borang D bagi Jajahan ' . (Auth::user()->jajahan ?? 'Kelantan') : 'Pengurusan pendaftaran premis, pengeluaran lesen EPU, pembaharuan tahunan dan kelulusan rasmi peringkat Negeri Kelantan' }}
             </p>
         </div>
+        @if(!Auth::user()->isPurePengarah())
         <a href="{{ route('epu.create') }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-lg shadow-amber-700/30 transition flex items-center gap-2">
             <i class="fa-solid fa-plus-circle"></i>
             <span>Daftar Ladang & Lesen (Borang A)</span>
         </a>
+        @endif
     </div>
 
     <!-- KPI Summary Pills -->

@@ -256,6 +256,7 @@
                         <a href="{{ route('pawah.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('pawah.index') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Senarai Surat Perjanjian
                         </a>
+                        @if(!Auth::user()->isPurePengarah())
                         @if(Auth::user()->isStaff())
                         <a href="{{ route('pawah.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('pawah.create') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Daftar Perjanjian Lembu Pawah
@@ -264,6 +265,7 @@
                         <a href="{{ route('pawah.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('pawah.create') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Mohon Program Pawah
                         </a>
+                        @endif
                         @endif
                     </div>
                 </div>
@@ -288,9 +290,11 @@
                         <a href="{{ route('naimbif.public.home') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.home') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Portal &amp; Info Program
                         </a>
+                        @if(!Auth::user()->isPurePengarah())
                         <a href="{{ route('naimbif.public.apply') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.apply') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             <i class="fa-solid fa-file-signature mr-1 text-emerald-400"></i> Borang Permohonan Baru
                         </a>
+                        @endif
                         <a href="{{ route('naimbif.public.check_status') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('naimbif.public.check_status') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             <i class="fa-solid fa-magnifying-glass mr-1 text-teal-400"></i> Semak Status Permohonan
                         </a>
@@ -312,9 +316,11 @@
                         <a href="{{ route('epu.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('epu.index') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Senarai Ladang Unggas
                         </a>
+                        @if(!Auth::user()->isPurePengarah())
                         <a href="{{ route('epu.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('epu.create') ? 'text-emerald-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Mohon Lesen (Borang A)
                         </a>
+                        @endif
                     </div>
                 </div>
                 @endif

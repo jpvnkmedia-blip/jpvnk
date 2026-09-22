@@ -78,6 +78,29 @@
         }
     },
 
+    getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = parseFloat(pos.coords.latitude.toFixed(6));
+                    const lng = parseFloat(pos.coords.longitude.toFixed(6));
+                    this.latitude = lat;
+                    this.longitude = lng;
+                    if (window.epuMap && window.epuMarker) {
+                        window.epuMap.setView([lat, lng], 15);
+                        window.epuMarker.setLatLng([lat, lng]);
+                    }
+                },
+                (err) => {
+                    alert('Tidak dapat mengesan lokasi semasa: ' + err.message + '. Sila pastikan kebenaran lokasi GPS dibenarkan pada pelayar anda.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            alert('Pelayar web anda tidak menyokong fungsi geolokasi GPS.');
+        }
+    },
+
     // Dynamic Calculations
     get totalKeluasanAyam() {
         return this.rebanAyam.reduce((acc, r) => acc + (parseFloat(r.lebar || 0) * parseFloat(r.panjang || 0) * parseFloat(r.tingkat || 1)), 0);
@@ -442,13 +465,19 @@
 
                 <!-- Butir-butir Ladang / Loji & OpenStreetMap Leaflet -->
                 <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                    <h4 class="font-extrabold text-slate-800 text-sm flex items-center justify-between">
-                        <span class="flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-amber-600"></i>
-                            <span>Butir-butir Ladang / Loji</span>
-                        </span>
-                        <span class="text-[11px] text-slate-500 font-normal">Klik pada peta atau seret penanda pin untuk menetapkan koordinat lokasi</span>
-                    </h4>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h4 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-amber-600"></i>
+                                <span>Butir-butir Ladang / Loji</span>
+                            </h4>
+                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">Klik pada peta atau seret penanda pin untuk menetapkan koordinat lokasi</p>
+                        </div>
+                        <button type="button" @click="getCurrentLocation()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-700/20 transition flex items-center justify-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span>Gunakan Lokasi Semasa (GPS)</span>
+                        </button>
+                    </div>
 
                     <!-- Peta Interaktif Leaflet -->
                     <div wire:ignore class="rounded-2xl overflow-hidden border border-slate-300 shadow-inner">
@@ -944,4 +973,40 @@
 @push('scripts')
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const defaultLat = {{ old('latitude', '6.1254') }};
+    const defaultLng = {{ old('longitude', '102.2381') }};
+    
+    const map = L.map('map').setView([defaultLat, defaultLng], 12);
+    window.epuMap = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    window.epuMarker = marker;
+
+    function updateAlpineCoords(lat, lng) {
+        const root = document.querySelector('[x-data]');
+        if (root && root._x_dataStack) {
+            const data = root._x_dataStack[0];
+            data.latitude = parseFloat(lat.toFixed(6));
+            data.longitude = parseFloat(lng.toFixed(6));
+        }
+    }
+
+    marker.on('dragend', function(e) {
+        const coord = e.target.getLatLng();
+        updateAlpineCoords(coord.lat, coord.lng);
+    });
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateAlpineCoords(e.latlng.lat, e.latlng.lng);
+    });
+});
+</script>
 @endpush

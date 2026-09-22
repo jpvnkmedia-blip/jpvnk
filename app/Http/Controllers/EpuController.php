@@ -103,6 +103,10 @@ class EpuController extends Controller implements HasMiddleware
     public function create()
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Lesen Penternakan Unggas.');
+        }
+
         $usahawanList = User::whereIn('role', ['usahawan', 'penternak', 'orang_awam'])->orderBy('name')->get();
         
         $jajahanList = [
@@ -129,6 +133,9 @@ class EpuController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Lesen Penternakan Unggas.');
+        }
 
         $validated = $request->validate([
             // Step 1: Maklumat Pemohon

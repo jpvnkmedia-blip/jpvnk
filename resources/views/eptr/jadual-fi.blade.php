@@ -80,6 +80,30 @@
         </div>
     </div>
 
+    <!-- Banner Makluman Khas: Tempoh Pemutihan EPTR -->
+    <div class="p-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shrink-0">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/20 text-[10px] font-black uppercase tracking-wider mb-1">
+                    <span>Program Khas Pemutihan EPTR 2026</span>
+                </div>
+                <h3 class="font-extrabold text-sm sm:text-base">Pengecualian Denda Lewat Pendaftaran 100% (RM 0.00)</h3>
+                <p class="text-xs text-emerald-100 mt-0.5">
+                    Bermula <strong>20 September sehingga 31 Disember 2026</strong>, semua pendaftaran ternakan yang lewat melebihi 14 hari tidak dikenakan caj denda Seksyen 7. Penternak hanya membayar fi pendaftaran dan penandaan biasa sahaja.
+                </p>
+            </div>
+        </div>
+        <div class="shrink-0">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-emerald-900 font-extrabold text-xs shadow-md">
+                <i class="fa-solid fa-clock"></i>
+                <span>20 Sept &ndash; 31 Dis 2026</span>
+            </span>
+        </div>
+    </div>
+
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

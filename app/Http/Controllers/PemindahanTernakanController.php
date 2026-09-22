@@ -67,6 +67,10 @@ class PemindahanTernakanController extends Controller
     public function create()
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan pemindahan ternakan baharu.');
+        }
+
         $isStaff = $user ? $user->isStaff() : false;
 
         // Dapatkan profil Pemunya EPTR bagi pengguna semasa jika ada
@@ -95,7 +99,7 @@ class PemindahanTernakanController extends Controller
             $q->whereIn('status', ['Aktif', 'Pawah'])->orderBy('no_tag');
         }])->orderBy('nama')->get();
 
-        $ternakanList = Ternakan::where('status_pendaftaran', 'Aktif')
+        $ternakanList = Ternakan::where('status', 'Aktif')
             ->orWhere('status_kelulusan', 'Diluluskan')
             ->orWhere('status_kelulusan', 'Lulus')
             ->orderBy('no_tag')
@@ -127,6 +131,10 @@ class PemindahanTernakanController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan pemindahan ternakan baharu.');
+        }
+
         $isStaff = $user ? $user->isStaff() : false;
 
         $request->validate([

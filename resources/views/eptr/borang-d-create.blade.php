@@ -351,6 +351,7 @@
                             </span>
                         </template>
                         <input type="hidden" name="is_musim_korban" :value="isMusimKorban ? '1' : '0'">
+                        <input type="hidden" name="tarikh_sembelih" :value="primaryTarikh">
                     </div>
                 </div>
 
@@ -554,8 +555,8 @@
 
                                     <!-- Tarikh Sembelihan -->
                                     <td class="p-2">
-                                        <div class="space-y-1">
-                                            <input type="date" :name="'items[' + index + '][tarikh_sembelihan]'" x-model="item.tarikh_sembelihan" @change="onRowDateChange(index)" required class="w-full p-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold">
+                                         <div class="space-y-1">
+                                             <input type="date" :name="'items[' + index + '][tarikh_sembelihan]'" x-model="item.tarikh_sembelihan" min="{{ date('Y-m-d') }}" @change="onRowDateChange(index)" required class="w-full p-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg font-bold">
                                             
                                             <!-- Status Musim Korban Badge per Baris -->
                                             <template x-if="isMusimKorban">

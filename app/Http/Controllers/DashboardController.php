@@ -373,16 +373,27 @@ class DashboardController extends Controller
         $eptrSpeciesRaw = Ternakan::select('jenis_ternakan', DB::raw('count(*) as total'))
             ->groupBy('jenis_ternakan')->pluck('total', 'jenis_ternakan')->toArray();
         $eptrSpeciesData = [
-            'Lembu' => $eptrSpeciesRaw['Lembu'] ?? 0,
-            'Kerbau' => $eptrSpeciesRaw['Kerbau'] ?? 0,
-            'Kambing' => $eptrSpeciesRaw['Kambing'] ?? 0,
-            'Biri-biri' => ($eptrSpeciesRaw['Biri-biri'] ?? 0) + ($eptrSpeciesRaw['Biri-Biri'] ?? 0) + ($eptrSpeciesRaw['Biri - Biri'] ?? 0),
-            'Rusa' => $eptrSpeciesRaw['Rusa'] ?? 0,
+            'Lembu' => 0,
+            'Kerbau' => 0,
+            'Kambing' => 0,
+            'Biri-biri' => 0,
+            'Rusa' => 0,
             'Lain-lain' => 0
         ];
         foreach ($eptrSpeciesRaw as $sp => $cnt) {
-            if (!in_array($sp, ['Lembu', 'Kerbau', 'Kambing', 'Biri-biri', 'Biri-Biri', 'Biri - Biri', 'Rusa'])) {
-                $eptrSpeciesData['Lain-lain'] += $cnt;
+            $spClean = trim(strtolower($sp ?? ''));
+            if ($spClean === 'lembu') {
+                $eptrSpeciesData['Lembu'] += (int) $cnt;
+            } elseif ($spClean === 'kerbau') {
+                $eptrSpeciesData['Kerbau'] += (int) $cnt;
+            } elseif ($spClean === 'kambing') {
+                $eptrSpeciesData['Kambing'] += (int) $cnt;
+            } elseif (in_array($spClean, ['biri-biri', 'biri-biri ', 'biri - biri', 'biribiri', 'domba', 'sheep'])) {
+                $eptrSpeciesData['Biri-biri'] += (int) $cnt;
+            } elseif ($spClean === 'rusa') {
+                $eptrSpeciesData['Rusa'] += (int) $cnt;
+            } else {
+                $eptrSpeciesData['Lain-lain'] += (int) $cnt;
             }
         }
 
@@ -456,8 +467,20 @@ class DashboardController extends Controller
         $totalNaimbifTolak = NaimbifPermohonan::where('status_negeri', 'Tolak')->orWhere('syor_permohonan', 'Tidak Disokong')->count();
         $totalNaimbifPopulasi = (int) NaimbifInventoriTernakan::sum('jumlah_baka');
 
-        $naimbifBakaRaw = NaimbifInventoriTernakan::select('baka', DB::raw('sum(jumlah_baka) as total'))
-            ->groupBy('baka')->pluck('total', 'baka')->toArray();
+        $naimbifInventoriRows = NaimbifInventoriTernakan::all();
+        $naimbifBakaData = [];
+        foreach ($naimbifInventoriRows as $inv) {
+            $bakaName = trim($inv->baka ?: 'Baka Tidak Dinyatakan');
+            if (strtoupper($bakaName) === 'LAIN-LAIN' && !empty($inv->nama_baka_lain)) {
+                $bakaName = 'Lain-lain (' . trim($inv->nama_baka_lain) . ')';
+            }
+            $totalCount = (int) ($inv->jumlah_baka ?? (($inv->betina_anak ?? 0) + ($inv->betina_dara ?? 0) + ($inv->betina_induk ?? 0) + ($inv->jantan_anak ?? 0) + ($inv->jantan_pejantan ?? 0)));
+            if (!isset($naimbifBakaData[$bakaName])) {
+                $naimbifBakaData[$bakaName] = 0;
+            }
+            $naimbifBakaData[$bakaName] += $totalCount;
+        }
+        $naimbifBakaRaw = $naimbifBakaData;
         
         $naimbifJajahanRaw = NaimbifPermohonan::select(DB::raw('COALESCE(jajahan_ladang, jajahan) as jajahan_nama'), DB::raw('count(*) as total'))
             ->groupBy('jajahan_nama')->pluck('total', 'jajahan_nama')->toArray();

@@ -26,9 +26,11 @@
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                    @if(!(Auth::check() && Auth::user()->isPurePengarah()))
                     <a href="{{ route('naimbif.public.apply') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-xl text-base font-bold text-slate-900 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 shadow-lg shadow-amber-400/20 transition-all transform hover:-translate-y-0.5">
                         <i class="fas fa-file-signature text-lg mr-2.5"></i> Mohon Penyertaan Sekarang
                     </a>
+                    @endif
                     <a href="{{ route('naimbif.public.check_status') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-xl text-base font-bold text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 transition-all">
                         <i class="fas fa-search text-emerald-400 mr-2.5"></i> Semak Status Permohonan
                     </a>

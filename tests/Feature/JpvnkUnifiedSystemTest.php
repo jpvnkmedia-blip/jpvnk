@@ -3175,7 +3175,7 @@ class JpvnkUnifiedSystemTest extends TestCase
         // 3. Permohonan hari biasa dengan 7 baris (Diterima)
         $items7 = array_slice($items8, 0, 7);
         $tarikhSembelih = date('Y-m-d');
-        $resitFile7 = \Illuminate\Http\UploadedFile::fake()->create('resit_sembelih_7.pdf', 150, 'application/pdf');
+        $resitFile7 = \Illuminate\Http\UploadedFile::fake()->create('resit_sembelih7.pdf', 150, 'application/pdf');
         $respValid7 = $this->actingAs($penternak)->post('/eptr/permit-sembelihan-borang-d/mohon', [
             'pemunya_id' => $pemunya->id,
             'jenis_ternakan' => 'Lembu',
@@ -3189,6 +3189,7 @@ class JpvnkUnifiedSystemTest extends TestCase
             'items' => $items7,
         ]);
         $respValid7->assertRedirect();
+        $respValid7->assertSessionHasNoErrors();
 
         $permit = PermitSembelihan::where('pemunya_id', $pemunya->id)->latest('id')->first();
         $this->assertNotNull($permit);
@@ -3235,9 +3236,9 @@ class JpvnkUnifiedSystemTest extends TestCase
         for ($k = 1; $k <= 10; $k++) {
             $items10[] = [
                 'jantina' => 'J',
-                'no_id_ternakan' => "KORBAN-2026-0{$k}",
-                'no_siri_kad_pendaftaran' => "DB-KB-2026-K0{$k}",
-                'tarikh_sembelihan' => date('Y-m-d'),
+                'no_id_ternakan' => "KORBAN-2027-0{$k}",
+                'no_siri_kad_pendaftaran' => "DB-KB-2027-K0{$k}",
+                'tarikh_sembelihan' => '2027-05-16',
                 'tempat_sembelihan' => 'Masjid Kota Bharu',
                 'kuantiti_karkas' => '1 Ekor',
             ];
@@ -3248,7 +3249,7 @@ class JpvnkUnifiedSystemTest extends TestCase
             'pemunya_id' => $pemunya->id,
             'jenis_ternakan' => 'Lembu',
             'tujuan_sembelih' => 'Ibadah Korban',
-            'tarikh_sembelih' => '2026-05-27', // Jatuh Hari Raya Pertama Aidiladha
+            'tarikh_sembelih' => '2027-05-16', // Jatuh Hari Raya Pertama Aidiladha 2027
             'no_kenderaan' => 'DBC 9999',
             'resit_pembayaran' => $resitKorban,
             'items' => $items10,
@@ -4801,8 +4802,112 @@ class JpvnkUnifiedSystemTest extends TestCase
             'nama_ladang' => 'Ladang Pelan Selamat',
         ]);
     }
+
+    public function test_pure_pengarah_cannot_access_operational_forms(): void
+    {
+        $pengarah = User::create([
+            'name' => 'Pengarah DVS Test',
+            'email' => 'pengarah.test.' . uniqid() . '@jpvnk.gov.my',
+            'password' => bcrypt('password'),
+            'role' => 'pengarah',
+            'is_approved' => true,
+        ]);
+
+        $this->assertTrue($pengarah->isPurePengarah());
+
+        // 1. Borang C
+        $this->actingAs($pengarah)->get('/eptr/pembatalan-borang-c/mohon')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/eptr/pembatalan-borang-c/mohon', [])->assertStatus(403);
+
+        // 2. Pawah
+        $this->actingAs($pengarah)->get('/pawah/perjanjian-baru')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/pawah/perjanjian-baru', [])->assertStatus(403);
+
+        // 3. Borang D
+        $this->actingAs($pengarah)->get('/eptr/permit-sembelihan-borang-d/mohon')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/eptr/permit-sembelihan-borang-d/mohon', [])->assertStatus(403);
+
+        // 4. Pemindahan
+        $this->actingAs($pengarah)->get('/eptr/pemindahan-ternakan/mohon')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/eptr/pemindahan-ternakan/mohon', [])->assertStatus(403);
+
+        // 5. Kesihatan
+        $this->actingAs($pengarah)->get('/eptr/program-kesihatan/daftar')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/eptr/program-kesihatan/daftar', [])->assertStatus(403);
+
+        // 6. NAIMbif
+        $this->actingAs($pengarah)->get('/naimbif/permohonan')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/naimbif/permohonan', [])->assertStatus(403);
+
+        // 7. EPU Unggas
+        $this->actingAs($pengarah)->get('/epu/daftar-borang-a')->assertStatus(403);
+        $this->actingAs($pengarah)->post('/epu/daftar-borang-a', [])->assertStatus(403);
+    }
+
+    public function test_borang_d_rejects_past_tarikh_sembelih(): void
+    {
+        $penternak = User::where('role', 'penternak')->first();
+        $pemunya = Pemunya::where('user_id', $penternak->id)->first() ?? Pemunya::create([
+            'user_id' => $penternak->id,
+            'nama' => $penternak->name,
+            'no_kp' => $penternak->ic_number ?? '800101035511',
+            'no_telefon' => '0199998877',
+            'alamat' => 'Kampung Padang Temusu',
+            'jajahan' => 'Kota Bharu',
+            'status' => 'Aktif',
+        ]);
+
+        $resit = \Illuminate\Http\UploadedFile::fake()->create('resit.pdf', 100, 'application/pdf');
+
+        $pastDate = \Carbon\Carbon::yesterday()->toDateString();
+        $resp = $this->actingAs($penternak)->post('/eptr/permit-sembelihan-borang-d/mohon', [
+            'pemunya_id' => $pemunya->id,
+            'jenis_ternakan' => 'Lembu',
+            'tujuan_sembelih' => 'Jualan',
+            'tarikh_sembelih' => $pastDate,
+            'resit_pembayaran' => $resit,
+            'items' => [
+                [
+                    'jantina' => 'J',
+                    'no_id_ternakan' => 'TAG-PAST-01',
+                    'tarikh_sembelihan' => $pastDate,
+                    'tempat_sembelihan' => 'Rumah Sembelih',
+                    'kuantiti_karkas' => '1 Ekor',
+                ]
+            ],
+        ]);
+
+        $resp->assertSessionHasErrors(['tarikh_sembelih', 'items.0.tarikh_sembelihan']);
+    }
+
+    public function test_pemindahan_create_route_returns_200_for_penternak(): void
+    {
+        $penternak = User::where('role', 'penternak')->first();
+        $resp = $this->actingAs($penternak)->get('/eptr/pemindahan-ternakan/mohon');
+        $resp->assertStatus(200);
+        $resp->assertSee('Permohonan Pemindahan Ternakan');
+    }
+
+    public function test_pemutihan_eptr_banner_and_fee_waiver(): void
+    {
+        $user = User::where('role', 'super_admin')->first();
+        
+        // 1. Jadual Fi EPTR
+        $respJadual = $this->actingAs($user)->get('/eptr/jadual-fi');
+        $respJadual->assertStatus(200);
+        $respJadual->assertSee('Program Khas Pemutihan EPTR 2026');
+        $respJadual->assertSee('20 September sehingga 31 Disember 2026');
+
+        // 2. Borang A EPTR (Pendaftaran Ternakan Matang)
+        $respBorangA = $this->actingAs($user)->get('/eptr/daftar-borang-a');
+        $respBorangA->assertStatus(200);
+        $respBorangA->assertSee('Pemutihan EPTR');
+        $respBorangA->assertSee('Denda Lewat Pemutihan (RM 0.00)');
+
+        // 3. Borang Daftar Anak
+        $respDaftarAnak = $this->actingAs($user)->get('/eptr/daftar-anak');
+        $respDaftarAnak->assertStatus(200);
+        $respDaftarAnak->assertSee('Pemutihan EPTR');
+        $respDaftarAnak->assertSee('Denda Lewat Pemutihan (RM 0.00)');
+    }
 }
-
-
-
-

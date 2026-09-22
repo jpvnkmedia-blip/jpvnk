@@ -1385,6 +1385,10 @@ class EptrController extends Controller implements HasMiddleware
     public function createBorangC(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Pembatalan / Kematian (Borang C).');
+        }
+
         $query = Ternakan::with('pemunya')
             ->whereIn('status', ['Aktif', 'Pawah'])
             ->where('status_kelulusan', 'Diluluskan')
@@ -1414,6 +1418,9 @@ class EptrController extends Controller implements HasMiddleware
     public function storeBorangC(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Pembatalan / Kematian (Borang C).');
+        }
         $validated = $request->validate([
             'ternakan_id' => 'required|exists:ternakan,id',
             'jenis_batal' => 'required|in:Mati,Pindah Keluar,Kecurian,Pelupusan,Sembelihan,Lain-lain',
@@ -1625,6 +1632,9 @@ class EptrController extends Controller implements HasMiddleware
     public function createBorangD(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Permit & SKV Sembelihan (Borang D).');
+        }
 
         // Senarai pemunya (untuk staf)
         $pemunyaList = $user->isStaff() ? Pemunya::orderBy('nama')->get() : ($user->pemunya ? collect([$user->pemunya]) : collect());
@@ -1661,6 +1671,9 @@ class EptrController extends Controller implements HasMiddleware
     public function storeBorangD(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat permohonan Permit & SKV Sembelihan (Borang D).');
+        }
 
         // Semak ternakan_id jika dihantar secara terus (single ternakan / backwards compatibility)
         if ($request->filled('ternakan_id')) {
@@ -1756,7 +1769,7 @@ class EptrController extends Controller implements HasMiddleware
             'tujuan_sembelih' => 'required|string|max:100',
             'is_musim_korban' => 'nullable|boolean',
             'hari_korban_percuma' => 'nullable|string|max:50',
-            'tarikh_sembelih' => 'nullable|date',
+            'tarikh_sembelih' => 'nullable|date|after_or_equal:today',
             'resit_pembayaran' => $isStaff ? 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048' : 'required|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'no_kenderaan' => 'nullable|string|max:50',
             'lokasi_sembelih' => 'nullable|string|max:255',
@@ -1773,7 +1786,7 @@ class EptrController extends Controller implements HasMiddleware
             'items.*.jantina' => 'nullable|string',
             'items.*.no_id_ternakan' => 'nullable|string',
             'items.*.no_siri_kad_pendaftaran' => 'nullable|string',
-            'items.*.tarikh_sembelihan' => 'nullable|date',
+            'items.*.tarikh_sembelihan' => 'nullable|date|after_or_equal:today',
             'items.*.hari_sembelihan_korban' => 'nullable|string|max:50',
             'items.*.tempat_sembelihan' => 'nullable|string',
             'items.*.no_kn_haiwan_16' => 'nullable|string',
@@ -1782,6 +1795,8 @@ class EptrController extends Controller implements HasMiddleware
             'ternakan_id' => 'nullable|exists:ternakan,id',
         ], [
             'items.max' => "Borang SKV Sembelih hanya membenarkan maksimum {$maxRows} baris ternakan sahaja" . ($isMusimKorban ? ' bagi musim Hari Raya Korban.' : ' bagi hari biasa.'),
+            'tarikh_sembelih.after_or_equal' => 'Tarikh sembelihan mestilah tarikh hari ini atau tarikh akan datang.',
+            'items.*.tarikh_sembelihan.after_or_equal' => 'Tarikh sembelihan pada jadual ternakan mestilah tarikh hari ini atau tarikh akan datang.',
             'pemunya_id.required' => 'Sila pilih pemunya / penternak ternakan.',
             'resit_pembayaran.required' => 'Bagi permohonan yang ada pembayaran fi, pemohon wajib memuat naik salinan resit pembayaran.',
             'resit_pembayaran.mimes' => 'Fail resit pembayaran mestilah dalam format JPG, PNG, atau PDF.',
@@ -1791,8 +1806,13 @@ class EptrController extends Controller implements HasMiddleware
         $pemunya = Pemunya::findOrFail($validated['pemunya_id']);
 
         // Pastikan penternak biasa hanya memohon untuk dirinya sendiri
-        if (!$user->isStaff() && $user->pemunya && $user->pemunya->id !== $pemunya->id) {
-            return back()->with('error', 'Akses Ditolak: Anda hanya dibenarkan memohon permit sembelihan bagi diri anda sendiri.')->withInput();
+        if (!$user->isStaff()) {
+            $isOwner = ($pemunya->user_id === $user->id) 
+                || ($user->pemunya && $user->pemunya->id === $pemunya->id) 
+                || (!empty($user->ic_number) && $pemunya->no_kp === $user->ic_number);
+            if (!$isOwner) {
+                return back()->with('error', 'Akses Ditolak: Anda hanya dibenarkan memohon permit sembelihan bagi diri anda sendiri.')->withInput();
+            }
         }
 
         // Proses Senarai Ternakan SKV (Maksimum 7 baris biasa / 10 baris musim korban)
@@ -1845,7 +1865,7 @@ class EptrController extends Controller implements HasMiddleware
                     'no_siri_kad_pendaftaran' => $tObj ? ($tObj->no_siri_kad_kuning ?? '-') : (!empty($item['no_siri_kad_pendaftaran']) ? $item['no_siri_kad_pendaftaran'] : '-'),
                     'tarikh_sembelihan' => $rowDate,
                     'hari_sembelihan_korban' => !empty($item['hari_sembelihan_korban']) ? $item['hari_sembelihan_korban'] : ($detectedRowHari ?: ($isMusimKorban ? ($hariKorbanPercuma ?? 'Hari Raya Pertama') : null)),
-                    'tempat_sembelihan' => (!empty($item['tempat_sembelihan'])) ? $item['tempat_sembelihan'] : ($validated['lokasi_sembelih'] ?? ($validated['nama_premis_sembelih'] ?? 'Rumah Sembelih ' . $pemunya->jajahan)),
+                    'tempat_sembelihan' => (!empty($item['tempat_sembelihan'])) ? $item['tempat_sembelihan'] : ($validated['lokasi_sembelih'] ?? ($validated['nama_premis_sembelih'] ?? 'Rumah Sembelih ' . ($pemunya->jajahan ?? 'Kota Bharu'))),
                     'no_kn_haiwan_16' => (!empty($item['no_kn_haiwan_16'])) ? $item['no_kn_haiwan_16'] : ('16/' . date('Y') . '/' . rand(100, 999)),
                     'kuantiti_karkas' => (!empty($item['kuantiti_karkas'])) ? $item['kuantiti_karkas'] : '1 Ekor',
                 ];
@@ -1867,7 +1887,7 @@ class EptrController extends Controller implements HasMiddleware
                 'no_siri_kad_pendaftaran' => $tObj->no_siri_kad_kuning ?? '-',
                 'tarikh_sembelihan' => $tarikhSembelih,
                 'hari_sembelihan_korban' => $isMusimKorban ? ($hariKorbanPercuma ?? 'Hari Raya Pertama') : null,
-                'tempat_sembelihan' => $validated['lokasi_sembelih'] ?? ($validated['nama_premis_sembelih'] ?? 'Rumah Sembelih ' . $pemunya->jajahan),
+                'tempat_sembelihan' => $validated['lokasi_sembelih'] ?? ($validated['nama_premis_sembelih'] ?? 'Rumah Sembelih ' . ($pemunya->jajahan ?? 'Kota Bharu')),
                 'no_kn_haiwan_16' => '16/' . date('Y') . '/' . rand(100, 999),
                 'kuantiti_karkas' => '1 Ekor',
             ];
@@ -1878,12 +1898,13 @@ class EptrController extends Controller implements HasMiddleware
         }
 
         // Pengiraan tempoh sah laku tepat 7 hari
-        $tarikhMula = Carbon::parse($validated['tarikh_sembelih'])->startOfDay();
+        $effectiveTarikhSembelih = $validated['tarikh_sembelih'] ?? $tarikhSembelih ?? date('Y-m-d');
+        $tarikhMula = Carbon::parse($effectiveTarikhSembelih)->startOfDay();
         $tarikhTamat = (clone $tarikhMula)->addDays(6)->endOfDay(); // 7 hari sah laku termasuk hari permulaan
 
         // Kod singkatan Jajahan
-        $jajahanClean = strtoupper(preg_replace('/[^A-Za-z]/', '', $pemunya->jajahan ?? 'KB'));
-        $kodJajahan = match (strtolower($pemunya->jajahan)) {
+        $jajahanRaw = $pemunya->jajahan ?? 'Kota Bharu';
+        $kodJajahan = match (strtolower(trim($jajahanRaw))) {
             'kota bharu' => 'KB',
             'pasir mas' => 'PM',
             'tumpat' => 'T',
@@ -1894,7 +1915,7 @@ class EptrController extends Controller implements HasMiddleware
             'jeli' => 'J',
             'kuala krai' => 'KK',
             'gua musang' => 'GM',
-            default => substr($jajahanClean, 0, 2),
+            default => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $jajahanRaw) ?: 'KB', 0, 2)),
         };
 
         $randomNum = rand(1000, 9999);
@@ -1922,13 +1943,13 @@ class EptrController extends Controller implements HasMiddleware
             'tujuan_sembelih' => $validated['tujuan_sembelih'],
             'is_musim_korban' => $isMusimKorban,
             'hari_korban_percuma' => $isMusimKorban ? $hariKorbanPercuma : null,
-            'tarikh_sembelih' => $validated['tarikh_sembelih'],
+            'tarikh_sembelih' => $effectiveTarikhSembelih,
             'tarikh_mula' => $tarikhMula->toDateString(),
             'tarikh_tamat' => $tarikhTamat->toDateString(),
             'no_kenderaan' => $validated['no_kenderaan'] ?? null,
-            'lokasi_sembelih' => $validated['lokasi_sembelih'] ?? ($validated['alamat_premis_sembelih'] ?? 'Rumah Sembelih ' . $pemunya->jajahan),
+            'lokasi_sembelih' => $validated['lokasi_sembelih'] ?? ($validated['alamat_premis_sembelih'] ?? 'Rumah Sembelih ' . ($pemunya->jajahan ?? 'Kota Bharu')),
             'nama_premis_sembelih' => $validated['nama_premis_sembelih'] ?? 'Rumah Penyembelihan Berlesen',
-            'alamat_premis_sembelih' => $validated['alamat_premis_sembelih'] ?? ($validated['lokasi_sembelih'] ?? 'Jajahan ' . $pemunya->jajahan),
+            'alamat_premis_sembelih' => $validated['alamat_premis_sembelih'] ?? ($validated['lokasi_sembelih'] ?? 'Jajahan ' . ($pemunya->jajahan ?? 'Kota Bharu')),
             'alamat_1' => $validated['alamat_1'] ?? null,
             'kuantiti_karkas_1' => $validated['kuantiti_karkas_1'] ?? null,
             'alamat_2' => $validated['alamat_2'] ?? null,
@@ -2509,6 +2530,9 @@ class EptrController extends Controller implements HasMiddleware
     public function createKesihatan(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat pendaftaran Rekod Program Kesihatan Ternakan.');
+        }
         
         $query = Ternakan::with('pemunya')
             ->whereIn('status', ['Aktif', 'Pawah'])
@@ -2550,6 +2574,9 @@ class EptrController extends Controller implements HasMiddleware
     public function storeKesihatan(Request $request)
     {
         $user = Auth::user();
+        if ($user && $user->isPurePengarah()) {
+            abort(403, 'Akses Ditolak: Pengarah Perkhidmatan Veterinar Negeri tidak dibenarkan membuat pendaftaran Rekod Program Kesihatan Ternakan.');
+        }
 
         $validated = $request->validate([
             'ternakan_id' => 'required|exists:ternakan,id',

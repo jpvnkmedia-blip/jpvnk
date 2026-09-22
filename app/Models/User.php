@@ -108,6 +108,11 @@ class User extends Authenticatable
         return $this->hasAnyRole(['pengarah', 'super_admin']);
     }
 
+    public function isPurePengarah(): bool
+    {
+        return in_array('pengarah', $this->getRolesList()) && !in_array('super_admin', $this->getRolesList());
+    }
+
     public function isPegawaiPengesahPejabat(): bool
     {
         return $this->hasAnyRole(['super_admin', 'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat']);

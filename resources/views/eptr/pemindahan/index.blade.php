@@ -22,12 +22,14 @@
                 </p>
             </div>
 
+            @if(!Auth::user()->isPurePengarah())
             <div class="flex flex-wrap items-center gap-3">
                 <a href="{{ route('eptr.pemindahan.create') }}" class="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-900/50 transition transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-plus-circle text-base"></i>
                     <span>Mohon Pemindahan Baharu</span>
                 </a>
             </div>
+            @endif
         </div>
     </div>
 
