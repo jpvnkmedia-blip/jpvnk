@@ -81,7 +81,7 @@
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                             <i class="fa-solid fa-id-card text-sm"></i>
                         </span>
-                        <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number') }}" placeholder="Contoh: 900729035413 atau emel" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-mono">
+                        <input id="ic_number" name="ic_number" type="text" autocomplete="username" required value="{{ old('ic_number') }}" placeholder="Contoh: 900414035114 atau emel" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-mono">
                     </div>
                     <p class="text-[11px] text-slate-400 mt-1">Masukkan 12 digit tanpa tanda sempang (-) atau alamat emel berdaftar.</p>
                 </div>
