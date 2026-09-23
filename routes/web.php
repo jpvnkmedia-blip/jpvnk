@@ -16,6 +16,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PetaTaburanController;
 use App\Http\Controllers\NaimbifPublicController;
 use App\Http\Controllers\NaimbifAdminController;
+use App\Http\Controllers\MediaTempahanController;
 
 // Laman Utama -> Redirect ke Dashboard atau Login
 Route::get('/', function () {
@@ -330,6 +331,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/negeri', [NaimbifAdminController::class, 'updateNegeri'])->name('update_negeri');
         Route::put('/{id}/negeri', [NaimbifAdminController::class, 'updateNegeri'])->name('update_negeri_put');
         Route::delete('/{id}', [NaimbifAdminController::class, 'destroy'])->name('destroy');
+    });
+
+    // 10. MODUL SISTEM TEMPAHAN UNIT MEDIA & SIARAN
+    Route::prefix('media')->name('media.')->group(function () {
+        Route::get('/', [MediaTempahanController::class, 'index'])->name('index');
+        Route::get('/tempah', [MediaTempahanController::class, 'create'])->name('create');
+        Route::post('/tempah', [MediaTempahanController::class, 'store'])->name('store');
+        Route::get('/{id}', [MediaTempahanController::class, 'show'])->name('show');
+        Route::get('/{id}/kemaskini', [MediaTempahanController::class, 'edit'])->name('edit');
+        Route::put('/{id}/kemaskini', [MediaTempahanController::class, 'update'])->name('update');
+        Route::post('/{id}/tindakan', [MediaTempahanController::class, 'tindakan'])->name('tindakan');
+        Route::get('/{id}/cetak-slip', [MediaTempahanController::class, 'cetakSlip'])->name('cetak');
     });
 });
 

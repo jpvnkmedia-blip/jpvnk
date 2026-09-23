@@ -602,11 +602,32 @@ class User extends Authenticatable
         return $this->isAdminUbat() || $this->isSuperAdmin();
     }
 
+    public function isAdminMedia(): bool
+    {
+        return $this->hasAnyRole(['admin_media', 'super_admin']);
+    }
+
+    public function canAccessMedia(): bool
+    {
+        return $this->isStaff();
+    }
+
+    public function canManageMedia(): bool
+    {
+        return $this->hasAnyRole(['admin_media', 'super_admin']);
+    }
+
+    public function canRequestMedia(): bool
+    {
+        return $this->isStaff();
+    }
+
     public function isStaff(): bool
     {
         return $this->hasAnyRole([
             'super_admin',
             'pengarah',
+            'admin_media',
             'admin_pejabat',
             'admin_stor_pejabat',
             'pegawai_pengesah_pejabat',
@@ -650,6 +671,7 @@ class User extends Authenticatable
         return match ($role) {
             'super_admin' => 'Super Admin',
             'pengarah' => 'Pengarah Perkhidmatan Veterinar Negeri',
+            'admin_media' => 'Admin Unit Media & Siaran',
             'admin_pejabat', 'admin_stor_pejabat' => 'Pegawai Stor Pejabat (Kemasukan Data)',
             'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat' => 'Pegawai Pengesah & Pelulus Stor Pejabat',
             'admin_kenderaan' => 'Admin Kenderaan & Fleet',

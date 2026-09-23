@@ -405,12 +405,12 @@
                 @endif
                 @endif
 
-                @if(Auth::user()->canRequestInventori() || Auth::user()->canAccessStorPejabat() || Auth::user()->canAccessKenderaan())
+                @if(Auth::user()->canRequestInventori() || Auth::user()->canAccessStorPejabat() || Auth::user()->canAccessKenderaan() || Auth::user()->canAccessMedia())
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     @if(Auth::user()->role === 'admin_kenderaan' && !Auth::user()->canAccessStorPejabat())
                         Pengurusan Kenderaan &amp; Fleet
                     @else
-                        Pengurusan Pejabat &amp; Bekalan
+                        Pengurusan Pejabat &amp; Pentadbiran
                     @endif
                 </div>
 
@@ -491,6 +491,29 @@
                         @if(Auth::user()->canBookVehicle())
                         <a href="{{ route('kenderaan.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('kenderaan.create') ? 'text-teal-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
                             Permohonan Baru
+                        </a>
+                        @endif
+                    </div>
+                </div>
+                @endif
+
+                @if(Auth::user()->canAccessMedia())
+                <!-- 8. Tempahan Unit Media & Siaran -->
+                <div x-data="{ open: {{ request()->routeIs('media.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('media.*') ? 'bg-slate-800 text-indigo-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-photo-film w-5 text-center text-base text-indigo-400"></i>
+                            <span>Unit Media &amp; Siaran</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak class="pl-9 pr-2 py-1 space-y-1 text-xs">
+                        <a href="{{ route('media.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('media.index') || request()->routeIs('media.show') ? 'text-indigo-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            <i class="fa-solid fa-calendar-days mr-1.5 text-indigo-400"></i> Kalendar &amp; Tempahan
+                        </a>
+                        @if(Auth::user()->canRequestMedia())
+                        <a href="{{ route('media.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('media.create') ? 'text-indigo-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            <i class="fa-solid fa-plus-circle mr-1.5 text-emerald-400"></i> Permohonan Baharu
                         </a>
                         @endif
                     </div>
