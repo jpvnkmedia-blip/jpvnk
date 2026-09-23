@@ -158,8 +158,11 @@ class MediaTempahanController extends Controller
         $this->authorizeAccess();
         $user = Auth::user();
 
-        // Pra-isi tarikh jika dipilih dari kalendar
-        $tarikhPilihan = $request->input('tarikh', Carbon::tomorrow()->format('Y-m-d'));
+        // Pra-isi tarikh jika dipilih dari kalendar (pastikan bukan tarikh lepas)
+        $tarikhPilihan = $request->input('tarikh');
+        if (!$tarikhPilihan || $tarikhPilihan < date('Y-m-d')) {
+            $tarikhPilihan = Carbon::tomorrow()->format('Y-m-d');
+        }
 
         return view('media.create', compact('user', 'tarikhPilihan'));
     }
@@ -184,8 +187,8 @@ class MediaTempahanController extends Controller
 
             // 2. Maklumat Program
             'nama_program' => 'required|string|max:255',
-            'tarikh_program' => 'required|date',
-            'tarikh_tamat' => 'nullable|date',
+            'tarikh_program' => 'required|date|after_or_equal:today',
+            'tarikh_tamat' => 'nullable|date|after_or_equal:tarikh_program',
             'masa_mula' => 'required|string|max:20',
             'masa_tamat' => 'required|string|max:20',
             'lokasi' => 'required|string|max:255',

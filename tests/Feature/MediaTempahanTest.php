@@ -373,4 +373,37 @@ class MediaTempahanTest extends TestCase
         $response->assertSee('Persidangan Kesihatan Haiwan Kebangsaan');
         $response->assertSee('DILULUSKAN');
     }
+
+    public function test_cannot_book_media_on_past_date()
+    {
+        $staff = $this->getStaffUser();
+
+        // 1. Check create view defaults to tomorrow if given past date in query string
+        $pastDate = now()->subDays(3)->toDateString();
+        $createResponse = $this->actingAs($staff)->get(route('media.create', ['tarikh' => $pastDate]));
+        $createResponse->assertStatus(200);
+        $createResponse->assertSee('value="' . now()->addDay()->toDateString() . '"', false);
+
+        // 2. Check store rejects past date with validation error
+        $formData = [
+            'nama_pemohon' => 'Siti Aminah Binti Kassim',
+            'jawatan_pemohon' => 'Pegawai Veterinar',
+            'bahagian_unit' => 'Unit Media',
+            'no_telefon' => '0198887766',
+            'emel' => 'aminah@jpvnk.gov.my',
+            'nama_program' => 'Program Tarikh Lepas',
+            'tarikh_program' => $pastDate,
+            'masa_mula' => '08:30',
+            'masa_tamat' => '17:00',
+            'lokasi' => 'Dewan JPVNK',
+            'penganjur' => 'JPVNK',
+            'pegawai_bertanggungjawab' => 'Aminah',
+            'jenis_permohonan' => ['Liputan Fotografi'],
+            'perakuan' => '1',
+        ];
+
+        $response = $this->actingAs($staff)->post(route('media.store'), $formData);
+        $response->assertSessionHasErrors(['tarikh_program']);
+        $this->assertEquals(0, MediaTempahan::where('nama_program', 'Program Tarikh Lepas')->count());
+    }
 }

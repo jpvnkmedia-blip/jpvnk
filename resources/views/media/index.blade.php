@@ -54,7 +54,7 @@
     </div>
 
     <!-- Main Navigation Tabs: Kalendar vs Senarai Permohonan -->
-    <div x-data="{ tab: '{{ $activeTab }}', selectedDate: null, selectedBookings: [] }" class="space-y-6">
+    <div x-data="{ tab: '{{ $activeTab }}', selectedDate: null, selectedBookings: [], isPastDate: false }" class="space-y-6">
         
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
             <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-2xl border border-slate-200">
@@ -155,18 +155,22 @@
                                 $isToday = $day['date'] === date('Y-m-d');
                                 $isPast = $day['date'] < date('Y-m-d');
                             @endphp
-                            <div @click="selectedDate = '{{ $day['date'] }}'; selectedBookings = {{ json_encode($day['bookings']) }}"
-                                 class="min-h-[90px] sm:min-h-[110px] rounded-2xl border p-2 sm:p-2.5 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden {{ $isToday ? 'ring-2 ring-indigo-500 bg-indigo-50/30 border-indigo-300 shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-indigo-300 hover:shadow-md' }}">
+                            <div @click="selectedDate = '{{ $day['date'] }}'; selectedBookings = {{ json_encode($day['bookings']) }}; isPastDate = {{ $isPast ? 'true' : 'false' }}"
+                                 class="min-h-[90px] sm:min-h-[110px] rounded-2xl border p-2 sm:p-2.5 transition-all flex flex-col justify-between group relative overflow-hidden {{ $isPast ? 'bg-slate-100/60 border-slate-200/80 opacity-60 hover:opacity-100 hover:bg-slate-100 cursor-pointer' : ($isToday ? 'ring-2 ring-indigo-500 bg-indigo-50/30 border-indigo-300 shadow-xs cursor-pointer' : 'bg-white hover:bg-slate-50 border-slate-200 hover:border-indigo-300 hover:shadow-md cursor-pointer') }}">
                                 
                                 <!-- Top Bar: Day Number & Status Dot -->
                                 <div class="flex items-center justify-between">
-                                    <span class="font-black text-sm {{ $isToday ? 'text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg' : 'text-slate-800' }}">
+                                    <span class="font-black text-sm {{ $isPast ? 'text-slate-400' : ($isToday ? 'text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg' : 'text-slate-800') }}">
                                         {{ $day['day'] }}
                                     </span>
 
                                     <!-- Status Indicator Dot -->
                                     <div class="flex items-center gap-1">
-                                        <span class="w-2.5 h-2.5 rounded-full {{ $day['status'] === 'kosong' ? 'bg-emerald-500' : ($day['status'] === 'sebahagian' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500 animate-bounce') }}"></span>
+                                        @if($isPast)
+                                            <span class="text-[9px] font-extrabold uppercase text-slate-400 bg-slate-200/80 px-1.5 py-0.5 rounded">Tamat</span>
+                                        @else
+                                            <span class="w-2.5 h-2.5 rounded-full {{ $day['status'] === 'kosong' ? 'bg-emerald-500' : ($day['status'] === 'sebahagian' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500 animate-bounce') }}"></span>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -174,7 +178,7 @@
                                 <div class="my-1.5 space-y-1">
                                     @if($day['count'] > 0)
                                         @foreach($day['bookings']->take(2) as $booking)
-                                            <div class="truncate text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $booking->status === 'Diluluskan' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200' }}">
+                                            <div class="truncate text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $isPast ? 'bg-slate-200 text-slate-600' : ($booking->status === 'Diluluskan' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200') }}">
                                                 {{ $booking->nama_program }}
                                             </div>
                                         @endforeach
@@ -184,17 +188,29 @@
                                             </div>
                                         @endif
                                     @else
-                                        <div class="text-[10px] text-emerald-600 font-bold italic opacity-75 sm:opacity-100 group-hover:opacity-100 transition">
-                                            🟢 Kosong
-                                        </div>
+                                        @if($isPast)
+                                            <div class="text-[10px] text-slate-400 italic">
+                                                Tiada rekod
+                                            </div>
+                                        @else
+                                            <div class="text-[10px] text-emerald-600 font-bold italic opacity-75 sm:opacity-100 group-hover:opacity-100 transition">
+                                                🟢 Kosong
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
 
                                 <!-- Bottom Status Badge -->
                                 <div class="pt-1 border-t border-slate-100 flex items-center justify-between text-[10px]">
-                                    <span class="font-extrabold {{ $day['status'] === 'kosong' ? 'text-emerald-700' : ($day['status'] === 'sebahagian' ? 'text-amber-700' : 'text-rose-700') }}">
-                                        {{ $day['badge'] }}
-                                    </span>
+                                    @if($isPast)
+                                        <span class="font-bold text-slate-400">
+                                            {{ $day['count'] > 0 ? $day['count'] . ' Program' : 'Tarikh Lepas' }}
+                                        </span>
+                                    @else
+                                        <span class="font-extrabold {{ $day['status'] === 'kosong' ? 'text-emerald-700' : ($day['status'] === 'sebahagian' ? 'text-amber-700' : 'text-rose-700') }}">
+                                            {{ $day['badge'] }}
+                                        </span>
+                                    @endif
                                     <i class="fa-solid fa-arrow-right text-[9px] text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all"></i>
                                 </div>
                             </div>
@@ -220,6 +236,17 @@
                             <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                     </div>
+
+                    <!-- Past Date Warning Notice -->
+                    <template x-if="isPastDate">
+                        <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base shrink-0"></i>
+                            <div>
+                                <span class="font-bold block">Tarikh ini telah berlalu</span>
+                                <span class="text-[11px] text-amber-800">Tempahan slot media tidak boleh dibuat untuk tarikh sebelum hari ini.</span>
+                            </div>
+                        </div>
+                    </template>
 
                     <!-- Booking list on that date -->
                     <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -254,10 +281,18 @@
 
                     <!-- Action buttons -->
                     <div class="pt-3 border-t border-slate-200 flex gap-2">
-                        <a :href="'/media/tempah?tarikh=' + selectedDate" class="flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm text-center shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-plus"></i>
-                            <span>Tempah Pada Tarikh Ini</span>
-                        </a>
+                        <template x-if="!isPastDate">
+                            <a :href="'/media/tempah?tarikh=' + selectedDate" class="flex-1 py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm text-center shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-circle-plus"></i>
+                                <span>Tempah Pada Tarikh Ini</span>
+                            </a>
+                        </template>
+                        <template x-if="isPastDate">
+                            <div class="flex-1 py-3 px-4 rounded-2xl bg-slate-100 text-slate-400 font-bold text-xs sm:text-sm text-center flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200 select-none">
+                                <i class="fa-solid fa-ban text-slate-400"></i>
+                                <span>Tarikh Telah Berlalu (Tidak Boleh Ditempah)</span>
+                            </div>
+                        </template>
                         <button @click="selectedDate = null" class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition">
                             Tutup
                         </button>
