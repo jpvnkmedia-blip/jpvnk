@@ -53,6 +53,7 @@ class MediaTempahan extends Model
         'catatan_admin',
         'pegawai_media_bertugas',
         'peralatan_disediakan',
+        'pautan_hasil_media',
         'diluluskan_oleh',
         'tarikh_kelulusan',
     ];

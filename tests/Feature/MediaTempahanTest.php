@@ -406,4 +406,59 @@ class MediaTempahanTest extends TestCase
         $response->assertSessionHasErrors(['tarikh_program']);
         $this->assertEquals(0, MediaTempahan::where('nama_program', 'Program Tarikh Lepas')->count());
     }
+
+    public function test_admin_media_can_update_deliverables_link_and_whatsapp_is_present()
+    {
+        $staff = $this->getStaffUser();
+        $admin = $this->getAdminUser();
+
+        $tempahan = MediaTempahan::create([
+            'user_id' => $staff->id,
+            'no_rujukan' => 'MEDIA/2026/09/0099',
+            'nama_pemohon' => 'En. Bakar',
+            'jawatan_pemohon' => 'Pegawai Tadbir',
+            'bahagian_unit' => 'Unit Media',
+            'no_telefon' => '0123456789',
+            'emel' => 'bakar@jpvnk.gov.my',
+            'nama_program' => 'Program Hari Penternak',
+            'tarikh_program' => now()->addDays(2)->toDateString(),
+            'masa_mula' => '08:30',
+            'masa_tamat' => '17:00',
+            'lokasi' => 'Dewan JPVNK',
+            'penganjur' => 'JPVNK',
+            'pegawai_bertanggungjawab' => 'Bakar',
+            'jenis_permohonan' => ['Liputan Fotografi'],
+            'status' => 'Diluluskan',
+            'perakuan' => true,
+        ]);
+
+        // Admin updates deliverables link
+        $driveUrl = 'https://drive.google.com/drive/folders/samplefolder123';
+        $updateResponse = $this->actingAs($admin)->post(route('media.tindakan', $tempahan->id), [
+            'keputusan' => 'Selesai',
+            'pautan_hasil_media' => $driveUrl,
+            'catatan_unit_media' => 'Semua gambar telah dimuat naik ke folder Google Drive.',
+        ]);
+
+        $updateResponse->assertRedirect(route('media.show', $tempahan->id));
+        $tempahan->refresh();
+        $this->assertEquals('Selesai', $tempahan->status);
+        $this->assertEquals($driveUrl, $tempahan->pautan_hasil_media);
+
+        // Staff views detail page with drive link and WhatsApp button
+        $viewResponse = $this->actingAs($staff)->get(route('media.show', $tempahan->id));
+        $viewResponse->assertStatus(200);
+        $viewResponse->assertSee($driveUrl);
+        $viewResponse->assertSee('https://wa.me/60123456789', false);
+    }
+
+    public function test_admin_media_can_export_csv_report()
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('media.export'));
+        $response->assertStatus(200);
+        $this->assertStringContainsString('attachment; filename="Laporan_Tempahan_Unit_Media_', $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('.csv"', $response->headers->get('Content-Disposition'));
+    }
 }

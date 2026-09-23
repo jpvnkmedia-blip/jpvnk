@@ -349,9 +349,17 @@
 
             <!-- Booking Table List -->
             <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-                <div class="p-5 border-b border-slate-200 flex items-center justify-between">
-                    <h3 class="font-black text-slate-900 text-sm">Senarai Permohonan Tempahan Media</h3>
-                    <span class="text-xs text-slate-500">Jumlah rekod: <b>{{ $tempahanList->total() }}</b></span>
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-black text-slate-900 text-sm">Senarai Permohonan Tempahan Media</h3>
+                        <span class="text-xs text-slate-500">Jumlah rekod: <b>{{ $tempahanList->total() }}</b></span>
+                    </div>
+                    @if(Auth::user()->canManageMedia() || Auth::user()->isPengarah())
+                        <a href="{{ route('media.export', request()->query()) }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Eksport Data (CSV / Excel)</span>
+                        </a>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">

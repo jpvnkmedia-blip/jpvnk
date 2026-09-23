@@ -168,7 +168,19 @@
                     </div>
                     <div>
                         <span class="text-slate-500 block text-[11px]">No. Telefon:</span>
-                        <span class="font-mono font-bold text-indigo-700">{{ $tempahan->no_telefon }}</span>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="font-mono font-bold text-indigo-700">{{ $tempahan->no_telefon }}</span>
+                            @php
+                                $cleanPhone = preg_replace('/[^0-9]/', '', $tempahan->no_telefon);
+                                if (str_starts_with($cleanPhone, '0')) {
+                                    $cleanPhone = '60' . substr($cleanPhone, 1);
+                                }
+                            @endphp
+                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode('Salam ' . $tempahan->nama_pemohon . ', berkenaan Permohonan Tempahan Unit Media ' . $tempahan->no_rujukan . ' (' . $tempahan->nama_program . ')') }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold transition shadow-2xs">
+                                <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                                <span>WhatsApp</span>
+                            </a>
+                        </div>
                     </div>
                     <div>
                         <span class="text-slate-500 block text-[11px]">Emel:</span>
@@ -176,6 +188,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Pautan Hasil Media (Google Drive / Cloud) Jika Ada -->
+            @if(!empty($tempahan->pautan_hasil_media))
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-3xl p-6 shadow-lg border border-emerald-500/30 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg shadow-xs">
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-sm text-white">Pautan Hasil Liputan / Bahan Media</h3>
+                                <p class="text-xs text-emerald-100">Bahan foto, video atau poster telah disediakan oleh Unit Media.</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full bg-white/20 text-white font-black text-[10px] tracking-wider uppercase">Muat Turun</span>
+                    </div>
+                    <div class="pt-2 flex flex-wrap items-center gap-3">
+                        <a href="{{ $tempahan->pautan_hasil_media }}" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-950 font-black text-xs shadow-md transition">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-emerald-600"></i>
+                            <span>Buka Folder Bahan (Google Drive / Cloud)</span>
+                        </a>
+                        <span class="text-[11px] text-emerald-100 font-mono truncate max-w-xs">{{ $tempahan->pautan_hasil_media }}</span>
+                    </div>
+                </div>
+            @endif
 
             <!-- 2. Jenis Perkhidmatan Media & Keperluan Khusus -->
             <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
@@ -327,6 +364,12 @@
                         <div>
                             <label class="block font-bold text-slate-300 mb-1.5">Pegawai / Krew Media Bertugas</label>
                             <input type="text" name="pegawai_media_bertugas" value="{{ old('pegawai_media_bertugas', $tempahan->pegawai_media_bertugas) }}" placeholder="Cth: En. Ahmad Jurufoto &amp; Pn. Siti Videografi" class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800/90 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1.5">Pautan Hasil Media (Google Drive / Cloud)</label>
+                            <input type="url" name="pautan_hasil_media" value="{{ old('pautan_hasil_media', $tempahan->pautan_hasil_media) }}" placeholder="https://drive.google.com/drive/folders/..." class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800/90 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 text-xs font-mono">
+                            <span class="text-[10px] text-slate-400 mt-1 block">Pautan folder foto/video untuk dimuat turun pemohon.</span>
                         </div>
 
                         <div>

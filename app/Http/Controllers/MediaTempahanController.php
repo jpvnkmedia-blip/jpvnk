@@ -522,6 +522,11 @@ class MediaTempahanController extends Controller
             $tempahan->peralatan_disediakan = $peralatan;
         }
 
+        $pautanHasil = $request->input('pautan_hasil_media');
+        if ($pautanHasil !== null) {
+            $tempahan->pautan_hasil_media = $pautanHasil;
+        }
+
         if (in_array($keputusan, ['Diluluskan', 'Ditolak', 'Selesai'])) {
             $tempahan->diluluskan_oleh = $user->id;
             $tempahan->tarikh_kelulusan = Carbon::now();
@@ -552,6 +557,101 @@ class MediaTempahanController extends Controller
 
         return redirect()->route('media.show', $tempahan->id)
             ->with('success', "Keputusan tempahan berjaya dikemas kini kepada status: {$tempahan->status}.");
+    }
+
+    /**
+     * Eksport Laporan Tempahan Unit Media ke format CSV / Excel
+     */
+    public function exportCsv(Request $request)
+    {
+        $this->authorizeAccess();
+        $user = Auth::user();
+
+        if (!$user->canManageMedia() && !$user->isPengarah()) {
+            abort(403, 'Akses Ditolak: Hanya Admin Unit Media dan Pengarah dibenarkan mengeksport laporan.');
+        }
+
+        $query = MediaTempahan::with('pemohon', 'pelulus')->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('tarikh_program', $request->month);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('tarikh_program', $request->year);
+        }
+
+        $records = $query->get();
+
+        $filename = 'Laporan_Tempahan_Unit_Media_' . date('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($records) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF"); // UTF-8 BOM for Microsoft Excel
+
+            fputcsv($file, [
+                'No. Rujukan',
+                'Nama Program',
+                'Tarikh Program',
+                'Tarikh Tamat',
+                'Masa',
+                'Lokasi',
+                'Penganjur',
+                'Nama Pemohon',
+                'Jawatan',
+                'Bahagian / Pejabat',
+                'No Telefon',
+                'Emel',
+                'Jenis Perkhidmatan',
+                'Status',
+                'Pegawai / Krew Bertugas',
+                'Pautan Hasil Media',
+                'Catatan Admin',
+                'Tarikh Hantar',
+                'Tarikh Kelulusan',
+            ]);
+
+            foreach ($records as $r) {
+                $jenisStr = is_array($r->jenis_permohonan) ? implode(', ', $r->jenis_permohonan) : ($r->jenis_permohonan ?? '');
+                fputcsv($file, [
+                    $r->no_rujukan,
+                    $r->nama_program,
+                    $r->tarikh_program ? $r->tarikh_program->format('d/m/Y') : '',
+                    $r->tarikh_tamat ? $r->tarikh_tamat->format('d/m/Y') : '',
+                    $r->masa_mula . ' - ' . $r->masa_tamat,
+                    $r->lokasi,
+                    $r->penganjur,
+                    $r->nama_pemohon,
+                    $r->jawatan,
+                    $r->bahagian_unit_jajahan,
+                    $r->no_telefon,
+                    $r->emel,
+                    $jenisStr,
+                    $r->status,
+                    $r->pegawai_media_bertugas ?? '-',
+                    $r->pautan_hasil_media ?? '-',
+                    $r->catatan_unit_media ?? '-',
+                    $r->tarikh_hantar ? $r->tarikh_hantar->format('d/m/Y H:i') : '',
+                    $r->tarikh_kelulusan ? $r->tarikh_kelulusan->format('d/m/Y H:i') : '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**

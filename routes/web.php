@@ -338,6 +338,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [MediaTempahanController::class, 'index'])->name('index');
         Route::get('/tempah', [MediaTempahanController::class, 'create'])->name('create');
         Route::post('/tempah', [MediaTempahanController::class, 'store'])->name('store');
+        Route::get('/eksport/csv', [MediaTempahanController::class, 'exportCsv'])->name('export');
         Route::get('/{id}', [MediaTempahanController::class, 'show'])->name('show');
         Route::get('/{id}/kemaskini', [MediaTempahanController::class, 'edit'])->name('edit');
         Route::put('/{id}/kemaskini', [MediaTempahanController::class, 'update'])->name('update');
