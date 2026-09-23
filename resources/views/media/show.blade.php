@@ -383,6 +383,101 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Card: WhatsApp Rakan Admin Media (Agihan / Ambil Tugas) -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-lg"></i>
+                            <h3 class="font-black text-slate-900 text-sm">WhatsApp Rakan Admin Media</h3>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Ambil Tugas</span>
+                    </div>
+
+                    <p class="text-xs text-slate-500">
+                        Hantar butiran program terus ke WhatsApp rakan Admin Media / Krew untuk meminta mereka mengambil tugas liputan permohonan ini:
+                    </p>
+
+                    @php
+                        $jenisText = is_array($tempahan->jenis_permohonan) ? implode(', ', $tempahan->jenis_permohonan) : ($tempahan->jenis_permohonan ?? '-');
+                        $tarikhText = $tempahan->tarikh_program ? $tempahan->tarikh_program->format('d/m/Y') : '-';
+                        $bookingUrl = route('media.show', $tempahan->id);
+                        
+                        $defaultMsg = "Salam, mohon semak & ambil tugas bagi Permohonan Tempahan Media JPVNK:\n\n"
+                            . "📌 *Program:* {$tempahan->nama_program}\n"
+                            . "📅 *Tarikh:* {$tarikhText} ({$tempahan->masa_mula} - {$tempahan->masa_tamat})\n"
+                            . "📍 *Lokasi:* {$tempahan->lokasi}\n"
+                            . "👤 *Pemohon:* {$tempahan->nama_pemohon} ({$tempahan->no_telefon})\n"
+                            . "🎥 *Perkhidmatan:* {$jenisText}\n"
+                            . "🔢 *No. Rujukan:* {$tempahan->no_rujukan}\n\n"
+                            . "🔗 *Pautan Permohonan:*\n{$bookingUrl}\n\n"
+                            . "Terima kasih!";
+                    @endphp
+
+                    <!-- Senarai Rakan Admin Media Sedia Ada -->
+                    @if(!empty($otherMediaAdmins) && count($otherMediaAdmins) > 0)
+                        <div class="space-y-2">
+                            <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Pilih Rakan Admin Media:</span>
+                            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                @foreach($otherMediaAdmins as $otherAdmin)
+                                    @php
+                                        $cleanPhone = preg_replace('/[^0-9]/', '', (string)$otherAdmin->phone);
+                                        if (str_starts_with($cleanPhone, '0')) {
+                                            $cleanPhone = '60' . substr($cleanPhone, 1);
+                                        }
+                                        $adminCustomMsg = "Salam {$otherAdmin->name},\n\n" . $defaultMsg;
+                                    @endphp
+                                    <div class="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 flex items-center justify-between transition">
+                                        <div class="truncate mr-2">
+                                            <div class="font-bold text-xs text-slate-800 truncate">{{ $otherAdmin->name }}</div>
+                                            <div class="text-[10px] text-slate-500 font-mono">{{ $otherAdmin->phone ?? 'Tiada No. Tel' }}</div>
+                                        </div>
+                                        @if(!empty($cleanPhone))
+                                            <a href="https://wa.me/{{ $cleanPhone }}?text={{ urlencode($adminCustomMsg) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition shrink-0">
+                                                <i class="fa-brands fa-whatsapp"></i>
+                                                <span>WhatsApp</span>
+                                            </a>
+                                        @else
+                                            <span class="text-[10px] text-slate-400 italic shrink-0">No. Tel Tiada</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Manual WhatsApp Phone Input -->
+                    <div x-data="{ customPhone: '', copySuccess: false }" class="pt-2 border-t border-slate-100 space-y-2">
+                        <label class="block text-[11px] font-bold text-slate-700">Atau Hantar ke Mana-mana No. Telefon / Krew Luar:</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="customPhone" placeholder="Cth: 0191234567" class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-mono">
+                            <button type="button" 
+                                    @click="
+                                        if(!customPhone) { alert('Sila masukkan nombor telefon penerima.'); return; }
+                                        let clean = customPhone.replace(/[^0-9]/g, '');
+                                        if(clean.startsWith('0')) clean = '60' + clean.substring(1);
+                                        let text = encodeURIComponent('{{ addslashes($defaultMsg) }}');
+                                        window.open('https://wa.me/' + clean + '?text=' + text, '_blank');
+                                    "
+                                    class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs">
+                                <i class="fa-brands fa-whatsapp"></i>
+                                <span>Hantar</span>
+                            </button>
+                        </div>
+
+                        <!-- Copy text button -->
+                        <button type="button" 
+                                @click="
+                                    navigator.clipboard.writeText(`{{ addslashes($defaultMsg) }}`);
+                                    copySuccess = true;
+                                    setTimeout(() => copySuccess = false, 3000);
+                                "
+                                class="w-full mt-2 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid" :class="copySuccess ? 'fa-check text-emerald-600' : 'fa-copy text-slate-500'"></i>
+                            <span x-text="copySuccess ? 'Mesej WhatsApp Berjaya Disalin!' : 'Salin Teks Mesej Tugas WhatsApp'"></span>
+                        </button>
+                    </div>
+                </div>
             @endif
 
             <!-- Status Tracking & Timeline -->

@@ -387,6 +387,7 @@ class User extends Authenticatable
         }
         $blocked = [
             'pengarah',
+            'admin_media',
             'admin_pejabat',
             'admin_stor_pejabat',
             'pegawai_pengesah_pejabat',
@@ -441,6 +442,7 @@ class User extends Authenticatable
             return true;
         }
         $blocked = [
+            'admin_media',
             'admin_program',
             'admin_epu',
             'admin_epu_negeri',
@@ -467,6 +469,7 @@ class User extends Authenticatable
             return true;
         }
         $blocked = [
+            'admin_media',
             'admin_eptr',
             'admin_epu',
             'admin_epu_negeri',
@@ -493,6 +496,7 @@ class User extends Authenticatable
             return true;
         }
         $blocked = [
+            'admin_media',
             'admin_eptr',
             'admin_program',
             'admin_kursus',
@@ -516,6 +520,7 @@ class User extends Authenticatable
         }
         $blocked = [
             'pengarah',
+            'admin_media',
             'admin_eptr',
             'admin_epu',
             'admin_epu_negeri',
@@ -542,6 +547,7 @@ class User extends Authenticatable
         }
         $blocked = [
             'pengarah',
+            'admin_media',
             'admin_eptr',
             'admin_epu',
             'admin_epu_negeri',
@@ -568,12 +574,12 @@ class User extends Authenticatable
 
     public function canRequestInventori(): bool
     {
-        return $this->isStaff() && !$this->hasAnyRole(['pengarah', 'admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik', 'admin_ubat']);
+        return $this->isStaff() && !$this->hasAnyRole(['pengarah', 'admin_media', 'admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik', 'admin_ubat']);
     }
 
     public function canRequestAlatanPejabat(): bool
     {
-        return $this->isStaff() && !$this->hasAnyRole(['pengarah', 'admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik', 'admin_ubat']);
+        return $this->isStaff() && !$this->hasAnyRole(['pengarah', 'admin_media', 'admin_program', 'admin_eptr', 'admin_epu', 'pegawai_pelesen', 'pegawai_verifikasi_epu', 'admin_kenderaan', 'admin_klinik', 'admin_ubat']);
     }
 
     public function canRequestUbat(): bool

@@ -338,7 +338,18 @@ class MediaTempahanController extends Controller
             abort(403, 'Akses Ditolak: Anda tidak dibenarkan melihat butiran tempahan media pemohon lain.');
         }
 
-        return view('media.show', compact('tempahan', 'user'));
+        // Dapatkan senarai rakan Admin Media lain untuk agihan/pemberitahuan tugas melalui WhatsApp
+        $otherMediaAdmins = User::where(function ($q) {
+            $q->where('role', 'admin_media')
+              ->orWhereJsonContains('roles', 'admin_media')
+              ->orWhere('role', 'super_admin')
+              ->orWhereJsonContains('roles', 'super_admin');
+        })->where('status', 'Aktif')
+          ->where('id', '!=', $user->id)
+          ->orderBy('name')
+          ->get();
+
+        return view('media.show', compact('tempahan', 'user', 'otherMediaAdmins'));
     }
 
     /**

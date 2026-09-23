@@ -29,6 +29,8 @@
                     Anda sedang mengakses sistem sebagai <span class="text-indigo-400 font-bold">Admin Stor Pejabat</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Inventori &amp; Stor Peralatan Pejabat</span> serta kelulusan permohonan bekalan staf JPVNK.
                 @elseif($user->role === 'admin_kenderaan')
                     Anda sedang mengakses sistem sebagai <span class="text-blue-400 font-bold">Admin Kenderaan &amp; Fleet</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Armada Kenderaan Rasmi</span>, jadual pemandu serta kelulusan tempahan kenderaan JPVNK.
+                @elseif($user->role === 'admin_media')
+                    Anda sedang mengakses sistem sebagai <span class="text-indigo-400 font-bold">Admin Media Jabatan</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Sistem Tempahan Unit Media &amp; Siaran</span>, kalendar liputan program, penugasan jurufoto/krew media dan kelulusan tempahan JPVNK.
                 @elseif($user->role === 'admin_epu')
                     Anda sedang mengakses sistem sebagai <span class="text-amber-400 font-bold">Admin EPU Negeri</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Enakmen Penternakan Unggas (EPU)</span>, pendaftaran ladang ternakan unggas, semakan permohonan lesen, pengesahan bayaran fi, dan cetakan borang rasmi peringkat Negeri Kelantan.
                 @elseif($user->role === 'pegawai_verifikasi_epu')
@@ -171,6 +173,19 @@
                     <a href="{{ route('kenderaan.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow-lg transition">
                         <i class="fa-solid fa-plus-circle"></i>
                         <span>Tempahan Kenderaan Baharu</span>
+                    </a>
+                @elseif($user->role === 'admin_media')
+                    <a href="{{ route('media.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>Kalendar Ketersediaan Media</span>
+                    </a>
+                    <a href="{{ route('media.index', ['tab' => 'senarai']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Senarai &amp; Tindakan Tempahan</span>
+                    </a>
+                    <a href="{{ route('media.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow-lg transition">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>Permohonan Tempahan Baharu</span>
                     </a>
                 @elseif($user->role === 'admin_ubat')
                     <a href="{{ route('inventori.ubat.permohonan') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg shadow-amber-900/40 transition">

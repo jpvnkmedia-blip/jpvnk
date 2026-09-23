@@ -409,6 +409,8 @@
                 <div class="pt-3 pb-1 px-3.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                     @if(Auth::user()->role === 'admin_kenderaan' && !Auth::user()->canAccessStorPejabat())
                         Pengurusan Kenderaan &amp; Fleet
+                    @elseif(Auth::user()->role === 'admin_media' && !Auth::user()->canAccessStorPejabat() && !Auth::user()->canAccessKenderaan())
+                        Pengurusan Media &amp; Komunikasi
                     @else
                         Pengurusan Pejabat &amp; Pentadbiran
                     @endif

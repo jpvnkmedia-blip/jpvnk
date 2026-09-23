@@ -461,4 +461,85 @@ class MediaTempahanTest extends TestCase
         $this->assertStringContainsString('attachment; filename="Laporan_Tempahan_Unit_Media_', $response->headers->get('Content-Disposition'));
         $this->assertStringContainsString('.csv"', $response->headers->get('Content-Disposition'));
     }
+
+    public function test_admin_media_only_has_access_to_media_module_and_not_other_modules()
+    {
+        $mediaUser = User::create([
+            'name' => 'Admin Media Sahaja',
+            'email' => 'media.only@jpvnk.test',
+            'ic_number' => '920101031122',
+            'phone' => '0197778899',
+            'role' => 'admin_media',
+            'roles' => ['admin_media'],
+            'status' => 'Aktif',
+            'password' => bcrypt('password'),
+        ]);
+
+        // Has media access
+        $this->assertTrue($mediaUser->canAccessMedia());
+        $this->assertTrue($mediaUser->canManageMedia());
+
+        // Blocked from other administrative modules
+        $this->assertFalse($mediaUser->canAccessEptr());
+        $this->assertFalse($mediaUser->canAccessPawah());
+        $this->assertFalse($mediaUser->canAccessEpu());
+        $this->assertFalse($mediaUser->canAccessKursus());
+        $this->assertFalse($mediaUser->canAccessKlinik());
+        $this->assertFalse($mediaUser->canAccessStorPejabat());
+        $this->assertFalse($mediaUser->canAccessStorUbat());
+        $this->assertFalse($mediaUser->canAccessKenderaan());
+        $this->assertFalse($mediaUser->canRequestInventori());
+    }
+
+    public function test_admin_media_can_whatsapp_other_media_admins_to_take_up_task()
+    {
+        $mediaAdmin1 = User::create([
+            'name' => 'Admin Media Utama',
+            'email' => 'media1@jpvnk.test',
+            'ic_number' => '920101031133',
+            'phone' => '0191112233',
+            'role' => 'admin_media',
+            'roles' => ['admin_media'],
+            'status' => 'Aktif',
+            'password' => bcrypt('password'),
+        ]);
+
+        $mediaAdmin2 = User::create([
+            'name' => 'En. Jurufoto Rakan Media',
+            'email' => 'media2@jpvnk.test',
+            'ic_number' => '920101031144',
+            'phone' => '0194445566',
+            'role' => 'admin_media',
+            'roles' => ['admin_media'],
+            'status' => 'Aktif',
+            'password' => bcrypt('password'),
+        ]);
+
+        $tempahan = MediaTempahan::create([
+            'user_id' => $mediaAdmin1->id,
+            'no_rujukan' => 'MEDIA/2026/09/0777',
+            'nama_pemohon' => 'Pegawai JPVNK',
+            'jawatan_pemohon' => 'Penolong Pegawai',
+            'bahagian_unit' => 'Unit Media',
+            'no_telefon' => '0123456789',
+            'emel' => 'pemohon@jpvnk.gov.my',
+            'nama_program' => 'Majlis Anugerah Khidmat Cemerlang',
+            'tarikh_program' => now()->addDays(3)->toDateString(),
+            'masa_mula' => '08:30',
+            'masa_tamat' => '13:00',
+            'lokasi' => 'Dewan Besar JPVNK',
+            'penganjur' => 'JPVNK',
+            'pegawai_bertanggungjawab' => 'Urusetia',
+            'jenis_permohonan' => ['Liputan Fotografi', 'Liputan Videografi'],
+            'status' => 'Menunggu Kelulusan',
+            'perakuan' => true,
+        ]);
+
+        $response = $this->actingAs($mediaAdmin1)->get(route('media.show', $tempahan->id));
+        $response->assertStatus(200);
+        $response->assertSee('WhatsApp Rakan Admin Media');
+        $response->assertSee('En. Jurufoto Rakan Media');
+        $response->assertSee('https://wa.me/60194445566', false);
+        $response->assertSee('Majlis+Anugerah+Khidmat+Cemerlang');
+    }
 }
