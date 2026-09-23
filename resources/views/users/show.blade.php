@@ -176,6 +176,12 @@
                     @if($targetUser->canAccessKenderaan())
                         <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-bold text-[10px]">Kenderaan</span>
                     @endif
+                    @if($targetUser->canAccessMedia())
+                        <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold text-[10px]">Unit Media</span>
+                    @endif
+                    @if($targetUser->canManageMedia())
+                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">Admin Media (Kelulusan)</span>
+                    @endif
                 </div>
             </div>
         </div>

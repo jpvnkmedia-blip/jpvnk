@@ -121,9 +121,15 @@ class UserController extends Controller implements HasMiddleware
                     'badge' => 'bg-blue-100 text-blue-800 border-blue-300',
                     'icon' => 'fa-truck-pickup text-blue-600',
                 ],
+                'admin_media' => [
+                    'label' => 'Admin Media Jabatan',
+                    'desc' => 'Pengurusan tempahan liputan media, jurufoto, videografi, reka bentuk dan kelulusan permohonan di Panel Tindakan Unit Media.',
+                    'badge' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                    'icon' => 'fa-camera text-indigo-600',
+                ],
                 'staf' => [
                     'label' => 'Kakitangan Jabatan (Staf)',
-                    'desc' => 'Staf JPVNK yang boleh memohon alatan stor dan mendaftar kursus.',
+                    'desc' => 'Staf JPVNK yang boleh memohon alatan stor, tempahan kenderaan, dan tempahan unit media.',
                     'badge' => 'bg-blue-100 text-blue-800 border-blue-300',
                     'icon' => 'fa-user-tie text-blue-600',
                 ],
@@ -236,7 +242,7 @@ class UserController extends Controller implements HasMiddleware
         // Statistik Keseluruhan
         $totalUsers = User::count();
         $totalStaff = User::whereIn('role', [
-            'super_admin', 'pengarah', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
+            'super_admin', 'pengarah', 'admin_media', 'admin_eptr', 'admin_jajahan', 'admin_eptr_jajahan',
             'admin_program', 'admin_epu_negeri', 'admin_epu', 'pegawai_pelesen',
             'admin_epu_jajahan', 'pegawai_verifikasi_epu',
             'admin_kursus', 'admin_ubat', 'admin_klinik', 'admin_pejabat', 'admin_stor_pejabat',

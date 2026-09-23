@@ -210,4 +210,65 @@ class UserMultiRolesTest extends TestCase
         $response->assertSee('Kenderaan Rasmi');
         $response->assertSee('Pengurusan Pengguna');
     }
+
+    public function test_super_admin_can_create_admin_media_user_and_they_can_approve_media()
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+
+        // 1. Create User with admin_media role
+        $response = $this->actingAs($superAdmin)->post(route('users.store'), [
+            'name' => 'Pegawai Unit Media Kelantan',
+            'email' => 'admin.media@jpvnk.test',
+            'ic_number' => '900101037788',
+            'phone' => '0198889900',
+            'address' => 'Ibu Pejabat JPVNK Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'roles' => ['admin_media'],
+            'status' => 'Aktif',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+
+        $mediaAdmin = User::where('email', 'admin.media@jpvnk.test')->first();
+        $this->assertNotNull($mediaAdmin);
+        $this->assertTrue($mediaAdmin->isAdminMedia());
+        $this->assertTrue($mediaAdmin->canManageMedia());
+        $this->assertTrue($mediaAdmin->canAccessMedia());
+        $this->assertEquals('Admin Media Jabatan', $mediaAdmin->role_label);
+
+        // 2. Verify admin_media can approve media booking
+        $staff = User::where('role', 'staf')->first() ?? $superAdmin;
+        $tempahan = \App\Models\MediaTempahan::create([
+            'user_id' => $staff->id,
+            'no_rujukan' => 'MEDIA/2026/09/0888',
+            'nama_pemohon' => $staff->name,
+            'jawatan_pemohon' => 'Pembantu Veterinar',
+            'bahagian_unit' => 'Unit Latihan',
+            'no_telefon' => '0123456789',
+            'emel' => $staff->email,
+            'nama_program' => 'Karnival Inovasi Veterinar',
+            'tarikh_program' => now()->addDays(4)->toDateString(),
+            'masa_mula' => '09:00',
+            'masa_tamat' => '17:00',
+            'lokasi' => 'Dewan Utama',
+            'penganjur' => 'JPVNK',
+            'pegawai_bertanggungjawab' => 'PIC Program',
+            'jenis_permohonan' => ['Liputan Fotografi', 'Reka Bentuk Poster'],
+            'status' => 'Menunggu Kelulusan',
+            'perakuan' => true,
+        ]);
+
+        $actionResponse = $this->actingAs($mediaAdmin)->post(route('media.tindakan', $tempahan->id), [
+            'keputusan' => 'Diluluskan',
+            'pegawai_media_bertugas' => 'En. Media & Pn. Krew',
+            'catatan_unit_media' => 'Permohonan diluluskan dan krew telah dijadualkan.',
+        ]);
+
+        $actionResponse->assertRedirect(route('media.show', $tempahan->id));
+        $tempahan->refresh();
+        $this->assertEquals('Diluluskan', $tempahan->status);
+        $this->assertEquals($mediaAdmin->id, $tempahan->diluluskan_oleh);
+    }
 }

@@ -671,7 +671,7 @@ class User extends Authenticatable
         return match ($role) {
             'super_admin' => 'Super Admin',
             'pengarah' => 'Pengarah Perkhidmatan Veterinar Negeri',
-            'admin_media' => 'Admin Unit Media & Siaran',
+            'admin_media' => 'Admin Media Jabatan',
             'admin_pejabat', 'admin_stor_pejabat' => 'Pegawai Stor Pejabat (Kemasukan Data)',
             'pegawai_pengesah_pejabat', 'admin_pelulus_pejabat' => 'Pegawai Pengesah & Pelulus Stor Pejabat',
             'admin_kenderaan' => 'Admin Kenderaan & Fleet',
