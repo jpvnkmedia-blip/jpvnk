@@ -33,18 +33,18 @@ class AuthController extends Controller
         $loginInput = trim($credentials['ic_number']);
         $cleanIc = str_replace(['-', ' '], '', $loginInput);
 
-        // Cari pengguna mengikut No. Kad Pengenalan (dibersihkan atau asal) atau Emel
-        $user = User::where(function ($q) use ($cleanIc, $loginInput) {
-            if (!empty($cleanIc)) {
-                $q->where('ic_number', $cleanIc);
-            }
-            if (!empty($loginInput)) {
-                $q->orWhere('ic_number', $loginInput)
-                  ->orWhere('email', $loginInput);
-            }
-        })->first();
-
         try {
+            // Cari pengguna mengikut No. Kad Pengenalan (dibersihkan atau asal) atau Emel
+            $user = User::where(function ($q) use ($cleanIc, $loginInput) {
+                if (!empty($cleanIc)) {
+                    $q->where('ic_number', $cleanIc);
+                }
+                if (!empty($loginInput)) {
+                    $q->orWhere('ic_number', $loginInput)
+                      ->orWhere('email', $loginInput);
+                }
+            })->first();
+
             if ($user && !empty($user->password) && Hash::check($credentials['password'], $user->password)) {
                 Auth::login($user, $request->boolean('remember'));
                 
@@ -63,7 +63,7 @@ class AuthController extends Controller
             ]);
 
             return back()->withErrors([
-                'ic_number' => 'Ralat memproses log masuk: ' . $e->getMessage(),
+                'ic_number' => 'Ralat pangkalan data / sistem: ' . $e->getMessage(),
             ])->onlyInput('ic_number');
         }
 
