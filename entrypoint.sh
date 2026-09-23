@@ -50,15 +50,17 @@ php artisan migrate --force || true
 echo "Checking and seeding initial data..."
 php artisan db:seed --force || true
 
-# Ensure permissions again after migration & seeding
-chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
-
 # Clear and rebuild caches
+echo "Optimizing application caches..."
 php artisan optimize:clear || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
+
+# Crucial: Ensure www-data ownership and 777 permissions AFTER all artisan commands
+echo "Setting final permissions for www-data..."
+chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configure Apache Port from Render's $PORT env variable (default 80)
 PORT=${PORT:-80}

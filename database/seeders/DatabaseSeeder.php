@@ -54,141 +54,177 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $adminPejabat = User::create([
-            'name' => 'Pn. Noraini binti Che Mat',
-            'email' => 'adminpejabat@veterinar.kelantan.gov.my',
-            'ic_number' => '850320036622',
-            'phone' => '019-9223344',
-            'address' => 'Bahagian Pengurusan & Stor Peralatan Pejabat, Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_pejabat',
-            'roles' => ['admin_pejabat'],
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminPejabat = User::updateOrCreate(
+            ['ic_number' => '850320036622'],
+            [
+                'name' => 'Pn. Noraini binti Che Mat',
+                'email' => 'adminpejabat@veterinar.kelantan.gov.my',
+                'phone' => '019-9223344',
+                'address' => 'Bahagian Pengurusan & Stor Peralatan Pejabat, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_pejabat',
+                'roles' => ['admin_pejabat'],
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $pegawaiPengesahPejabat = User::create([
-            'name' => 'En. Zakaria bin Hamzah',
-            'email' => 'pengesah.pejabat@veterinar.kelantan.gov.my',
-            'ic_number' => '810415035599',
-            'phone' => '019-9227788',
-            'address' => 'Unit Pentadbiran Am & Pengesahan Perolehan, Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'pegawai_pengesah_pejabat',
-            'roles' => ['pegawai_pengesah_pejabat'],
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $pegawaiPengesahPejabat = User::updateOrCreate(
+            ['ic_number' => '810415035599'],
+            [
+                'name' => 'En. Zakaria bin Hamzah',
+                'email' => 'pengesah.pejabat@veterinar.kelantan.gov.my',
+                'phone' => '019-9227788',
+                'address' => 'Unit Pentadbiran Am & Pengesahan Perolehan, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'pegawai_pengesah_pejabat',
+                'roles' => ['pegawai_pengesah_pejabat'],
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminKenderaan = User::create([
-            'name' => 'En. Razak bin Che Dollah',
-            'email' => 'adminkenderaan@veterinar.kelantan.gov.my',
-            'ic_number' => '840215035577',
-            'phone' => '019-9882211',
-            'address' => 'Unit Pengurusan Kenderaan & Fleet Rasmi, Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_kenderaan',
-            'roles' => ['admin_kenderaan'],
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminKenderaan = User::updateOrCreate(
+            ['ic_number' => '840215035577'],
+            [
+                'name' => 'En. Razak bin Che Dollah',
+                'email' => 'adminkenderaan@veterinar.kelantan.gov.my',
+                'phone' => '019-9882211',
+                'address' => 'Unit Pengurusan Kenderaan & Fleet Rasmi, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_kenderaan',
+                'roles' => ['admin_kenderaan'],
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminUbat = User::create([
-            'name' => 'Dr. Faridah binti Mat Zin',
-            'email' => 'adminubat@veterinar.kelantan.gov.my',
-            'ic_number' => '880404035510',
-            'phone' => '019-9112233',
-            'address' => 'Unit Farmasi & Stor Ubat Veterinar, Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_ubat',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminMedia = User::updateOrCreate(
+            ['ic_number' => '890505036677'],
+            [
+                'name' => 'En. Ahmad Faris bin Rosli',
+                'email' => 'adminmedia@veterinar.kelantan.gov.my',
+                'phone' => '019-9337711',
+                'address' => 'Unit Media & Komunikasi Korporat, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_media',
+                'roles' => ['admin_media'],
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminEptr = User::create([
-            'name' => 'En. Wan Kamaruddin bin Wan Noh',
-            'email' => 'admineptr@veterinar.kelantan.gov.my',
-            'ic_number' => '831112035533',
-            'phone' => '019-9334455',
-            'address' => 'Unit Regulatori & EPTR, Pejabat Veterinar Negeri Kelantan',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_eptr',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminUbat = User::updateOrCreate(
+            ['ic_number' => '880404035510'],
+            [
+                'name' => 'Dr. Faridah binti Mat Zin',
+                'email' => 'adminubat@veterinar.kelantan.gov.my',
+                'phone' => '019-9112233',
+                'address' => 'Unit Farmasi & Stor Ubat Veterinar, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_ubat',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminProgram = User::create([
-            'name' => 'Dr. Zulkifli bin Ismail',
-            'email' => 'adminprogram@veterinar.kelantan.gov.my',
-            'ic_number' => '790808035544',
-            'phone' => '019-9445566',
-            'address' => 'Bahagian Pembangunan Industri Ternakan & Skim Pawah, JPVNK',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_program',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminEptr = User::updateOrCreate(
+            ['ic_number' => '831112035533'],
+            [
+                'name' => 'En. Wan Kamaruddin bin Wan Noh',
+                'email' => 'admineptr@veterinar.kelantan.gov.my',
+                'phone' => '019-9334455',
+                'address' => 'Unit Regulatori & EPTR, Pejabat Veterinar Negeri Kelantan',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_eptr',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminEpu = User::create([
-            'name' => 'En. Azman bin Mohd Noor',
-            'email' => 'adminepu@veterinar.kelantan.gov.my',
-            'ic_number' => '810614035555',
-            'phone' => '019-9556677',
-            'address' => 'Bahagian Regulatori Perladangan Unggas (EPU), JPVNK',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_epu',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminProgram = User::updateOrCreate(
+            ['ic_number' => '790808035544'],
+            [
+                'name' => 'Dr. Zulkifli bin Ismail',
+                'email' => 'adminprogram@veterinar.kelantan.gov.my',
+                'phone' => '019-9445566',
+                'address' => 'Bahagian Pembangunan Industri Ternakan & Skim Pawah, JPVNK',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_program',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
+
+        $adminEpu = User::updateOrCreate(
+            ['ic_number' => '810614035555'],
+            [
+                'name' => 'En. Azman bin Mohd Noor',
+                'email' => 'adminepu@veterinar.kelantan.gov.my',
+                'phone' => '019-9556677',
+                'address' => 'Bahagian Regulatori Perladangan Unggas (EPU), JPVNK',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_epu',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // Admin NAIMbif Negeri (Ibu Pejabat JPVNK)
-        $adminNaimbifNegeri = User::create([
-            'name' => 'Dr. Noor Azlina binti Mat Zin',
-            'email' => 'adminnaimbif@veterinar.kelantan.gov.my',
-            'ic_number' => '840505036677',
-            'phone' => '019-9554433',
-            'address' => 'Unit Pembangunan Komoditi Pedaging & Ladang Bridlot NAIMbif, Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_naimbif_negeri',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminNaimbifNegeri = User::updateOrCreate(
+            ['ic_number' => '840505036677'],
+            [
+                'name' => 'Dr. Noor Azlina binti Mat Zin',
+                'email' => 'adminnaimbif@veterinar.kelantan.gov.my',
+                'phone' => '019-9554433',
+                'address' => 'Unit Pembangunan Komoditi Pedaging & Ladang Bridlot NAIMbif, Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_naimbif_negeri',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // Admin NAIMbif Jajahan (Pasir Puteh)
-        $adminNaimbifPasirPuteh = User::create([
-            'name' => 'En. Khairul Anuar bin Mohd Zain',
-            'email' => 'naimbif.pasirputeh@veterinar.kelantan.gov.my',
-            'ic_number' => '860202035588',
-            'phone' => '019-9665544',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh, 16800 Pasir Puteh',
-            'jajahan' => 'Pasir Puteh',
-            'role' => 'admin_naimbif_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminNaimbifPasirPuteh = User::updateOrCreate(
+            ['ic_number' => '860202035588'],
+            [
+                'name' => 'En. Khairul Anuar bin Mohd Zain',
+                'email' => 'naimbif.pasirputeh@veterinar.kelantan.gov.my',
+                'phone' => '019-9665544',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh, 16800 Pasir Puteh',
+                'jajahan' => 'Pasir Puteh',
+                'role' => 'admin_naimbif_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // Admin NAIMbif Jajahan (Kota Bharu)
-        $adminNaimbifKotaBharu = User::create([
-            'name' => 'Pn. Norazila binti Hassan',
-            'email' => 'naimbif.kotabharu@veterinar.kelantan.gov.my',
-            'ic_number' => '870303035599',
-            'phone' => '019-9776655',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu, 15200 Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_naimbif_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminNaimbifKotaBharu = User::updateOrCreate(
+            ['ic_number' => '870303035599'],
+            [
+                'name' => 'Pn. Norazila binti Hassan',
+                'email' => 'naimbif.kotabharu@veterinar.kelantan.gov.my',
+                'phone' => '019-9776655',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu, 15200 Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_naimbif_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // Pengarah JPVNK (Ketua Eksekutif Jabatan & Pegawai Pelesen EPU)
         $pengarah = User::updateOrCreate(
@@ -225,7 +261,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Pegawai Verifikasi EPU Jajahan (PPVJ Kota Bharu)
-        $verifikasiKb = User::firstOrCreate(
+        $verifikasiKb = User::updateOrCreate(
             ['ic_number' => '850312035521'],
             [
                 'name' => 'Dr. Nor Azman bin Yusof',
@@ -241,7 +277,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Pegawai Verifikasi EPU Jajahan (PPVJ Pasir Mas)
-        $verifikasiPm = User::firstOrCreate(
+        $verifikasiPm = User::updateOrCreate(
             ['ic_number' => '870815035541'],
             [
                 'name' => 'En. Zulkifli bin Daud',
@@ -257,7 +293,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Admin EPU Jajahan (PPVJ Pasir Puteh)
-        $verifikasiPp = User::firstOrCreate(
+        $verifikasiPp = User::updateOrCreate(
             ['ic_number' => '860909035511'],
             [
                 'name' => 'En. Wan Mohd Fauzi bin Wan Ahmad',
@@ -272,227 +308,261 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $adminKursus = User::create([
-            'name' => 'Pn. Roslina binti Daud',
-            'email' => 'adminkursus@veterinar.kelantan.gov.my',
-            'ic_number' => '870425035566',
-            'phone' => '019-9667788',
-            'address' => 'Pusat Latihan Veterinar Kelantan, Bachok',
-            'jajahan' => 'Bachok',
-            'role' => 'admin_kursus',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminKursus = User::updateOrCreate(
+            ['ic_number' => '870425035566'],
+            [
+                'name' => 'Pn. Roslina binti Daud',
+                'email' => 'adminkursus@veterinar.kelantan.gov.my',
+                'phone' => '019-9667788',
+                'address' => 'Pusat Latihan Veterinar Kelantan, Bachok',
+                'jajahan' => 'Bachok',
+                'role' => 'admin_kursus',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // Admin EPTR Jajahan (10 Jajahan di Kelantan)
-        $adminJajahan = User::create([
-            'name' => 'Dr. Nik Farhan bin Nik Hassan',
-            'email' => 'adminjajahan@veterinar.kelantan.gov.my',
-            'ic_number' => '840919035577',
-            'phone' => '019-9778899',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu, Jalan Kubang Kachang, 15200 Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminJajahan = User::updateOrCreate(
+            ['ic_number' => '840919035577'],
+            [
+                'name' => 'Dr. Nik Farhan bin Nik Hassan',
+                'email' => 'adminjajahan@veterinar.kelantan.gov.my',
+                'phone' => '019-9778899',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kota Bharu, Jalan Kubang Kachang, 15200 Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Ahmad Zaki bin Ismail',
-            'email' => 'admineptr.pasirmas@veterinar.kelantan.gov.my',
-            'ic_number' => '850818035501',
-            'phone' => '09-7909242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Mas, Jalan Tasek, 17000 Pasir Mas',
-            'jajahan' => 'Pasir Mas',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '850818035501'],
+            [
+                'name' => 'Dr. Ahmad Zaki bin Ismail',
+                'email' => 'admineptr.pasirmas@veterinar.kelantan.gov.my',
+                'phone' => '09-7909242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Mas, Jalan Tasek, 17000 Pasir Mas',
+                'jajahan' => 'Pasir Mas',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Rosli bin Daud',
-            'email' => 'admineptr.bachok@veterinar.kelantan.gov.my',
-            'ic_number' => '820412035502',
-            'phone' => '09-7788242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Bachok, Jalan Kampung Nipah, 16300 Bachok',
-            'jajahan' => 'Bachok',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '820412035502'],
+            [
+                'name' => 'Dr. Rosli bin Daud',
+                'email' => 'admineptr.bachok@veterinar.kelantan.gov.my',
+                'phone' => '09-7788242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Bachok, Jalan Kampung Nipah, 16300 Bachok',
+                'jajahan' => 'Bachok',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Wan Azman bin Wan Sulaiman',
-            'email' => 'admineptr.tumpat@veterinar.kelantan.gov.my',
-            'ic_number' => '810923035503',
-            'phone' => '09-7257242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Tumpat, Jalan Dato Bikam, 16200 Tumpat',
-            'jajahan' => 'Tumpat',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '810923035503'],
+            [
+                'name' => 'Dr. Wan Azman bin Wan Sulaiman',
+                'email' => 'admineptr.tumpat@veterinar.kelantan.gov.my',
+                'phone' => '09-7257242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Tumpat, Jalan Dato Bikam, 16200 Tumpat',
+                'jajahan' => 'Tumpat',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Mohd Yusof bin Othman',
-            'email' => 'admineptr.pasirputeh@veterinar.kelantan.gov.my',
-            'ic_number' => '830115035504',
-            'phone' => '09-7866242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh, Jalan Nik Mat Saman, 16800 Pasir Puteh',
-            'jajahan' => 'Pasir Puteh',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '830115035504'],
+            [
+                'name' => 'Dr. Mohd Yusof bin Othman',
+                'email' => 'admineptr.pasirputeh@veterinar.kelantan.gov.my',
+                'phone' => '09-7866242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Pasir Puteh, Jalan Nik Mat Saman, 16800 Pasir Puteh',
+                'jajahan' => 'Pasir Puteh',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Siti Aminah binti Razali',
-            'email' => 'admineptr.machang@veterinar.kelantan.gov.my',
-            'ic_number' => '870606035505',
-            'phone' => '09-9751242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Machang, Jalan Pejabat Pos, 18500 Machang',
-            'jajahan' => 'Machang',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '870606035505'],
+            [
+                'name' => 'Dr. Siti Aminah binti Razali',
+                'email' => 'admineptr.machang@veterinar.kelantan.gov.my',
+                'phone' => '09-9751242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Machang, Jalan Pejabat Pos, 18500 Machang',
+                'jajahan' => 'Machang',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Abdul Halim bin Hashim',
-            'email' => 'admineptr.tanahmerah@veterinar.kelantan.gov.my',
-            'ic_number' => '841120035506',
-            'phone' => '09-9556242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Tanah Merah, Jalan Kelantan, 17500 Tanah Merah',
-            'jajahan' => 'Tanah Merah',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '841120035506'],
+            [
+                'name' => 'Dr. Abdul Halim bin Hashim',
+                'email' => 'admineptr.tanahmerah@veterinar.kelantan.gov.my',
+                'phone' => '09-9556242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Tanah Merah, Jalan Kelantan, 17500 Tanah Merah',
+                'jajahan' => 'Tanah Merah',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Mohd Khairi bin Mansor',
-            'email' => 'admineptr.jeli@veterinar.kelantan.gov.my',
-            'ic_number' => '880714035507',
-            'phone' => '09-9440242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Jeli, Jalan Hospital, 17600 Jeli',
-            'jajahan' => 'Jeli',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '880714035507'],
+            [
+                'name' => 'Dr. Mohd Khairi bin Mansor',
+                'email' => 'admineptr.jeli@veterinar.kelantan.gov.my',
+                'phone' => '09-9440242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Jeli, Jalan Hospital, 17600 Jeli',
+                'jajahan' => 'Jeli',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Nurul Huda binti Salleh',
-            'email' => 'admineptr.kualakrai@veterinar.kelantan.gov.my',
-            'ic_number' => '860303035508',
-            'phone' => '09-9666242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kuala Krai, Jalan Sultan Yahya Petra, 18000 Kuala Krai',
-            'jajahan' => 'Kuala Krai',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '860303035508'],
+            [
+                'name' => 'Dr. Nurul Huda binti Salleh',
+                'email' => 'admineptr.kualakrai@veterinar.kelantan.gov.my',
+                'phone' => '09-9666242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Kuala Krai, Jalan Sultan Yahya Petra, 18000 Kuala Krai',
+                'jajahan' => 'Kuala Krai',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        User::create([
-            'name' => 'Dr. Muhammad Hafiz bin Kamaruddin',
-            'email' => 'admineptr.guamusang@veterinar.kelantan.gov.my',
-            'ic_number' => '891219035509',
-            'phone' => '09-9121242',
-            'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Gua Musang, Tingkat 1, Wisma Persekutuan, 18300 Gua Musang',
-            'jajahan' => 'Gua Musang',
-            'role' => 'admin_jajahan',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        User::updateOrCreate(
+            ['ic_number' => '891219035509'],
+            [
+                'name' => 'Dr. Muhammad Hafiz bin Kamaruddin',
+                'email' => 'admineptr.guamusang@veterinar.kelantan.gov.my',
+                'phone' => '09-9121242',
+                'address' => 'Pejabat Perkhidmatan Veterinar Jajahan Gua Musang, Tingkat 1, Wisma Persekutuan, 18300 Gua Musang',
+                'jajahan' => 'Gua Musang',
+                'role' => 'admin_jajahan',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $adminKlinik = User::create([
-            'name' => 'Dr. Sarah binti Mohd Zaki',
-            'email' => 'adminklinik@veterinar.kelantan.gov.my',
-            'ic_number' => '890812035588',
-            'phone' => '019-9887766',
-            'address' => 'Klinik Haiwan Kesayangan Ibu Pejabat JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'admin_klinik',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $adminKlinik = User::updateOrCreate(
+            ['ic_number' => '890812035588'],
+            [
+                'name' => 'Dr. Sarah binti Mohd Zaki',
+                'email' => 'adminklinik@veterinar.kelantan.gov.my',
+                'phone' => '019-9887766',
+                'address' => 'Klinik Haiwan Kesayangan Ibu Pejabat JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'admin_klinik',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $kakitangan = User::create([
-            'name' => 'En. Mohd Haziq bin Abdullah',
-            'email' => 'staf@veterinar.kelantan.gov.my',
-            'ic_number' => '950515035512',
-            'phone' => '013-9876543',
-            'address' => 'Bahagian Khidmat Pengurusan & Pentadbiran, JPVNK Kota Bharu',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'staf',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $kakitangan = User::updateOrCreate(
+            ['ic_number' => '950515035512'],
+            [
+                'name' => 'En. Mohd Haziq bin Abdullah',
+                'email' => 'staf@veterinar.kelantan.gov.my',
+                'phone' => '013-9876543',
+                'address' => 'Bahagian Khidmat Pengurusan & Pentadbiran, JPVNK Kota Bharu',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'staf',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $penternak = User::create([
-            'name' => 'Ahmad bin Ibrahim',
-            'email' => 'penternak@gmail.com',
-            'ic_number' => '780312035123',
-            'phone' => '013-9201122',
-            'address' => 'Kampung Padang Kala, Peringat, 16400 Kota Bharu, Kelantan',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'penternak',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $penternak = User::updateOrCreate(
+            ['ic_number' => '780312035123'],
+            [
+                'name' => 'Ahmad bin Ibrahim',
+                'email' => 'penternak@gmail.com',
+                'phone' => '013-9201122',
+                'address' => 'Kampung Padang Kala, Peringat, 16400 Kota Bharu, Kelantan',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'penternak',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $penternak2 = User::create([
-            'name' => 'Hassan bin Abdullah',
-            'email' => 'hassan.ternak@gmail.com',
-            'ic_number' => '821005035443',
-            'phone' => '014-8899112',
-            'address' => 'Kampung Temangan, 18500 Machang, Kelantan',
-            'jajahan' => 'Machang',
-            'role' => 'penternak',
-            'auth_provider' => 'manual',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $penternak2 = User::updateOrCreate(
+            ['ic_number' => '821005035443'],
+            [
+                'name' => 'Hassan bin Abdullah',
+                'email' => 'hassan.ternak@gmail.com',
+                'phone' => '014-8899112',
+                'address' => 'Kampung Temangan, 18500 Machang, Kelantan',
+                'jajahan' => 'Machang',
+                'role' => 'penternak',
+                'auth_provider' => 'manual',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $usahawan = User::create([
-            'name' => 'Siti Hajar binti Yusoff',
-            'email' => 'usahawan@gmail.com',
-            'ic_number' => '890214035678',
-            'phone' => '011-12345678',
-            'address' => 'Lot 4522, Mukim Gunong, 16090 Bachok, Kelantan',
-            'jajahan' => 'Bachok',
-            'role' => 'usahawan',
-            'auth_provider' => 'google',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $usahawan = User::updateOrCreate(
+            ['ic_number' => '890214035678'],
+            [
+                'name' => 'Siti Hajar binti Yusoff',
+                'email' => 'usahawan@gmail.com',
+                'phone' => '011-12345678',
+                'address' => 'Lot 4522, Mukim Gunong, 16090 Bachok, Kelantan',
+                'jajahan' => 'Bachok',
+                'role' => 'usahawan',
+                'auth_provider' => 'google',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
-        $orangAwam = User::create([
-            'name' => 'Mohd Razak bin Ismail',
-            'email' => 'awam@gmail.com',
-            'ic_number' => '950101035999',
-            'phone' => '017-9876543',
-            'address' => 'No 12, Taman Desa Kemumin, Pengkalan Chepa, 16100 Kota Bharu, Kelantan',
-            'jajahan' => 'Kota Bharu',
-            'role' => 'orang_awam',
-            'auth_provider' => 'mydigital_id',
-            'status' => 'Aktif',
-            'password' => $password,
-        ]);
+        $orangAwam = User::updateOrCreate(
+            ['ic_number' => '950101035999'],
+            [
+                'name' => 'Mohd Razak bin Ismail',
+                'email' => 'awam@gmail.com',
+                'phone' => '017-9876543',
+                'address' => 'No 12, Taman Desa Kemumin, Pengkalan Chepa, 16100 Kota Bharu, Kelantan',
+                'jajahan' => 'Kota Bharu',
+                'role' => 'orang_awam',
+                'auth_provider' => 'mydigital_id',
+                'status' => 'Aktif',
+                'password' => $password,
+            ]
+        );
 
         // 2. PEMUNYA & EPTR TERNAKAN
         $pemunya1 = Pemunya::create([

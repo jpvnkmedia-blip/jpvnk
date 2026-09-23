@@ -241,8 +241,11 @@ class EpuController extends Controller implements HasMiddleware
             'status_ladang' => 'Aktif',
         ]);
 
-        $noRujukan = 'EPU/' . strtoupper(substr($validated['jajahan'], 0, 3)) . '/' . date('Y') . '/' . rand(1000, 9999);
-        $noLesen = 'EPU-' . strtoupper(substr($validated['jajahan'], 0, 3)) . '-' . date('Y') . '-' . rand(1000, 9999);
+        do {
+            $noRujukan = 'EPU/' . strtoupper(substr($validated['jajahan'], 0, 3)) . '/' . date('Y') . '/' . rand(1000, 9999) . '-' . substr(uniqid(), -3);
+        } while (EpuPermohonan::where('no_rujukan_permohonan', $noRujukan)->exists());
+
+        $noLesen = 'EPU-' . strtoupper(substr($validated['jajahan'], 0, 3)) . '-' . date('Y') . '-' . rand(1000, 9999) . '-' . substr(uniqid(), -3);
 
         $permohonan = EpuPermohonan::create([
             'epu_ladang_id' => $ladang->id,
@@ -386,8 +389,11 @@ class EpuController extends Controller implements HasMiddleware
             'perubahan_maklumat' => 'nullable|string',
         ]);
 
-        $noRujukan = 'EPU-RENEW/' . strtoupper(substr($ladang->jajahan, 0, 3)) . '/' . date('Y') . '/' . rand(1000, 9999);
-        $noLesen = 'EPU-' . strtoupper(substr($ladang->jajahan, 0, 3)) . '-' . date('Y') . '-' . rand(1000, 9999);
+        do {
+            $noRujukan = 'EPU-RENEW/' . strtoupper(substr($ladang->jajahan, 0, 3)) . '/' . date('Y') . '/' . rand(1000, 9999) . '-' . substr(uniqid(), -3);
+        } while (EpuPermohonan::where('no_rujukan_permohonan', $noRujukan)->exists());
+
+        $noLesen = 'EPU-' . strtoupper(substr($ladang->jajahan, 0, 3)) . '-' . date('Y') . '-' . rand(1000, 9999) . '-' . substr(uniqid(), -3);
 
         EpuPermohonan::create([
             'epu_ladang_id' => $ladang->id,
