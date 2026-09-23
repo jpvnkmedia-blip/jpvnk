@@ -59,8 +59,8 @@ php artisan view:cache || true
 
 # Crucial: Ensure www-data ownership and 777 permissions AFTER all artisan commands
 echo "Setting final permissions for www-data..."
-chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/.env
+chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/.env
 
 # Configure Apache Port from Render's $PORT env variable (default 80)
 PORT=${PORT:-80}

@@ -34,15 +34,37 @@ class AuthController extends Controller
         $cleanIc = str_replace(['-', ' '], '', $loginInput);
 
         // Cari pengguna mengikut No. Kad Pengenalan (dibersihkan atau asal) atau Emel
-        $user = User::where('ic_number', $cleanIc)
-            ->orWhere('ic_number', $loginInput)
-            ->orWhere('email', $loginInput)
-            ->first();
+        $user = User::where(function ($q) use ($cleanIc, $loginInput) {
+            if (!empty($cleanIc)) {
+                $q->where('ic_number', $cleanIc);
+            }
+            if (!empty($loginInput)) {
+                $q->orWhere('ic_number', $loginInput)
+                  ->orWhere('email', $loginInput);
+            }
+        })->first();
 
-        if ($user && Hash::check($credentials['password'], $user->password)) {
-            Auth::login($user, $request->boolean('remember'));
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'))->with('success', 'Selamat kembali, ' . $user->name);
+        try {
+            if ($user && !empty($user->password) && Hash::check($credentials['password'], $user->password)) {
+                Auth::login($user, $request->boolean('remember'));
+                
+                try {
+                    $request->session()->regenerate();
+                } catch (\Throwable $se) {
+                    \Illuminate\Support\Facades\Log::warning('Session regeneration warning: ' . $se->getMessage());
+                }
+
+                return redirect()->intended(route('dashboard'))->with('success', 'Selamat kembali, ' . $user->name);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Login error: ' . $e->getMessage(), [
+                'input' => $loginInput,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withErrors([
+                'ic_number' => 'Ralat memproses log masuk: ' . $e->getMessage(),
+            ])->onlyInput('ic_number');
         }
 
         return back()->withErrors([
