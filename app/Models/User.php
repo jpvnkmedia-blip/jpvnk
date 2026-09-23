@@ -804,6 +804,7 @@ class User extends Authenticatable
             return true;
         }
         $blocked = [
+            'admin_media',
             'admin_epu',
             'admin_epu_negeri',
             'admin_epu_jajahan',

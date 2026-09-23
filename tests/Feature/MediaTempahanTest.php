@@ -482,6 +482,7 @@ class MediaTempahanTest extends TestCase
         // Blocked from other administrative modules
         $this->assertFalse($mediaUser->canAccessEptr());
         $this->assertFalse($mediaUser->canAccessPawah());
+        $this->assertFalse($mediaUser->canAccessNaimbif());
         $this->assertFalse($mediaUser->canAccessEpu());
         $this->assertFalse($mediaUser->canAccessKursus());
         $this->assertFalse($mediaUser->canAccessKlinik());
