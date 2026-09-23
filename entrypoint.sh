@@ -3,6 +3,15 @@ set -e
 
 echo "Starting JPVNK Application on Render..."
 
+# Setup .env if not present
+if [ ! -f /var/www/html/.env ]; then
+    if [ -f /var/www/html/.env.example ]; then
+        cp /var/www/html/.env.example /var/www/html/.env
+    else
+        touch /var/www/html/.env
+    fi
+fi
+
 # Create database directory and sqlite file with full read/write permissions for www-data
 mkdir -p /var/www/html/database
 if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
@@ -24,25 +33,29 @@ mkdir -p /var/www/html/storage/framework/cache/data \
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
+# Ensure APP_KEY exists before running migrations or caches
+if [ -z "$APP_KEY" ]; then
+    echo "Warning: APP_KEY is not set in environment. Generating application key..."
+    php artisan key:generate --force || true
+fi
+
 # Link storage
 php artisan storage:link --force || true
 
 # Run database migrations
-echo "Running migrations..."
+echo "Running database migrations..."
 php artisan migrate --force || true
 
-# Auto-seed initial data if users table is empty
-echo "Checking and seeding initial data if needed..."
-php artisan tinker --execute="if (\App\Models\User::count() === 0) { \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]); }" || true
+# Auto-seed initial data
+echo "Checking and seeding initial data..."
+php artisan db:seed --force || true
 
-# Ensure permissions again after migration
+# Ensure permissions again after migration & seeding
 chown -R www-data:www-data /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Clear and cache configurations, routes, and views
-php artisan config:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
+# Clear and rebuild caches
+php artisan optimize:clear || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true

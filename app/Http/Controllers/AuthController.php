@@ -17,9 +17,7 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $demoUsers = User::orderBy('id')->get();
-
-        return view('auth.login', compact('demoUsers'));
+        return view('auth.login');
     }
 
     public function login(Request $request)
