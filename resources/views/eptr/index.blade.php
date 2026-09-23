@@ -370,6 +370,17 @@
                                             <i class="fa-solid fa-receipt text-amber-600"></i>
                                         </a>
                                     @endif
+
+                                    <!-- Super Admin Delete Button -->
+                                    @if(Auth::user()->isSuperAdmin())
+                                        <form action="{{ route('eptr.ternakan.destroy', $t->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam rekod ternakan {{ $t->no_tag ?? ('ID: ' . $t->id) }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Rekod Ternakan (Super Admin Sahaja)">
+                                                <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

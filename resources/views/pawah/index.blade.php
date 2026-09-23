@@ -189,6 +189,15 @@
                                     <i class="fa-solid fa-print"></i> Perjanjian
                                 </a>
                                 @endif
+                                @if(Auth::user()->isSuperAdmin())
+                                <form action="{{ route('pawah.destroy', $p->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam Surat Perjanjian Pawah {{ $p->no_perjanjian }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Perjanjian (Super Admin Sahaja)">
+                                        <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                    </button>
+                                </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

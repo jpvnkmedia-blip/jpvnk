@@ -157,6 +157,15 @@
                                 <a href="{{ route('inventori.show', $item->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 font-bold transition">
                                     <i class="fa-solid fa-arrow-right-arrow-left"></i> Stok Masuk / Keluar
                                 </a>
+                                @if(Auth::user()->isSuperAdmin())
+                                    <form action="{{ route('inventori.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam item ubat/vaksin {{ $item->nama_item }} ({{ $item->kod_item }}) secara kekal? Tindakan ini tidak boleh diundur!');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Item Ubat (Super Admin Sahaja)">
+                                            <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

@@ -2648,6 +2648,23 @@ class EptrController extends Controller implements HasMiddleware
     }
 
     /**
+     * Padam Rekod Ternakan Ruminan (Super Admin Sahaja)
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam rekod ternakan ruminan.');
+        }
+
+        $ternakan = Ternakan::findOrFail($id);
+        $noTag = $ternakan->no_tag ?? ('ID: ' . $ternakan->id);
+        $ternakan->delete();
+
+        return redirect()->route('eptr.index')->with('success', "Rekod ternakan {$noTag} berjaya dipadam dari sistem.");
+    }
+
+    /**
      * Helper muat naik fail secara selamat merentasi pelayan dan persekitaran Windows/Linux
      */
     protected function uploadFileSafely($file, $folder = 'resit_eptr')

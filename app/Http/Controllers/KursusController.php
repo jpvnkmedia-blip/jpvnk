@@ -492,4 +492,25 @@ class KursusController extends Controller implements HasMiddleware
 
         return view('kursus.sijil', compact('application'));
     }
+
+    // 16. Padam Permohonan Peserta Kursus (Super Admin Sahaja)
+    public function destroyPemohon($id)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam permohonan kursus.');
+        }
+
+        $application = CourseApplication::findOrFail($id);
+        $name = $application->user->name ?? 'Pemohon';
+        $regNo = $application->registration_number;
+
+        if ($application->course && $application->course->registered_count > 0) {
+            $application->course->decrement('registered_count');
+        }
+
+        $application->delete();
+
+        return back()->with('success', "Permohonan kursus bagi '{$name}' ({$regNo}) berjaya dipadam daripada sistem.");
+    }
 }

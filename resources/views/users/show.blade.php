@@ -59,6 +59,14 @@
                     <span class="font-bold text-slate-900 text-right">{{ $targetUser->name }}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-slate-50">
+                    <span class="text-slate-500">Jawatan</span>
+                    <span class="font-bold text-amber-700 text-right">{{ $targetUser->jawatan ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-50">
+                    <span class="text-slate-500">Bahagian / Unit / Pejabat</span>
+                    <span class="font-medium text-slate-900 text-right">{{ $targetUser->bahagian_unit ?? '-' }}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-50">
                     <span class="text-slate-500">No. Kad Pengenalan</span>
                     <span class="font-mono font-bold text-slate-900 text-right">{{ $targetUser->ic_number ?? '-' }}</span>
                 </div>

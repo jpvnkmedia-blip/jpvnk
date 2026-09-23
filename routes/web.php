@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pindah-milik-borang-b/{id}/tolak', [EptrController::class, 'tolakBorangB'])->name('borang-b.tolak');
         Route::get('/pindah-milik-borang-b/{id}/cetak', [EptrController::class, 'cetakBorangB'])->name('borang-b.cetak');
         Route::match(['get', 'post'], '/pindah-milik-borang-b/cetak-pukal', [EptrController::class, 'cetakPukalBorangB'])->name('borang-b.cetak-pukal');
+        Route::delete('/ternakan/{id}', [EptrController::class, 'destroy'])->name('ternakan.destroy');
 
         // Proses Daftar Anak Ternakan (Kelahiran Baru)
         Route::get('/daftar-anak', [EptrController::class, 'createAnak'])->name('daftar-anak');
@@ -156,6 +157,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/perjanjian-baru', [PawahController::class, 'store'])->name('store');
         Route::get('/perjanjian/{id}', [PawahController::class, 'show'])->name('show');
         Route::get('/perjanjian/{id}/cetak', [PawahController::class, 'cetakPerjanjian'])->name('cetak-perjanjian');
+        Route::delete('/perjanjian/{id}', [PawahController::class, 'destroy'])->name('destroy');
 
         // Kelulusan & Penolakan Permohonan Pawah (Pegawai Pawah)
         Route::post('/perjanjian/{id}/lulus', [PawahController::class, 'luluskanPermohonan'])->name('lulus');
@@ -175,6 +177,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/daftar-borang-a', [EpuController::class, 'create'])->name('create');
         Route::post('/daftar-borang-a', [EpuController::class, 'store'])->name('store');
         Route::get('/ladang/{id}', [EpuController::class, 'show'])->name('show');
+        Route::delete('/ladang/{id}', [EpuController::class, 'destroy'])->name('destroy');
         Route::get('/lesen-borang-b/{permohonanId}/cetak', [EpuController::class, 'cetakLesen'])->name('cetak-lesen');
         Route::get('/pembaharuan-borang-c/{ladangId}', [EpuController::class, 'createPembaharuan'])->name('borang-c.create');
         Route::post('/pembaharuan-borang-c/{ladangId}', [EpuController::class, 'storePembaharuan'])->name('borang-c.store');
@@ -217,6 +220,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pemohon/{id}/tolak', [KursusController::class, 'tolakPemohon'])->name('pemohon.tolak');
         Route::post('/pemohon/{id}/hadir', [KursusController::class, 'sahkanKehadiran'])->name('pemohon.hadir');
         Route::post('/pemohon/lulus-pukal', [KursusController::class, 'lulusPukal'])->name('pemohon.lulus-pukal');
+        Route::delete('/pemohon/{id}', [KursusController::class, 'destroyPemohon'])->name('pemohon.destroy');
 
         // Cetak Sijil
         Route::get('/sijil/{applicationId}', [KursusController::class, 'cetakSijil'])->name('sijil');
@@ -229,6 +233,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/temujanji-baru', [KlinikController::class, 'store'])->name('store');
         Route::get('/api/semak-pemilik', [KlinikController::class, 'semakPemilik'])->name('semak_pemilik');
         Route::get('/temujanji/{id}', [KlinikController::class, 'show'])->name('show');
+        Route::delete('/temujanji/{id}', [KlinikController::class, 'destroy'])->name('destroy');
         Route::get('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'createRawatan'])->name('rawatan.create');
         Route::post('/temujanji/{id}/rekod-rawatan', [KlinikController::class, 'storeRawatan'])->name('rawatan.store');
         Route::get('/temujanji/{id}/kad-rawatan', [KlinikController::class, 'cetakKadRawatan'])->name('cetak-kad-rawatan');
@@ -285,6 +290,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tempahan-baru', [KenderaanController::class, 'create'])->name('create');
         Route::post('/tempahan-baru', [KenderaanController::class, 'store'])->name('store');
         Route::get('/tempahan/{id}', [KenderaanController::class, 'show'])->name('show');
+        Route::delete('/tempahan/{id}', [KenderaanController::class, 'destroyTempahan'])->name('tempahan.destroy');
         Route::post('/tempahan/{id}/kelulusan', [KenderaanController::class, 'approve'])->name('approve');
         Route::post('/tempahan/{id}/lulus', [KenderaanController::class, 'approve'])->name('lulus');
         Route::post('/tempahan/{id}/tolak', [KenderaanController::class, 'tolak'])->name('tolak');
@@ -346,6 +352,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/tindakan', [MediaTempahanController::class, 'tindakan'])->name('tindakan');
         Route::get('/{id}/cetak-slip', [MediaTempahanController::class, 'cetakSlip'])->name('cetak');
         Route::get('/{id}/kalendar-ics', [MediaTempahanController::class, 'kalendarIcs'])->name('ics');
+        Route::delete('/{id}', [MediaTempahanController::class, 'destroy'])->name('destroy');
     });
 });
 

@@ -297,6 +297,8 @@ class UserController extends Controller implements HasMiddleware
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'jawatan' => ['required', 'string', 'max:150'],
+            'bahagian_unit' => ['required', 'string', 'max:200'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'ic_number' => ['required', 'string', 'max:20', 'unique:users,ic_number'],
             'phone' => ['required', 'string', 'max:25'],
@@ -309,6 +311,8 @@ class UserController extends Controller implements HasMiddleware
             'signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
             'name.required' => 'Nama penuh pengguna wajib diisi.',
+            'jawatan.required' => 'Jawatan pengguna wajib diisi.',
+            'bahagian_unit.required' => 'Bahagian / Unit / Pejabat Perkhidmatan Veterinar Jajahan wajib diisi.',
             'email.required' => 'Alamat emel wajib diisi.',
             'email.unique' => 'Alamat emel ini telah pun digunakan oleh pengguna lain.',
             'ic_number.required' => 'No. Kad Pengenalan wajib diisi.',
@@ -338,6 +342,8 @@ class UserController extends Controller implements HasMiddleware
 
         $user = User::create([
             'name' => $validated['name'],
+            'jawatan' => $validated['jawatan'],
+            'bahagian_unit' => $validated['bahagian_unit'],
             'email' => $validated['email'],
             'ic_number' => $validated['ic_number'],
             'phone' => $validated['phone'],
@@ -414,6 +420,8 @@ class UserController extends Controller implements HasMiddleware
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'jawatan' => ['required', 'string', 'max:150'],
+            'bahagian_unit' => ['required', 'string', 'max:200'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $id],
             'ic_number' => ['required', 'string', 'max:20', 'unique:users,ic_number,' . $id],
             'phone' => ['required', 'string', 'max:25'],
@@ -426,6 +434,8 @@ class UserController extends Controller implements HasMiddleware
             'signature' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
             'name.required' => 'Nama penuh pengguna wajib diisi.',
+            'jawatan.required' => 'Jawatan pengguna wajib diisi.',
+            'bahagian_unit.required' => 'Bahagian / Unit / Pejabat Perkhidmatan Veterinar Jajahan wajib diisi.',
             'email.required' => 'Alamat emel wajib diisi.',
             'email.unique' => 'Alamat emel ini telah pun digunakan oleh pengguna lain.',
             'ic_number.required' => 'No. Kad Pengenalan wajib diisi.',
@@ -452,6 +462,8 @@ class UserController extends Controller implements HasMiddleware
         $primaryRole = in_array('super_admin', $validated['roles']) ? 'super_admin' : $validated['roles'][0];
 
         $targetUser->name = $validated['name'];
+        $targetUser->jawatan = $validated['jawatan'];
+        $targetUser->bahagian_unit = $validated['bahagian_unit'];
         $targetUser->email = $validated['email'];
         $targetUser->ic_number = $validated['ic_number'];
         $targetUser->phone = $validated['phone'];

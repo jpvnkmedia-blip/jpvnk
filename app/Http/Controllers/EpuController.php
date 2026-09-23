@@ -1102,4 +1102,21 @@ class EpuController extends Controller implements HasMiddleware
             }
         }
     }
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam rekod ladang unggas EPU.');
+        }
+
+        $ladang = EpuLadang::with('permohonanList', 'pemeriksaanList')->findOrFail($id);
+        $namaLadang = $ladang->nama_ladang;
+
+        $ladang->pemeriksaanList()->delete();
+        $ladang->permohonanList()->delete();
+        $ladang->delete();
+
+        return redirect()->route('epu.index')->with('success', "Rekod Ladang Unggas '{$namaLadang}' berjaya dipadam daripada sistem.");
+    }
 }

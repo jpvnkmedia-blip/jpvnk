@@ -728,4 +728,22 @@ class MediaTempahanController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+    /**
+     * Padam Permohonan Tempahan Media (Super Admin Sahaja)
+     */
+    public function destroy($id)
+    {
+        $this->authorizeAccess();
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam permohonan tempahan media.');
+        }
+
+        $tempahan = MediaTempahan::findOrFail($id);
+        $noRujukan = $tempahan->no_rujukan;
+        $tempahan->delete();
+
+        return redirect()->route('media.index')->with('success', "Permohonan tempahan media '{$noRujukan}' berjaya dipadam daripada sistem.");
+    }
 }

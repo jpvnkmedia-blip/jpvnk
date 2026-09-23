@@ -657,4 +657,21 @@ class KlinikController extends Controller implements HasMiddleware
 
         return back()->with('success', "Permohonan {$permohonan->no_permohonan} telah berjaya dibatalkan.");
     }
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam rekod temujanji klinik haiwan.');
+        }
+
+        $temujanji = KlinikTemujanji::findOrFail($id);
+        $noTemujanji = $temujanji->no_temujanji;
+
+        // Delete child rawatan records
+        $temujanji->rawatan()->delete();
+        $temujanji->delete();
+
+        return redirect()->route('klinik.index')->with('success', "Rekod temujanji '{$noTemujanji}' berjaya dipadam daripada sistem.");
+    }
 }

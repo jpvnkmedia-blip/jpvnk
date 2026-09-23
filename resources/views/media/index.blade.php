@@ -438,6 +438,15 @@
                                                     <i class="fa-solid fa-pen text-xs"></i>
                                                 </a>
                                             @endif
+                                            @if(Auth::user()->isSuperAdmin())
+                                                <form action="{{ route('media.destroy', $t->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam permohonan tempahan media {{ $t->no_rujukan }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition" title="Padam Tempahan Media (Super Admin Sahaja)">
+                                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

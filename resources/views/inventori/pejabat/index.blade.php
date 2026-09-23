@@ -142,6 +142,15 @@
                                         <i class="fa-solid fa-eye"></i> Lihat Butiran Stok
                                     @endif
                                 </a>
+                                @if(Auth::user()->isSuperAdmin())
+                                    <form action="{{ route('inventori.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam barangan {{ $item->nama_item }} ({{ $item->kod_item }}) secara kekal? Tindakan ini tidak boleh diundur!');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Barangan Pejabat (Super Admin Sahaja)">
+                                            <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

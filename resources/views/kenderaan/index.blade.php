@@ -191,6 +191,15 @@
                                 <a href="{{ route('kenderaan.show', $t->id) }}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-teal-100 text-slate-700 hover:text-teal-800 font-bold transition">
                                     <i class="fa-solid fa-eye"></i> Butiran
                                 </a>
+                                @if(Auth::user()->isSuperAdmin())
+                                    <form action="{{ route('kenderaan.tempahan.destroy', $t->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam permohonan tempahan kenderaan {{ $t->no_tempahan }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Tempahan (Super Admin Sahaja)">
+                                            <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

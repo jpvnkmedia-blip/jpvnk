@@ -91,6 +91,8 @@ class AuthController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'jawatan' => ['required', 'string', 'max:150'],
+            'bahagian_unit' => ['required', 'string', 'max:200'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'ic_number' => ['required', 'string', 'max:20', 'unique:users'],
             'nama_syarikat' => ['nullable', 'string', 'max:255'],
@@ -107,6 +109,8 @@ class AuthController extends Controller
             'captcha' => ['nullable', 'string'],
         ], [
             'name.required' => 'Sila masukkan nama penuh anda.',
+            'jawatan.required' => 'Sila masukkan jawatan anda.',
+            'bahagian_unit.required' => 'Sila masukkan bahagian / unit / pejabat perkhidmatan veterinar jajahan.',
             'email.required' => 'Sila masukkan alamat emel yang sah.',
             'email.unique' => 'Alamat emel ini telah digunakan.',
             'ic_number.required' => 'Sila masukkan No. Kad Pengenalan anda.',
@@ -133,6 +137,8 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
+            'jawatan' => $validated['jawatan'],
+            'bahagian_unit' => $validated['bahagian_unit'],
             'nama_syarikat' => $validated['nama_syarikat'] ?? null,
             'no_ssm' => $validated['no_ssm'] ?? null,
             'bentuk_perniagaan' => $validated['bentuk_perniagaan'] ?? null,
@@ -145,6 +151,7 @@ class AuthController extends Controller
             'negeri' => $validated['negeri'] ?? 'Kelantan',
             'jajahan' => $jajahan,
             'role' => $role,
+            'roles' => [$role],
             'auth_provider' => 'manual',
             'status' => 'Aktif',
             'password' => Hash::make($finalPassword),

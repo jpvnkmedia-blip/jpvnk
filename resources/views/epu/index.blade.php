@@ -187,6 +187,15 @@
                                         </a>
                                     @endif
                                 @endif
+                                @if(Auth::user()->isSuperAdmin())
+                                    <form action="{{ route('epu.destroy', $ladang->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam rekod Ladang Unggas {{ $ladang->nama_ladang }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 transition" title="Padam Ladang (Super Admin Sahaja)">
+                                            <i class="fa-solid fa-trash-can text-rose-600"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

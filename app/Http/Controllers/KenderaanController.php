@@ -401,4 +401,25 @@ class KenderaanController extends Controller implements HasMiddleware
 
         return redirect()->back()->with('success', 'Rekod kenderaan telah dipadam.');
     }
+
+    // Padam Permohonan Tempahan Kenderaan (Super Admin Sahaja)
+    public function destroyTempahan($id)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam permohonan tempahan kenderaan.');
+        }
+
+        $tempahan = KenderaanTempahan::findOrFail($id);
+        $noTempahan = $tempahan->no_tempahan;
+
+        // Reset status kenderaan jika tempahan sedang berjalan/diluluskan
+        if ($tempahan->kenderaan && $tempahan->status === 'Diluluskan') {
+            $tempahan->kenderaan->update(['status' => 'Sedia']);
+        }
+
+        $tempahan->delete();
+
+        return redirect()->route('kenderaan.index')->with('success', "Rekod tempahan kenderaan '{$noTempahan}' berjaya dipadam daripada sistem.");
+    }
 }

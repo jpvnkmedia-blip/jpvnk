@@ -186,6 +186,15 @@
                                 <a href="{{ route('naimbif.public.print', $app->no_rujukan) }}" target="_blank" class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300" title="Cetak Borang A4">
                                     <i class="fas fa-print"></i>
                                 </a>
+                                @if(Auth::user()->isSuperAdmin())
+                                <form action="{{ route('naimbif.admin.destroy', $app->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam permohonan NAIMbif {{ $app->no_rujukan }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200" title="Padam Permohonan (Super Admin Sahaja)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

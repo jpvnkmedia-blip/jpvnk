@@ -60,6 +60,17 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Jawatan <span class="text-rose-500">*</span></label>
+                        <input type="text" name="jawatan" value="{{ old('jawatan', $targetUser->jawatan) }}" required placeholder="Contoh: Pegawai Veterinar / Penolong Pegawai" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Bahagian / Unit / Pejabat JPV Jajahan <span class="text-rose-500">*</span></label>
+                        <input type="text" name="bahagian_unit" value="{{ old('bahagian_unit', $targetUser->bahagian_unit) }}" required placeholder="Contoh: Bahagian Pembangunan Ternakan / JPV Kota Bharu" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                     <div>
                         <label class="block font-bold text-slate-700 uppercase mb-1">No. Kad Pengenalan <span class="text-rose-500">*</span></label>

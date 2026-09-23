@@ -721,4 +721,27 @@ class PawahController extends Controller implements HasMiddleware
             ]
         );
     }
+
+    /**
+     * Padam Surat Perjanjian Pawah (Super Admin Sahaja)
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Hanya Super Admin dibenarkan memadam surat perjanjian pawah.');
+        }
+
+        $perjanjian = PawahPerjanjian::findOrFail($id);
+        $noPerjanjian = $perjanjian->no_perjanjian ?? ('ID: ' . $perjanjian->id);
+
+        // Delete associated records
+        PawahTernakan::where('perjanjian_id', $perjanjian->id)->delete();
+        PawahRekodKelahiran::where('perjanjian_id', $perjanjian->id)->delete();
+        PawahRekodKesihatan::where('perjanjian_id', $perjanjian->id)->delete();
+        PawahPenyelesaian::where('perjanjian_id', $perjanjian->id)->delete();
+        $perjanjian->delete();
+
+        return redirect()->route('pawah.index')->with('success', "Surat Perjanjian Pawah {$noPerjanjian} berjaya dipadam dari sistem.");
+    }
 }

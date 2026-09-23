@@ -360,6 +360,17 @@
                                         </button>
                                     </form>
                                 @endif
+
+                                @if(Auth::user()->isSuperAdmin())
+                                    <!-- Super Admin Delete Action -->
+                                    <form action="{{ route('kursus.pemohon.destroy', $app->id) }}" method="POST" class="inline" onsubmit="return confirm('PERINGATAN SUPER ADMIN: Adakah anda pasti ingin memadam permohonan kursus {{ $app->registration_number }} secara kekal? Tindakan ini tidak boleh diundur!');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition" title="Padam Permohonan (Super Admin Sahaja)">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
