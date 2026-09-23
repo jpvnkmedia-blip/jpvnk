@@ -71,27 +71,68 @@
             @endif
         </div>
     @elseif($tempahan->status === 'Diluluskan')
-        <div class="bg-emerald-50 border border-emerald-300 rounded-3xl p-5 sm:p-6 text-emerald-950 space-y-2 shadow-xs">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 font-black text-sm text-emerald-900">
-                    <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+        <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/70 border-2 border-emerald-300 rounded-3xl p-5 sm:p-6 text-emerald-950 space-y-4 shadow-md">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 font-black text-sm text-emerald-950">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
                     <span>Tempahan Disahkan &amp; Diluluskan</span>
                 </div>
-                <span class="text-xs font-mono font-bold text-emerald-800 bg-white/80 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                <span class="text-xs font-mono font-bold text-emerald-800 bg-white/90 px-2.5 py-0.5 rounded-lg border border-emerald-200 self-start sm:self-auto shadow-2xs">
                     Tarikh Kelulusan: {{ $tempahan->tarikh_kelulusan ? $tempahan->tarikh_kelulusan->format('d/m/Y H:i') : '-' }}
                 </span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                <div class="bg-white p-3 rounded-2xl border border-emerald-200">
-                    <span class="text-slate-500 block text-[11px]">Pegawai / Krew Media Bertugas:</span>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="bg-white/95 p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                    <span class="text-slate-500 block text-[11px] font-semibold">Pegawai / Krew Media Bertugas:</span>
                     <span class="font-bold text-slate-900 text-sm mt-0.5 block">{{ $tempahan->pegawai_media_bertugas ?? 'Pasukan Unit Media JPVNK' }}</span>
                 </div>
-                <div class="bg-white p-3 rounded-2xl border border-emerald-200">
-                    <span class="text-slate-500 block text-[11px]">Catatan Unit Media:</span>
+                <div class="bg-white/95 p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                    <span class="text-slate-500 block text-[11px] font-semibold">Catatan Unit Media:</span>
                     <span class="font-medium text-slate-800 mt-0.5 block">{{ $tempahan->catatan_unit_media ?? 'Liputan disahkan mengikut atur cara yang ditetapkan.' }}</span>
                 </div>
             </div>
+
+            <!-- Kalendar Google jpvnkmedia@gmail.com Integration Card -->
+            <div class="bg-white rounded-2xl p-4 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <div class="font-black text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+                            <span>Kalendar Google Unit Media</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">jpvnkmedia@gmail.com</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            Program ini diselaraskan secara automatik ke Kalendar Rasmi Unit Media JPVNK.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <a href="{{ $tempahan->google_calendar_url }}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
+                        <i class="fa-brands fa-google text-amber-300"></i>
+                        <span>Buka di Google Calendar</span>
+                    </a>
+                    <a href="{{ route('media.ics', $tempahan->id) }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 border border-slate-300">
+                        <i class="fa-solid fa-download text-slate-500"></i>
+                        <span>Muat Turun .ICS</span>
+                    </a>
+                </div>
+            </div>
         </div>
+
+        @if(session('auto_open_gcal'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const gcalUrl = "{{ session('auto_open_gcal') }}";
+                    if (gcalUrl) {
+                        window.open(gcalUrl, '_blank');
+                    }
+                });
+            </script>
+        @endif
     @elseif($tempahan->status === 'Ditolak')
         <div class="bg-rose-50 border border-rose-300 rounded-3xl p-5 sm:p-6 text-rose-950 space-y-2 shadow-xs">
             <div class="flex items-center gap-2 font-black text-sm text-rose-900">

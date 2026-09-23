@@ -566,6 +566,35 @@ class MediaTempahanController extends Controller
             $keputusan === 'Diluluskan' ? 'emerald' : ($keputusan === 'Ditolak' ? 'rose' : 'sky')
         );
 
+        if ($keputusan === 'Diluluskan') {
+            // Cuba hantar jemputan kalendar ke emel rasmi Unit Media jika konfigurasi emel wujud
+            try {
+                if (config('mail.default') && config('mail.default') !== 'null') {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        "Salam Unit Media,\n\nPermohonan tempahan berikut telah DILULUSKAN:\n\n"
+                        . "Program: {$tempahan->nama_program}\n"
+                        . "No. Rujukan: {$tempahan->no_rujukan}\n"
+                        . "Tarikh: {$tempahan->tarikh_program->format('d/m/Y')} ({$tempahan->masa_mula} - {$tempahan->masa_tamat})\n"
+                        . "Lokasi: {$tempahan->lokasi}\n"
+                        . "Pemohon: {$tempahan->nama_pemohon} ({$tempahan->no_telefon})\n"
+                        . "Pegawai Bertugas: {$tempahan->pegawai_media_bertugas}\n\n"
+                        . "Pautan Google Calendar: {$tempahan->google_calendar_url}\n\n"
+                        . "Sistem Bersepadu JPVNK",
+                        function ($message) use ($tempahan) {
+                            $message->to('jpvnkmedia@gmail.com')
+                                ->subject("[KALENDAR MEDIA] Tempahan Diluluskan: {$tempahan->nama_program} ({$tempahan->no_rujukan})");
+                        }
+                    );
+                }
+            } catch (\Exception $e) {
+                // Abaikan ralat emel jika offline/log driver
+            }
+
+            return redirect()->route('media.show', $tempahan->id)
+                ->with('success', "Keputusan tempahan berjaya DILULUSKAN! Butiran program telah sedia dimasukkan ke Kalendar Google jpvnkmedia@gmail.com.")
+                ->with('auto_open_gcal', $tempahan->google_calendar_url);
+        }
+
         return redirect()->route('media.show', $tempahan->id)
             ->with('success', "Keputusan tempahan berjaya dikemas kini kepada status: {$tempahan->status}.");
     }
@@ -680,5 +709,23 @@ class MediaTempahanController extends Controller
         }
 
         return view('media.cetak-slip', compact('tempahan', 'user'));
+    }
+
+    /**
+     * Muat Turun Fail Acara Kalendar (.ics) untuk Google Calendar / Outlook
+     */
+    public function kalendarIcs($id)
+    {
+        $this->authorizeAccess();
+        $tempahan = MediaTempahan::findOrFail($id);
+
+        $icsContent = $tempahan->generateIcsContent();
+        $safeRef = str_replace('/', '-', $tempahan->no_rujukan);
+        $filename = "acara-media-{$safeRef}.ics";
+
+        return response($icsContent, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }

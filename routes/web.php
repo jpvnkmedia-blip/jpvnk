@@ -344,6 +344,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}/kemaskini', [MediaTempahanController::class, 'update'])->name('update');
         Route::post('/{id}/tindakan', [MediaTempahanController::class, 'tindakan'])->name('tindakan');
         Route::get('/{id}/cetak-slip', [MediaTempahanController::class, 'cetakSlip'])->name('cetak');
+        Route::get('/{id}/kalendar-ics', [MediaTempahanController::class, 'kalendarIcs'])->name('ics');
     });
 });
 

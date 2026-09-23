@@ -543,4 +543,67 @@ class MediaTempahanTest extends TestCase
         $response->assertSee('https://wa.me/60194445566', false);
         $response->assertSee('Majlis+Anugerah+Khidmat+Cemerlang');
     }
+
+    public function test_approving_booking_generates_google_calendar_url_and_ics_for_jpvnkmedia()
+    {
+        $admin = $this->getAdminUser();
+        $staff = $this->getStaffUser();
+
+        $tempahan = MediaTempahan::create([
+            'user_id' => $staff->id,
+            'no_rujukan' => 'MEDIA/2026/09/0888',
+            'nama_pemohon' => 'Dr. Zulkifli',
+            'jawatan_pemohon' => 'Pegawai Veterinar',
+            'bahagian_unit' => 'Unit Pembangunan',
+            'no_telefon' => '0199998888',
+            'emel' => 'zul@jpvnk.gov.my',
+            'nama_program' => 'Hari Inovasi Veterinar 2026',
+            'tarikh_program' => now()->addDays(4)->toDateString(),
+            'masa_mula' => '09:00',
+            'masa_tamat' => '17:00',
+            'lokasi' => 'Pusat Konvensyen Kelantan',
+            'penganjur' => 'JPVNK',
+            'pegawai_bertanggungjawab' => 'Dr. Zul',
+            'jenis_permohonan' => ['Liputan Fotografi', 'Video Promosi / Montaj'],
+            'status' => 'Menunggu Kelulusan',
+            'perakuan' => true,
+        ]);
+
+        // 1. Semak helper model Google Calendar & ICS
+        $this->assertStringContainsString('calendar.google.com/calendar/render', $tempahan->google_calendar_url);
+        $this->assertStringContainsString('jpvnkmedia%40gmail.com', $tempahan->google_calendar_url);
+        $this->assertStringContainsString('Hari+Inovasi+Veterinar+2026', $tempahan->google_calendar_url);
+
+        $ics = $tempahan->generateIcsContent();
+        $this->assertStringContainsString('BEGIN:VCALENDAR', $ics);
+        $this->assertStringContainsString('jpvnkmedia@gmail.com', $ics);
+        $this->assertStringContainsString('Hari Inovasi Veterinar 2026', $ics);
+
+        // 2. Admin Luluskan Permohonan
+        $response = $this->actingAs($admin)->post(route('media.tindakan', $tempahan->id), [
+            'status' => 'Diluluskan',
+            'pegawai_media_bertugas' => 'Krew Utama JPVNK',
+            'catatan_admin' => 'Diluluskan dan dimasukkan ke kalendar.',
+        ]);
+
+        $response->assertRedirect(route('media.show', $tempahan->id));
+        $response->assertSessionHas('auto_open_gcal');
+        $response->assertSessionHas('success');
+
+        $tempahan->refresh();
+        $this->assertEquals('Diluluskan', $tempahan->status);
+
+        // 3. Paparan show melihat pautan Google Calendar jpvnkmedia@gmail.com
+        $showResponse = $this->actingAs($staff)->get(route('media.show', $tempahan->id));
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Kalendar Google Unit Media');
+        $showResponse->assertSee('jpvnkmedia@gmail.com');
+        $showResponse->assertSee('Buka di Google Calendar');
+
+        // 4. Muat turun fail .ics
+        $icsResponse = $this->actingAs($staff)->get(route('media.ics', $tempahan->id));
+        $icsResponse->assertStatus(200);
+        $icsResponse->assertHeader('Content-Type', 'text/calendar; charset=utf-8');
+        $this->assertStringContainsString('MEDIA-2026-09-0888.ics', $icsResponse->headers->get('Content-Disposition'));
+    }
 }

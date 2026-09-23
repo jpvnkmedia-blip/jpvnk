@@ -426,6 +426,9 @@
                                                 <i class="fa-solid fa-eye text-xs"></i>
                                             </a>
                                             @if($t->status === 'Diluluskan')
+                                                <a href="{{ $t->google_calendar_url }}" target="_blank" class="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold transition" title="Tambah ke Google Calendar (jpvnkmedia@gmail.com)">
+                                                    <i class="fa-solid fa-calendar-plus text-xs"></i>
+                                                </a>
                                                 <a href="{{ route('media.cetak', $t->id) }}" target="_blank" class="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold transition" title="Cetak Slip Tempahan">
                                                     <i class="fa-solid fa-print text-xs"></i>
                                                 </a>

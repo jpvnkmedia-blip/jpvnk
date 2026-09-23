@@ -310,4 +310,111 @@ class MediaTempahan extends Model
             ];
         }
     }
+
+    /**
+     * Format tarikh dan masa program mengikut standard Google Calendar (UTC ISO8601)
+     */
+    public function getGoogleCalendarDates(): string
+    {
+        $startDate = $this->tarikh_program ? $this->tarikh_program->format('Y-m-d') : date('Y-m-d');
+        
+        $rawStartTime = trim($this->masa_mula ?? '08:30');
+        $startTime = preg_replace('/[^0-9:]/', '', $rawStartTime);
+        if (strlen($startTime) == 4 && !str_contains($startTime, ':')) {
+            $startTime = substr($startTime, 0, 2) . ':' . substr($startTime, 2, 2);
+        }
+        if (empty($startTime) || !str_contains($startTime, ':')) {
+            $startTime = '08:30';
+        }
+
+        $endDate = ($this->tarikh_tamat ?: $this->tarikh_program) ? ($this->tarikh_tamat ?: $this->tarikh_program)->format('Y-m-d') : $startDate;
+        
+        $rawEndTime = trim($this->masa_tamat ?? '17:00');
+        $endTime = preg_replace('/[^0-9:]/', '', $rawEndTime);
+        if (strlen($endTime) == 4 && !str_contains($endTime, ':')) {
+            $endTime = substr($endTime, 0, 2) . ':' . substr($endTime, 2, 2);
+        }
+        if (empty($endTime) || !str_contains($endTime, ':')) {
+            $endTime = '17:00';
+        }
+
+        try {
+            $start = Carbon::parse("{$startDate} {$startTime}", 'Asia/Kuala_Lumpur')->setTimezone('UTC');
+            $end = Carbon::parse("{$endDate} {$endTime}", 'Asia/Kuala_Lumpur')->setTimezone('UTC');
+            return $start->format('Ymd\THis\Z') . '/' . $end->format('Ymd\THis\Z');
+        } catch (\Exception $e) {
+            return str_replace('-', '', $startDate) . '/' . str_replace('-', '', $endDate);
+        }
+    }
+
+    /**
+     * Jana pautan terus Google Calendar untuk dimasukkan ke akaun jpvnkmedia@gmail.com
+     */
+    public function getGoogleCalendarUrlAttribute(): string
+    {
+        $title = "[JPVNK MEDIA] {$this->nama_program} ({$this->no_rujukan})";
+        $dates = $this->getGoogleCalendarDates();
+        $jenisStr = is_array($this->jenis_permohonan) ? implode(', ', $this->jenis_permohonan) : ($this->jenis_permohonan ?? 'Liputan Media');
+
+        $details = "TEMPAHAN PERKHIDMATAN UNIT MEDIA & PENERBITAN JPVNK\n\n"
+            . "📌 No. Rujukan: {$this->no_rujukan}\n"
+            . "🎯 Nama Program: {$this->nama_program}\n"
+            . "🏛️ Penganjur: {$this->penganjur}\n"
+            . "📍 Lokasi: {$this->lokasi}\n"
+            . "👤 Pemohon: {$this->nama_pemohon} ({$this->jawatan})\n"
+            . "🏢 Bahagian / Unit: {$this->bahagian_unit_jajahan}\n"
+            . "📞 No. Telefon: {$this->no_telefon}\n"
+            . "✉️ Emel: {$this->emel}\n"
+            . "🎥 Jenis Liputan: {$jenisStr}\n"
+            . "🎬 Pegawai / Krew Bertugas: " . ($this->pegawai_media_bertugas ?: 'Unit Media JPVNK') . "\n"
+            . "📷 Peralatan: " . ($this->peralatan_disediakan ?: 'Kamera DSLR, Gimbal & Mikrofon') . "\n"
+            . "🔗 Status: " . $this->status . "\n\n"
+            . "Sistem Bersepadu JPVNK: " . (function_exists('route') ? route('media.show', $this->id) : url('/media/' . $this->id));
+
+        $params = [
+            'action' => 'TEMPLATE',
+            'text' => $title,
+            'dates' => $dates,
+            'details' => $details,
+            'location' => $this->lokasi ?? 'Jabatan Perkhidmatan Veterinar Negeri Kelantan',
+            'add' => 'jpvnkmedia@gmail.com',
+        ];
+
+        return 'https://calendar.google.com/calendar/render?' . http_build_query($params);
+    }
+
+    /**
+     * Jana kandungan iCalendar (.ics) untuk kalendar Google / Outlook / Apple
+     */
+    public function generateIcsContent(): string
+    {
+        $dates = $this->getGoogleCalendarDates();
+        $parts = explode('/', $dates);
+        $dtStart = $parts[0] ?? gmdate('Ymd\THis\Z');
+        $dtEnd = $parts[1] ?? gmdate('Ymd\THis\Z', strtotime('+2 hours'));
+        $uid = md5($this->no_rujukan . $this->id) . '@veterinar.kelantan.gov.my';
+        $summary = addcslashes("[JPVNK MEDIA] {$this->nama_program} ({$this->no_rujukan})", ",;\\");
+        $location = addcslashes($this->lokasi ?? 'JPVNK Kelantan', ",;\\");
+        $jenisStr = is_array($this->jenis_permohonan) ? implode(', ', $this->jenis_permohonan) : ($this->jenis_permohonan ?? '');
+        $description = addcslashes("Program: {$this->nama_program}\\nNo Rujukan: {$this->no_rujukan}\\nPemohon: {$this->nama_pemohon} ({$this->no_telefon})\\nLiputan: {$jenisStr}\\nPegawai Bertugas: {$this->pegawai_media_bertugas}\\nStatus: {$this->status}", ",;\\");
+
+        return "BEGIN:VCALENDAR\r\n"
+            . "VERSION:2.0\r\n"
+            . "PRODID:-//JPVNK//Sistem Veterinar Bersepadu Kelantan//MY\r\n"
+            . "CALSCALE:GREGORIAN\r\n"
+            . "METHOD:REQUEST\r\n"
+            . "BEGIN:VEVENT\r\n"
+            . "UID:{$uid}\r\n"
+            . "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n"
+            . "DTSTART:{$dtStart}\r\n"
+            . "DTEND:{$dtEnd}\r\n"
+            . "SUMMARY:{$summary}\r\n"
+            . "DESCRIPTION:{$description}\r\n"
+            . "LOCATION:{$location}\r\n"
+            . "ORGANIZER;CN=Unit Media JPVNK:mailto:jpvnkmedia@gmail.com\r\n"
+            . "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=JPVNK Media:mailto:jpvnkmedia@gmail.com\r\n"
+            . "STATUS:CONFIRMED\r\n"
+            . "END:VEVENT\r\n"
+            . "END:VCALENDAR\r\n";
+    }
 }
