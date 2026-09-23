@@ -47,7 +47,6 @@
               hasPoster: false,
               hasVideo: false,
               hasLain: false,
-              keutamaan: '{{ old('tahap_keutamaan', $tempahan->tahap_keutamaan) }}',
               init() {
                   this.updateSelection();
               },
@@ -187,42 +186,10 @@
             </div>
         </div>
 
-        <!-- 5. Keutamaan & Tarikh Diperlukan -->
-        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
-            <h2 class="text-sm sm:text-base font-black text-slate-900 pb-2 border-b border-slate-100">
-                ⏰ 5. Keutamaan &amp; Tarikh Diperlukan
-            </h2>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Tarikh Bahan Diperlukan</label>
-                    <input type="date" name="tarikh_diperlukan" value="{{ old('tarikh_diperlukan', $tempahan->tarikh_diperlukan ? $tempahan->tarikh_diperlukan->format('Y-m-d') : '') }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono">
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Tahap Keutamaan <span class="text-rose-500">*</span></label>
-                    <div class="flex items-center gap-3 pt-1">
-                        @foreach(['Biasa', 'Segera', 'Sangat Segera'] as $lvl)
-                            <label class="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border flex-1 text-center justify-center font-bold"
-                                   :class="keutamaan === '{{ $lvl }}' ? 'bg-indigo-50 border-indigo-300 text-indigo-900' : 'bg-white border-slate-200 text-slate-600'">
-                                <input type="radio" name="tahap_keutamaan" value="{{ $lvl }}" x-model="keutamaan" class="text-indigo-600 focus:ring-indigo-500">
-                                <span>{{ $lvl }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="sm:col-span-2" x-show="keutamaan !== 'Biasa'">
-                    <label class="block font-bold text-rose-700 mb-1">Sebab Keperluan Segera</label>
-                    <input type="text" name="sebab_segera" value="{{ old('sebab_segera', $tempahan->sebab_segera) }}" class="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 text-xs bg-rose-50/30">
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. Lampiran Tambahan -->
+        <!-- 5. Lampiran Tambahan -->
         <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
             <h2 class="text-sm sm:text-base font-black text-slate-900 pb-2 border-b border-slate-100">
-                📎 6. Muat Naik Lampiran Tambahan
+                📎 5. Muat Naik Lampiran Tambahan
             </h2>
 
             <input type="file" name="lampiran_files[]" multiple class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">

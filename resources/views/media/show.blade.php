@@ -7,7 +7,6 @@
 
     @php
         $badge = $tempahan->status_badge;
-        $keutamaan = $tempahan->keutamaan_badge;
     @endphp
 
     <!-- Top Navigation & Action Bar -->
@@ -113,14 +112,11 @@
 
             <!-- 1. Maklumat Pemohon & Program -->
             <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="pb-3 border-b border-slate-100">
                     <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-calendar-days text-indigo-600"></i>
                         <span>Maklumat Program &amp; Pemohon</span>
                     </h3>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $keutamaan['bg'] }}">
-                        Keutamaan: {{ $keutamaan['label'] }}
-                    </span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">

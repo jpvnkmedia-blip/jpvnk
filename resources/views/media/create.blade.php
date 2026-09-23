@@ -16,7 +16,7 @@
                     <i class="fa-solid fa-camera-retro text-amber-500"></i>
                     <span>Borang Permohonan Tempahan Unit Media</span>
                 </h1>
-                <p class="text-xs text-slate-500">Sila lengkapkan 7 seksyen permohonan di bawah untuk semakan dan pengesahan Unit Media JPVNK.</p>
+                <p class="text-xs text-slate-500">Sila lengkapkan 6 seksyen permohonan di bawah untuk semakan dan pengesahan Unit Media JPVNK.</p>
             </div>
         </div>
 
@@ -316,52 +316,14 @@
             </div>
         </div>
 
-        <!-- ================= 5. KEUTAMAAN & TARIKH DIPERLUKAN ================= -->
+        <!-- ================= 5. LAMPIRAN ================= -->
         <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
             <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
                 <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
                     5
                 </div>
                 <div>
-                    <h2 class="text-sm sm:text-base font-black text-slate-900">⏰ 5. Keutamaan &amp; Tarikh Diperlukan</h2>
-                    <p class="text-xs text-slate-500">Tentukan tahap urgensi bagi pemprosesan Unit Media.</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Tarikh Bahan / Liputan Diperlukan</label>
-                    <input type="date" name="tarikh_diperlukan" value="{{ old('tarikh_diperlukan') }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 text-xs font-mono">
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Tahap Keutamaan <span class="text-rose-500">*</span></label>
-                    <div class="flex items-center gap-3 pt-1">
-                        @foreach(['Biasa', 'Segera', 'Sangat Segera'] as $lvl)
-                            <label class="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border flex-1 text-center justify-center font-bold transition"
-                                   :class="keutamaan === '{{ $lvl }}' ? '{{ $lvl === 'Sangat Segera' ? 'bg-rose-50 border-rose-300 text-rose-800' : ($lvl === 'Segera' ? 'bg-amber-50 border-amber-300 text-amber-800' : 'bg-slate-100 border-slate-300 text-slate-900') }}' : 'bg-white border-slate-200 text-slate-600'">
-                                <input type="radio" name="tahap_keutamaan" value="{{ $lvl }}" x-model="keutamaan" class="text-indigo-600 focus:ring-indigo-500">
-                                <span>{{ $lvl }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="sm:col-span-2" x-show="keutamaan !== 'Biasa'" x-transition>
-                    <label class="block font-bold text-rose-700 mb-1">Sebab Keperluan Segera / Sangat Segera <span class="text-rose-500">*</span></label>
-                    <input type="text" name="sebab_segera" value="{{ old('sebab_segera') }}" placeholder="Nyatakan justifikasi kenapa permohonan ini perlu diproses segera..." class="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 focus:ring-2 focus:ring-rose-500 text-xs bg-rose-50/30">
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= 6. LAMPIRAN ================= -->
-        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-5">
-            <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
-                <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                    6
-                </div>
-                <div>
-                    <h2 class="text-sm sm:text-base font-black text-slate-900">📎 6. Lampiran Fail &amp; Rujukan</h2>
+                    <h2 class="text-sm sm:text-base font-black text-slate-900">📎 5. Lampiran Fail &amp; Rujukan</h2>
                     <p class="text-xs text-slate-500">Muat naik surat jemputan, atur cara program, tentatif, logo, atau dokumen sokongan.</p>
                 </div>
             </div>
@@ -374,14 +336,14 @@
             </div>
         </div>
 
-        <!-- ================= 7. PENGESAHAN ================= -->
+        <!-- ================= 6. PENGESAHAN ================= -->
         <div class="bg-gradient-to-br from-indigo-50/70 to-slate-50 rounded-3xl p-6 sm:p-7 border border-indigo-200/80 shadow-xs space-y-4">
             <div class="flex items-center gap-3 pb-3 border-b border-indigo-200/60">
                 <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                    7
+                    6
                 </div>
                 <div>
-                    <h2 class="text-sm sm:text-base font-black text-slate-900">✅ 7. Pengesahan Pemohon</h2>
+                    <h2 class="text-sm sm:text-base font-black text-slate-900">✅ 6. Pengesahan Pemohon</h2>
                     <p class="text-xs text-slate-600">Perakuan ketepatan maklumat sebelum permohonan dihantar.</p>
                 </div>
             </div>

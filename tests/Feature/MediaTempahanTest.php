@@ -85,7 +85,7 @@ class MediaTempahanTest extends TestCase
         $response->assertSee('MEDIA/2026/09/0001');
     }
 
-    public function test_staff_can_submit_full_7_section_media_booking_with_attachments()
+    public function test_staff_can_submit_full_6_section_media_booking_with_attachments()
     {
         $staff = $this->getStaffUser();
 
@@ -129,15 +129,10 @@ class MediaTempahanTest extends TestCase
             'video_durasi' => 'Montaj 3 Minit',
             'catatan_keperluan' => 'Perlukan jurufoto standby 30 minit sebelum VIP tiba',
 
-            // 5. Keutamaan & Tarikh Diperlukan
-            'tarikh_diperlukan' => now()->addDays(4)->toDateString(),
-            'keutamaan' => 'Segera',
-            'sebab_segera' => 'Program peringkat negeri bersama YB Exco Pertanian',
-
-            // 6. Lampiran
+            // 5. Lampiran
             'lampiran' => [$file1, $file2],
 
-            // 7. Pengesahan
+            // 6. Pengesahan
             'perakuan' => '1',
         ];
 
@@ -149,7 +144,6 @@ class MediaTempahanTest extends TestCase
         $tempahan = MediaTempahan::where('nama_program', 'Kempen Kesedaran Keselamatan Makanan Haiwan')->first();
         $this->assertNotNull($tempahan);
         $this->assertEquals('Menunggu Kelulusan', $tempahan->status);
-        $this->assertEquals('Segera', $tempahan->keutamaan);
         $this->assertStringStartsWith('MEDIA/', $tempahan->no_rujukan);
         $this->assertCount(4, $tempahan->jenis_permohonan);
         $this->assertCount(2, $tempahan->lampiran);

@@ -57,11 +57,9 @@
                     {{ strtoupper($tempahan->status) }}
                 </span>
             </div>
-            <div class="text-right text-[11px]">
-                <span class="font-bold">Keutamaan:</span> 
-                <span class="font-bold uppercase {{ $tempahan->keutamaan == 'Sangat Segera' ? 'text-rose-600' : ($tempahan->keutamaan == 'Segera' ? 'text-amber-600' : 'text-slate-700') }}">
-                    {{ $tempahan->keutamaan }}
-                </span>
+            <div class="text-right text-[11px] font-semibold text-slate-700">
+                <span>Tarikh Program:</span> 
+                <span class="font-bold text-slate-900">{{ $tempahan->tarikh_program ? $tempahan->tarikh_program->format('d/m/Y') : '-' }}</span>
             </div>
         </div>
 

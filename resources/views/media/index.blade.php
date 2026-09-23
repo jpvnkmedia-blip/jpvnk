@@ -327,7 +327,6 @@
                                 <th class="px-4 py-3.5">Maklumat Program &amp; Lokasi</th>
                                 <th class="px-4 py-3.5">Pemohon &amp; Bahagian</th>
                                 <th class="px-4 py-3.5">Jenis Keperluan Media</th>
-                                <th class="px-4 py-3.5">Keutamaan</th>
                                 <th class="px-4 py-3.5">Status</th>
                                 <th class="px-4 py-3.5 text-center">Tindakan</th>
                             </tr>
@@ -336,7 +335,6 @@
                             @forelse($tempahanList as $t)
                                 @php
                                     $badge = $t->status_badge;
-                                    $keutamaan = $t->keutamaan_badge;
                                 @endphp
                                 <tr class="hover:bg-slate-50/80 transition">
                                     <td class="px-4 py-3.5 whitespace-nowrap">
@@ -372,12 +370,6 @@
                                                 @endif
                                             @endif
                                         </div>
-                                    </td>
-                                    <td class="px-4 py-3.5 whitespace-nowrap">
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 w-fit {{ $keutamaan['bg'] }}">
-                                            <i class="fa-solid {{ $keutamaan['icon'] }}"></i>
-                                            <span>{{ $keutamaan['label'] }}</span>
-                                        </span>
                                     </td>
                                     <td class="px-4 py-3.5 whitespace-nowrap">
                                         <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1.5 w-fit {{ $badge['bg'] }}">
