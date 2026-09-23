@@ -314,6 +314,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\UserController::class, 'index'])->name('index');
         Route::get('/tambah', [\App\Http\Controllers\UserController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\UserController::class, 'store'])->name('store');
+        Route::match(['post', 'delete'], '/multi-delete', [\App\Http\Controllers\UserController::class, 'multiDestroy'])->name('multi-destroy');
         Route::get('/{id}', [\App\Http\Controllers\UserController::class, 'show'])->name('show');
         Route::get('/{id}/kemaskini', [\App\Http\Controllers\UserController::class, 'edit'])->name('edit');
         Route::put('/{id}', [\App\Http\Controllers\UserController::class, 'update'])->name('update');

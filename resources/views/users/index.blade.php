@@ -102,12 +102,43 @@
         </form>
     </div>
 
+    <!-- Bulk Action Toolbar (Tindakan Pukal / Multi Delete) -->
+    <div id="bulkActionBar" class="hidden bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xs">
+                <i class="fa-solid fa-check-double"></i>
+            </span>
+            <div>
+                <span class="font-bold text-sm text-white"><span id="selectedCount" class="text-amber-400 font-black">0</span> pengguna dipilih</span>
+                <p class="text-[11px] text-slate-400">Pilih tindakan operasi pukal untuk rekod yang ditandakan.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" id="clearSelectionBtn" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-xmark text-xs"></i>
+                <span>Nyahpilih</span>
+            </button>
+            <form id="bulkDeleteForm" action="{{ route('users.multi-destroy') }}" method="POST" class="inline" onsubmit="return confirmBulkDelete();">
+                @csrf
+                @method('DELETE')
+                <div id="bulkDeleteInputsContainer"></div>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-950/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                    <span>Padam Terpilih (Multi Delete)</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Users Table -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px]">
+                        <th class="px-4 py-3.5 w-10 text-center">
+                            <input type="checkbox" id="selectAll" class="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer" title="Pilih Semua Pengguna">
+                        </th>
                         <th class="px-5 py-3.5">Pengguna &amp; Maklumat Asas</th>
                         <th class="px-4 py-3.5">No. Kad Pengenalan</th>
                         <th class="px-4 py-3.5">Peranan (Role)</th>
@@ -118,7 +149,16 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($users as $u)
-                        <tr class="hover:bg-slate-50/70 transition">
+                        <tr class="user-row hover:bg-slate-50/70 transition" data-user-id="{{ $u->id }}">
+                            <td class="px-4 py-3.5 text-center">
+                                @if(Auth::id() !== $u->id)
+                                    <input type="checkbox" value="{{ $u->id }}" class="user-checkbox w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer">
+                                @else
+                                    <span title="Akaun anda sendiri (Dilindungi)" class="text-slate-300 cursor-not-allowed">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
@@ -185,7 +225,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+                            <td colspan="7" class="px-5 py-12 text-center text-slate-400">
                                 <i class="fa-solid fa-users-slash text-4xl text-slate-300 mb-3 block"></i>
                                 <div class="font-bold text-sm text-slate-600">Tiada Pengguna Ditemui</div>
                                 <p class="text-xs mt-1">Cuba ubah kata kunci carian atau tetapan tapisan.</p>
@@ -204,4 +244,89 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const bulkActionBar = document.getElementById('bulkActionBar');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    const bulkDeleteInputsContainer = document.getElementById('bulkDeleteInputsContainer');
+
+    function updateBulkState() {
+        const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
+        const count = checkedBoxes.length;
+
+        selectedCountSpan.textContent = count;
+
+        if (count > 0) {
+            bulkActionBar.classList.remove('hidden');
+        } else {
+            bulkActionBar.classList.add('hidden');
+        }
+
+        // Update selectAll state
+        if (userCheckboxes.length > 0) {
+            selectAllCheckbox.checked = (count === userCheckboxes.length);
+            selectAllCheckbox.indeterminate = (count > 0 && count < userCheckboxes.length);
+        }
+
+        // Highlight selected rows
+        document.querySelectorAll('.user-row').forEach(row => {
+            const cb = row.querySelector('.user-checkbox');
+            if (cb && cb.checked) {
+                row.classList.add('bg-amber-50/60');
+            } else {
+                row.classList.remove('bg-amber-50/60');
+            }
+        });
+
+        // Populate hidden inputs for bulk form
+        bulkDeleteInputsContainer.innerHTML = '';
+        checkedBoxes.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = cb.value;
+            bulkDeleteInputsContainer.appendChild(input);
+        });
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            userCheckboxes.forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+            updateBulkState();
+        });
+    }
+
+    userCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkState);
+    });
+
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', function() {
+            userCheckboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            updateBulkState();
+        });
+    }
+
+    window.confirmBulkDelete = function() {
+        const count = document.querySelectorAll('.user-checkbox:checked').length;
+        if (count === 0) {
+            alert('Sila pilih sekurang-kurangnya satu akaun pengguna untuk dipadam.');
+            return false;
+        }
+        return confirm(`Adakah anda pasti mahu memadam ${count} akaun pengguna yang dipilih secara serentak?\n\nAMARAN: Tindakan ini tidak boleh diundur dan akan memadam rekod berkaitan pengguna.`);
+    };
+});
+</script>
 @endsection

@@ -538,6 +538,50 @@ class UserController extends Controller implements HasMiddleware
         return redirect()->route('users.index')->with('success', "Akaun pengguna {$name} telah berjaya dipadam dari sistem.");
     }
 
+    public function multiDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer', 'exists:users,id'],
+        ], [
+            'ids.required' => 'Sila pilih sekurang-kurangnya satu akaun pengguna untuk dipadam.',
+            'ids.min' => 'Sila pilih sekurang-kurangnya satu akaun pengguna untuk dipadam.',
+            'ids.*.exists' => 'Salah satu pengguna yang dipilih tidak wujud dalam pangkalan data.',
+        ]);
+
+        $currentUser = Auth::user();
+        $selectedIds = $validated['ids'];
+
+        // Tapis keluar akaun Super Admin sendiri jika terpilih secara tidak sengaja
+        $validIds = collect($selectedIds)
+            ->reject(fn($id) => (int)$id === (int)$currentUser->id)
+            ->values()
+            ->all();
+
+        if (empty($validIds)) {
+            return back()->with('error', 'Akses Ditolak: Anda tidak boleh memadam akaun Super Admin anda sendiri.');
+        }
+
+        $users = User::whereIn('id', $validIds)->get();
+        $deletedCount = 0;
+
+        foreach ($users as $user) {
+            if (!empty($user->signature) && is_string($user->signature) && Storage::disk('public')->exists($user->signature)) {
+                Storage::disk('public')->delete($user->signature);
+            }
+            $user->delete();
+            $deletedCount++;
+        }
+
+        $skippedSelf = in_array($currentUser->id, $selectedIds);
+        $message = "Sebanyak {$deletedCount} akaun pengguna berjaya dipadam secara pukal dari sistem.";
+        if ($skippedSelf) {
+            $message .= " (Akaun Super Admin anda sendiri telah dikecualikan daripada pemadaman).";
+        }
+
+        return redirect()->route('users.index')->with('success', $message);
+    }
+
     /**
      * Simpan fail muat naik dengan selamat
      */

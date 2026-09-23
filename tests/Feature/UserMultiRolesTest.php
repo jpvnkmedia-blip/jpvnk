@@ -271,4 +271,94 @@ class UserMultiRolesTest extends TestCase
         $this->assertEquals('Diluluskan', $tempahan->status);
         $this->assertEquals($mediaAdmin->id, $tempahan->diluluskan_oleh);
     }
+
+    public function test_super_admin_can_multi_delete_users()
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+
+        // Create 3 dummy users
+        $user1 = User::create([
+            'name' => 'User Multi Del 1',
+            'email' => 'del1@jpvnk.test',
+            'ic_number' => '990101031111',
+            'phone' => '0191111111',
+            'address' => 'Kota Bharu',
+            'jajahan' => 'Kota Bharu',
+            'role' => 'orang_awam',
+            'status' => 'Aktif',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $user2 = User::create([
+            'name' => 'User Multi Del 2',
+            'email' => 'del2@jpvnk.test',
+            'ic_number' => '990101032222',
+            'phone' => '0192222222',
+            'address' => 'Pasir Mas',
+            'jajahan' => 'Pasir Mas',
+            'role' => 'penternak',
+            'status' => 'Aktif',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->actingAs($superAdmin)->delete(route('users.multi-destroy'), [
+            'ids' => [$user1->id, $user2->id],
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('users', ['id' => $user1->id]);
+        $this->assertDatabaseMissing('users', ['id' => $user2->id]);
+    }
+
+    public function test_multi_delete_safely_skips_own_super_admin_account()
+    {
+        $superAdmin = User::where('role', 'super_admin')->first();
+
+        $user1 = User::create([
+            'name' => 'User Multi Del Single',
+            'email' => 'single.del@jpvnk.test',
+            'ic_number' => '990101033333',
+            'phone' => '0193333333',
+            'address' => 'Bachok',
+            'jajahan' => 'Bachok',
+            'role' => 'staf',
+            'status' => 'Aktif',
+            'password' => Hash::make('password123'),
+        ]);
+
+        // Attempt to delete both user1 and superAdmin himself
+        $response = $this->actingAs($superAdmin)->delete(route('users.multi-destroy'), [
+            'ids' => [$superAdmin->id, $user1->id],
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+        $this->assertDatabaseMissing('users', ['id' => $user1->id]);
+        $this->assertDatabaseHas('users', ['id' => $superAdmin->id]);
+    }
+
+    public function test_non_super_admin_cannot_multi_delete_users()
+    {
+        $staff = User::where('role', 'staf')->first() ?? User::where('role', 'penternak')->first();
+
+        $user1 = User::create([
+            'name' => 'User Test Protect',
+            'email' => 'protect@jpvnk.test',
+            'ic_number' => '990101034444',
+            'phone' => '0194444444',
+            'address' => 'Machang',
+            'jajahan' => 'Machang',
+            'role' => 'orang_awam',
+            'status' => 'Aktif',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $response = $this->actingAs($staff)->delete(route('users.multi-destroy'), [
+            'ids' => [$user1->id],
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('users', ['id' => $user1->id]);
+    }
 }
