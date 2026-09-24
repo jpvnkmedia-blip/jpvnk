@@ -10,7 +10,11 @@
         <a href="{{ route('klinik.index') }}" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-white px-3.5 py-2 rounded-xl border border-slate-200 transition">
             &larr; Kembali ke Senarai Temujanji
         </a>
-        <div class="flex items-center gap-2">
+            @if(Auth::user()->canManageActionList())
+                <a href="{{ route('action-list.create', ['temujanji_id' => $temujanji->id]) }}" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5" title="Jana Borang Action List PK-RK-61">
+                    <i class="fa-solid fa-clipboard-list"></i> Jana Action List (PK-RK-61)
+                </a>
+            @endif
             @if(Auth::user()->isStaff() && $temujanji->status !== 'Selesai')
                 <a href="{{ route('klinik.rawatan.create', $temujanji->id) }}" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
                     <i class="fa-solid fa-stethoscope"></i> Rekod Rawatan Veterinar

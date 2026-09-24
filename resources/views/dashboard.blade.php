@@ -40,7 +40,7 @@
                 @elseif($user->role === 'admin_eptr')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin EPTR Negeri</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Pendaftaran Ternakan Ruminan (EPTR)</span>, kelulusan tag telinga, pembatalan/kematian ternakan, permit sembelihan dan permit pemindahan ternakan peringkat Negeri Kelantan.
                 @elseif($user->role === 'admin_jajahan' || $user->role === 'admin_eptr_jajahan')
-                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin EPTR Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Pendaftaran Ternakan Ruminan (EPTR)</span>, verifikasi &amp; kelulusan tag telinga, permit sembelihan, kelulusan permit pemindahan ternakan dan pengurusan kesihatan bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
+                    Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin EPTR Jajahan {{ $user->jajahan ?? '' }}</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Pejabat Perkhidmatan Veterinar Jajahan (Admin Jajahan)</span>, pengisian <span class="text-teal-300 font-bold">Borang Action List (PK-RK-61)</span>, verifikasi tag telinga EPTR, permit pemindahan, klinik haiwan serta pemantauan projek bagi Jajahan <span class="text-emerald-300 font-bold">{{ $user->jajahan ?? 'Kelantan' }}</span>.
                 @elseif($user->role === 'admin_program')
                     Anda sedang mengakses sistem sebagai <span class="text-emerald-400 font-bold">Admin Program Pawah</span>. Anda bertanggungjawab menguruskan <span class="text-white font-semibold">Skim Bantuan Pawah Ternakan</span>, pendaftaran perjanjian pawah, kelulusan permohonan awam, pemantauan kelahiran anak, dan proses penyelesaian pawah JPVNK.
                 @elseif($user->role === 'admin_naimbif_negeri' || $user->role === 'admin_naimbif')
@@ -128,6 +128,14 @@
                         <span>Permit Pemindahan Ternakan</span>
                     </a>
                     @if($user->role === 'admin_jajahan' || $user->role === 'admin_eptr_jajahan')
+                    <a href="{{ route('action-list.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold shadow-lg shadow-teal-900/40 transition">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>Isi Action List (PK-RK-61)</span>
+                    </a>
+                    <a href="{{ route('action-list.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow-lg transition">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>Rekod Action List</span>
+                    </a>
                     <a href="{{ route('inventori.permohonan.ubat.mohon') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-900/40 transition">
                         <i class="fa-solid fa-pills"></i>
                         <span>Mohon Bekalan Ubat / Vaksin</span>

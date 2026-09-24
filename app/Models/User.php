@@ -320,12 +320,29 @@ class User extends Authenticatable
 
     public function isAdminJajahan(): bool
     {
-        return $this->hasAnyRole(['super_admin', 'admin_jajahan', 'admin_eptr_jajahan']) || ($this->hasRole('admin_eptr') && !empty($this->jajahan));
+        return $this->hasAnyRole(['super_admin', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) || ($this->hasRole('admin_eptr') && !empty($this->jajahan));
+    }
+
+    public function canManageActionList(): bool
+    {
+        return $this->hasAnyRole([
+            'super_admin',
+            'pengarah',
+            'admin_jajahan',
+            'admin_eptr_jajahan',
+            'pegawai_jajahan',
+            'admin_klinik',
+            'admin_ubat',
+            'admin_eptr',
+            'admin_program',
+            'admin_naimbif_jajahan',
+            'admin_epu_jajahan',
+        ]);
     }
 
     public function isAdminEptrJajahan(): bool
     {
-        return $this->hasAnyRole(['super_admin', 'admin_jajahan', 'admin_eptr_jajahan']) || ($this->hasRole('admin_eptr') && !empty($this->jajahan));
+        return $this->hasAnyRole(['super_admin', 'admin_jajahan', 'admin_eptr_jajahan', 'pegawai_jajahan']) || ($this->hasRole('admin_eptr') && !empty($this->jajahan));
     }
 
     public function isAdminUbat(): bool

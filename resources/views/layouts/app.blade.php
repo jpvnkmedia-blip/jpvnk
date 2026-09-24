@@ -380,6 +380,27 @@
                 </div>
                 @endif
 
+                @if(Auth::user()->canManageActionList())
+                <!-- 5.1 Action List Jajahan (PK-RK-61) -->
+                <div x-data="{ open: {{ request()->routeIs('action-list.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium transition {{ request()->routeIs('action-list.*') ? 'bg-slate-800 text-teal-400' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-clipboard-list w-5 text-center text-base text-teal-400"></i>
+                            <span>Action List (PK-RK-61)</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak class="pl-9 pr-2 py-1 space-y-1 text-xs">
+                        <a href="{{ route('action-list.index') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('action-list.index') ? 'text-teal-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            Senarai Borang Action List
+                        </a>
+                        <a href="{{ route('action-list.create') }}" class="block px-3 py-2 rounded-lg {{ request()->routeIs('action-list.create') ? 'text-teal-400 bg-slate-800/60 font-semibold' : 'text-slate-400 hover:text-white hover:bg-slate-800/30' }}">
+                            + Isi Borang Baharu
+                        </a>
+                    </div>
+                </div>
+                @endif
+
                 @if(Auth::user()->canAccessStorUbat())
                 <!-- 5b. Stor Ubat & Vaksin Veterinar (Admin Stor Ubat & Super Admin) -->
                 <div x-data="{ open: {{ request()->routeIs('inventori.ubat.*') ? 'true' : 'false' }} }" class="space-y-1">

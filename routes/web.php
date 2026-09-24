@@ -245,6 +245,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/permohonan-ubat/{id}/batal', [KlinikController::class, 'permohonanUbatBatal'])->name('permohonan_ubat.batal');
     });
 
+    // 5.1 MODUL ACTION LIST JAJAHAN (PK-RK-61)
+    Route::prefix('action-list')->name('action-list.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ActionListController::class, 'index'])->name('index');
+        Route::get('/cipta', [\App\Http\Controllers\ActionListController::class, 'create'])->name('create');
+        Route::post('/cipta', [\App\Http\Controllers\ActionListController::class, 'store'])->name('store');
+        Route::get('/api/cari-pelanggan', [\App\Http\Controllers\ActionListController::class, 'apiCariPelanggan'])->name('api-cari-pelanggan');
+        Route::get('/{id}', [\App\Http\Controllers\ActionListController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\ActionListController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\ActionListController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\ActionListController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/cetak', [\App\Http\Controllers\ActionListController::class, 'cetak'])->name('cetak');
+    });
+
     // 6. MODUL INVENTORI (STOR PERALATAN PEJABAT & STOR UBAT VETERINAR)
     Route::prefix('inventori')->name('inventori.')->group(function () {
         Route::get('/', [InventoriController::class, 'index'])->name('index');

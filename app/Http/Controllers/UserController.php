@@ -50,8 +50,8 @@ class UserController extends Controller implements HasMiddleware
                     'icon' => 'fa-cow text-amber-600',
                 ],
                 'admin_jajahan' => [
-                    'label' => 'Admin EPTR Jajahan',
-                    'desc' => 'Kelulusan tag telinga, verifikasi dan pengesahan ternakan mengikut Jajahan.',
+                    'label' => 'Admin Jajahan (PPVJ)',
+                    'desc' => 'Pengurusan Pejabat Perkhidmatan Veterinar Jajahan, pengisian borang Action List (PK-RK-61), verifikasi tag telinga, klinik haiwan jajahan & pemantauan projek.',
                     'badge' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
                     'icon' => 'fa-landmark text-emerald-600',
                 ],
