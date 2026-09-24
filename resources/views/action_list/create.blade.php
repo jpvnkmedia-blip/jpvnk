@@ -97,7 +97,7 @@
                     <label class="block font-black text-emerald-950 text-xs uppercase flex items-center gap-1.5">
                         <i class="fa-solid fa-id-card text-emerald-600"></i> Semak No. Kad Pengenalan Pelanggan (Autolengkap):
                     </label>
-                    <span class="text-[11px] text-emerald-700 font-medium">Masukkan No. K/P tanpa sengkang untuk semakan data EPTR, EPU, Klinik & Pawah</span>
+                    <span class="text-[11px] text-emerald-700 font-medium">Masukkan No. K/P untuk semakan bersepadu EPTR, EPU, Klinik & Pawah</span>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2">
                     <div class="relative flex-1">
@@ -521,7 +521,13 @@
         btnSpinner.classList.remove('hidden');
 
         fetch(`{{ route('action-list.api-semak-pelanggan-lengkap') }}?ic_number=${encodeURIComponent(rawVal)}`)
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.message || `Ralat sambungan pelayan (Status ${res.status})`);
+                }
+                return data;
+            })
             .then(data => {
                 btnText.classList.remove('hidden');
                 btnSpinner.classList.add('hidden');
@@ -584,7 +590,7 @@
             .catch(err => {
                 btnText.classList.remove('hidden');
                 btnSpinner.classList.add('hidden');
-                tunjukAlert('Ralat menyemak pangkalan data. Sila cuba lagi.', 'rose');
+                tunjukAlert(err.message || 'Ralat menyemak pangkalan data. Sila cuba lagi.', 'rose');
             });
     }
 

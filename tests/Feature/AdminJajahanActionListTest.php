@@ -378,4 +378,48 @@ class AdminJajahanActionListTest extends TestCase
         $this->assertEquals('5.839212, 102.394123', $actionList->gps_koordinat);
         $this->assertEquals([1, 2], $actionList->ternakan_terlibat_ids);
     }
+
+    public function test_api_semak_pelanggan_lengkap_for_pemunya_without_user_account_and_with_hyphens(): void
+    {
+        $pemunyaOnly = \App\Models\Pemunya::create([
+            'user_id' => null,
+            'nama' => 'Pak Daud Penternak Tradisional',
+            'no_kp' => '650101-03-7788',
+            'no_telefon' => '017-8899001',
+            'alamat' => 'Kampung Bukit Jawa, Pasir Puteh',
+            'jajahan' => 'Pasir Puteh',
+            'daerah' => 'Jajahan Pasir Puteh',
+            'mukim' => 'Bukit Jawa',
+            'poskod' => '16800',
+        ]);
+
+        $ternakan = \App\Models\Ternakan::create([
+            'pemunya_id' => $pemunyaOnly->id,
+            'no_tag' => 'MY-KEL-2026-7788',
+            'jenis_ternakan' => 'Lembu',
+            'baka' => 'Kedah-Kelantan',
+            'jantina' => 'Jantan',
+            'jajahan' => 'Pasir Puteh',
+            'status' => 'Aktif',
+            'status_kelulusan' => 'Diluluskan',
+            'lokasi_kandang' => 'Kandang Bukit Jawa',
+        ]);
+
+        // Search using clean IC without hyphens
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->getJson(route('action-list.api-semak-pelanggan-lengkap', ['ic_number' => '650101037788']));
+        $response->assertStatus(200);
+        $response->assertJson([
+            'found' => true,
+            'pelanggan' => [
+                'nama' => 'Pak Daud Penternak Tradisional',
+                'no_kp' => '650101-03-7788',
+                'jajahan' => 'Pasir Puteh',
+            ],
+        ]);
+
+        $response->assertJsonFragment([
+            'no_tag' => 'MY-KEL-2026-7788',
+            'jenis_ternakan' => 'Lembu',
+        ]);
+    }
 }
