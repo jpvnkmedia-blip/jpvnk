@@ -63,7 +63,7 @@ class UserNotification extends Model
     public static function send($userId, string $title, string $message, string $type = 'sistem', ?string $actionUrl = null, string $icon = 'fa-solid fa-bell', string $color = 'emerald'): ?self
     {
         try {
-            return self::create([
+            $notification = self::create([
                 'user_id' => $userId,
                 'type' => $type,
                 'title' => $title,
@@ -73,6 +73,18 @@ class UserNotification extends Model
                 'color' => $color,
                 'read_at' => null,
             ]);
+
+            // Dispatch Email Notification automatically to the target user
+            try {
+                $user = User::find($userId);
+                if ($user && !empty($user->email) && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\ActivityNotificationMail($notification, $user));
+                }
+            } catch (\Throwable $mailError) {
+                \Illuminate\Support\Facades\Log::warning("Gagal menghantar emel notifikasi aktiviti kepada Pengguna ID {$userId}: " . $mailError->getMessage());
+            }
+
+            return $notification;
         } catch (\Throwable $e) {
             return null;
         }

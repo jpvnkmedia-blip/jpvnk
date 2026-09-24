@@ -43,6 +43,9 @@ Route::middleware('guest')->group(function () {
 // Role Switcher (Akses pantas demo & pengujian)
 Route::post('/auth/switch-role', [AuthController::class, 'switchRole'])->name('auth.switch-role');
 
+// Akses Sijil Digital Kursus Secara Terus (Emel & Peserta)
+Route::get('/kursus/sijil/{applicationId}', [\App\Http\Controllers\KursusController::class, 'cetakSijil'])->name('kursus.sijil');
+
 // Authenticated System Routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -221,9 +224,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pemohon/{id}/hadir', [KursusController::class, 'sahkanKehadiran'])->name('pemohon.hadir');
         Route::post('/pemohon/lulus-pukal', [KursusController::class, 'lulusPukal'])->name('pemohon.lulus-pukal');
         Route::delete('/pemohon/{id}', [KursusController::class, 'destroyPemohon'])->name('pemohon.destroy');
-
-        // Cetak Sijil
-        Route::get('/sijil/{applicationId}', [KursusController::class, 'cetakSijil'])->name('sijil');
     });
 
     // 5. MODUL KLINIK HAIWAN

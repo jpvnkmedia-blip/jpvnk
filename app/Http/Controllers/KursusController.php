@@ -450,7 +450,7 @@ class KursusController extends Controller implements HasMiddleware
                 'Sijil Digital Kursus Dikeluarkan',
                 "Tahniah! Sijil Digital rasmi bagi kursus '{$application->course->title}' ({$certNo}) sedia untuk dimuat turun.",
                 'kursus',
-                route('kursus.show', $application->course_id),
+                route('kursus.sijil', $application->id),
                 'fa-solid fa-award',
                 'amber'
             );
