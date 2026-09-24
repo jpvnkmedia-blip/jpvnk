@@ -31,9 +31,21 @@ services:
         sync: false
       - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
         value: false
-      - key: SESSION_DRIVER
-        value: cookie
-      - key: CACHE_STORE
-        value: file
       - key: QUEUE_CONNECTION
         value: sync
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: jpvnkmedia@gmail.com
+      - key: MAIL_FROM_NAME
+        value: Jabatan Perkhidmatan Veterinar Negeri Kelantan
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false

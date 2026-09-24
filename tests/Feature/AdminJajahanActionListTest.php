@@ -269,4 +269,113 @@ class AdminJajahanActionListTest extends TestCase
             'ic_number' => $this->penternak->ic_number,
         ]);
     }
+
+    public function test_api_semak_pelanggan_lengkap_returns_cross_module_data(): void
+    {
+        // 1. Create/Update Pemunya & EPTR Ternakan
+        $pemunya = \App\Models\Pemunya::updateOrCreate(
+            ['no_kp' => $this->penternak->ic_number],
+            [
+                'user_id' => $this->penternak->id,
+                'nama' => $this->penternak->name,
+                'no_telefon' => '019-9887766',
+                'alamat' => 'Kampung Gong Chapa',
+                'jajahan' => 'Pasir Puteh',
+                'daerah' => 'Jajahan Pasir Puteh',
+                'mukim' => 'Padang Pak Amat',
+                'poskod' => '16800',
+            ]
+        );
+
+        $ternakan = \App\Models\Ternakan::create([
+            'pemunya_id' => $pemunya->id,
+            'no_tag' => 'MY-KEL-2026-9988',
+            'jenis_ternakan' => 'Lembu',
+            'baka' => 'Brakmas',
+            'jantina' => 'Betina',
+            'jajahan' => 'Pasir Puteh',
+            'status' => 'Aktif',
+            'status_kelulusan' => 'Diluluskan',
+            'lokasi_kandang' => 'Kandang Gong Chapa',
+        ]);
+
+        // 2. Create EPU Ladang
+        $ladang = \App\Models\EpuLadang::create([
+            'user_id' => $this->penternak->id,
+            'nama_pemohon_atau_syarikat' => $this->penternak->name,
+            'nama_ladang' => 'Ladang Ayam Chapa',
+            'id_premis' => 'EPU-PP-001',
+            'jajahan' => 'Pasir Puteh',
+            'alamat_ladang' => 'Lot 123 Kampung Gong Chapa',
+            'latitude' => 5.839212,
+            'longitude' => 102.394123,
+            'kapasiti_maksimum_unggas' => 5000,
+            'status_ladang' => 'Aktif',
+        ]);
+
+        // 3. Create Pawah Perjanjian
+        $pawah = \App\Models\PawahPerjanjian::create([
+            'user_id' => $this->penternak->id,
+            'no_perjanjian' => 'PW-PP-2026-0099',
+            'nama_program' => 'Program Pawah Lembu Baka Kelantan',
+            'jenis_pawah' => 'Pawah Lembu',
+            'jajahan' => 'Pasir Puteh',
+            'status' => 'Aktif',
+            'tarikh_mula' => now()->toDateString(),
+            'tarikh_tamat' => now()->addYears(3)->toDateString(),
+            'bilangan_induk' => 2,
+        ]);
+
+        // 4. Test API Semak Pelanggan Lengkap
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->getJson(route('action-list.api-semak-pelanggan-lengkap', ['ic_number' => $this->penternak->ic_number]));
+        $response->assertStatus(200);
+        $response->assertJson([
+            'found' => true,
+            'pelanggan' => [
+                'nama' => $this->penternak->name,
+                'no_kp' => $this->penternak->ic_number,
+            ],
+            'suggested_gps' => '5.839212, 102.394123',
+        ]);
+
+        $response->assertJsonFragment([
+            'no_tag' => 'MY-KEL-2026-9988',
+            'jenis_ternakan' => 'Lembu',
+        ]);
+
+        $response->assertJsonFragment([
+            'no_perjanjian' => 'PW-PP-2026-0099',
+        ]);
+
+        $response->assertJsonFragment([
+            'nama_ladang' => 'Ladang Ayam Chapa',
+        ]);
+    }
+
+    public function test_admin_jajahan_can_store_action_list_with_smart_fields(): void
+    {
+        $formData = [
+            'kod_dokumen' => 'PK-RK-61',
+            'no_bil' => 'AL/PP/2026/0888',
+            'jajahan' => 'Pasir Puteh',
+            'tarikh' => '2026-09-24',
+            'kategori_pelanggan' => 'Individu',
+            'nama_pelanggan' => 'Mohd Azman bin Salleh',
+            'no_kp' => $this->penternak->ic_number,
+            'gps_koordinat' => '5.839212, 102.394123',
+            'rawatan_lapangan' => '1',
+            'pemantauan_pawah' => '1',
+            'jenis_ternakan' => ['Lembu'],
+            'ternakan_terlibat_ids' => [1, 2],
+            'bil_ternakan' => 2,
+            'status' => 'Selesai',
+        ];
+
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->post(route('action-list.store'), $formData);
+        
+        $actionList = ActionList::where('no_bil', 'AL/PP/2026/0888')->first();
+        $this->assertNotNull($actionList);
+        $this->assertEquals('5.839212, 102.394123', $actionList->gps_koordinat);
+        $this->assertEquals([1, 2], $actionList->ternakan_terlibat_ids);
+    }
 }

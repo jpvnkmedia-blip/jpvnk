@@ -46,9 +46,15 @@ php artisan storage:link --force || true
 echo "Running database migrations..."
 php artisan migrate --force || true
 
-# Auto-seed initial data
-echo "Checking and seeding initial data..."
-php artisan db:seed --force || true
+# Auto-seed initial data only if users table is empty
+echo "Checking database records..."
+USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null | tr -d '\r\n' || echo "0")
+if [ "$USER_COUNT" = "0" ] || [ -z "$USER_COUNT" ]; then
+    echo "Database is empty. Seeding initial baseline data..."
+    php artisan db:seed --force || true
+else
+    echo "Database already initialized with $USER_COUNT users. Skipping db:seed to preserve deleted/modified accounts."
+fi
 
 # Clear and rebuild caches
 echo "Optimizing application caches..."

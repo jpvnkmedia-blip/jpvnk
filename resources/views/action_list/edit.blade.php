@@ -155,11 +155,11 @@
             </div>
         </div>
 
-        <!-- C. MAKLUMAT TEMUJANJI -->
+        <!-- C. MAKLUMAT TEMUJANJI & GPS -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
             <div class="font-black text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
                 <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">C</span>
-                MAKLUMAT TEMUJANJI
+                MAKLUMAT TEMUJANJI & LOKASI
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
@@ -193,7 +193,25 @@
                     <input type="text" name="maklumat_tambahan" value="{{ old('maklumat_tambahan', $actionList->maklumat_tambahan) }}" class="w-full py-2 px-3 rounded-xl border border-slate-300 focus:outline-emerald-500 text-slate-700">
                 </div>
 
-                <div class="lg:col-span-4">
+                <!-- GPS Koordinat Lokasi -->
+                <div class="lg:col-span-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block font-bold text-slate-700 uppercase text-[11px] flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-rose-500"></i> GPS Koordinat Lokasi:
+                        </label>
+                        <button type="button" onclick="dapatkanGpsSemasa()" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1">
+                            <i class="fa-solid fa-crosshairs"></i> Guna GPS Semasa
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" name="gps_koordinat" id="gpsKoordinatInput" value="{{ old('gps_koordinat', $actionList->gps_koordinat) }}" placeholder="cth: 5.8392, 102.3941" class="w-full py-1.5 px-3 rounded-xl border border-slate-300 bg-white font-mono text-slate-800">
+                        <button type="button" onclick="bukaGoogleMaps()" class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs whitespace-nowrap flex items-center gap-1">
+                            <i class="fa-solid fa-map-location-dot"></i> Peta
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
                     <label class="block font-bold text-slate-700 uppercase mb-1">Lampiran Lakaran Peta</label>
                     @if($actionList->lampiran_peta)
                         <div class="mb-2 flex items-center gap-3">
@@ -404,9 +422,34 @@
                 Batal
             </a>
             <button type="submit" class="px-7 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg transition flex items-center gap-2">
-                <i class="fa-solid fa-save"></i> Kemaskini Borang Action List
+                <i class="fa-solid fa-save"></i> Simpan Perubahan Borang (PK-RK-61)
             </button>
         </div>
     </form>
 </div>
+
+<script>
+    function dapatkanGpsSemasa() {
+        if (!navigator.geolocation) {
+            alert('Pelayar anda tidak menyokong geolokasi GPS.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            document.getElementById('gpsKoordinatInput').value = `${lat}, ${lng}`;
+        }, err => {
+            alert('Gagal mendapatkan lokasi GPS. Sila pastikan kebenaran lokasi diaktifkan.');
+        });
+    }
+
+    function bukaGoogleMaps() {
+        const coords = document.getElementById('gpsKoordinatInput').value.trim();
+        if (!coords) {
+            alert('Sila masukkan koordinat GPS terlebih dahulu.');
+            return;
+        }
+        window.open(`https://www.google.com/maps?q=${encodeURIComponent(coords)}`, '_blank');
+    }
+</script>
 @endsection

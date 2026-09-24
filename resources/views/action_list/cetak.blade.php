@@ -204,13 +204,21 @@
                         11 Maklumat tambahan<br><span class="text-[9px] font-normal">(peta lokasi sila lukis di belakang dan lain-lain)</span>
                     </div>
                     <div class="w-4 p-1.5 font-bold text-center flex-shrink-0">:</div>
-                    <div class="p-1.5 flex-1">{{ $actionList->maklumat_tambahan ?: '-' }}</div>
+                    <div class="p-1.5 flex-1">
+                        {{ $actionList->maklumat_tambahan ?: '-' }}
+                        @if($actionList->gps_koordinat)
+                            <span class="ml-2 font-mono font-bold">[ GPS: {{ $actionList->gps_koordinat }} ]</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
             <!-- SECTION D: MAKLUMAT PERKHIDMATAN YANG DIBERI -->
-            <div class="bg-slate-50/50 p-1.5 font-bold text-[11px] form-border-t form-border-b">
-                D. MAKLUMAT PERKHIDMATAN YANG DIBERI
+            <div class="bg-slate-50/50 p-1.5 font-bold text-[11px] form-border-t form-border-b flex justify-between items-center">
+                <span>D. MAKLUMAT PERKHIDMATAN YANG DIBERI</span>
+                @if($actionList->pawahPerjanjian)
+                    <span class="font-normal text-[10px]">[ Pawah: <b class="font-mono">{{ $actionList->pawahPerjanjian->no_perjanjian }}</b> ]</span>
+                @endif
             </div>
             
             <div class="grid grid-cols-12 divide-x divide-black text-[11px]">
@@ -236,7 +244,7 @@
 
                     <div class="flex items-start gap-1.5">
                         <span class="w-3.5 h-3.5 border border-black inline-flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5">{{ !empty($srv['pemantauan_pawah']) ? '✓' : '' }}</span>
-                        <span>Pemantauan Pawah Negeri</span>
+                        <span>Pemantauan Pawah {{ $actionList->pawahPerjanjian ? "({$actionList->pawahPerjanjian->no_perjanjian})" : 'Negeri' }}</span>
                     </div>
 
                     <div class="flex items-start gap-1.5">

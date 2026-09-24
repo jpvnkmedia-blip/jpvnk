@@ -251,6 +251,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/cipta', [\App\Http\Controllers\ActionListController::class, 'create'])->name('create');
         Route::post('/cipta', [\App\Http\Controllers\ActionListController::class, 'store'])->name('store');
         Route::get('/api/cari-pelanggan', [\App\Http\Controllers\ActionListController::class, 'apiCariPelanggan'])->name('api-cari-pelanggan');
+        Route::get('/api/semak-pelanggan-lengkap', [\App\Http\Controllers\ActionListController::class, 'apiSemakPelangganLengkap'])->name('api-semak-pelanggan-lengkap');
         Route::get('/{id}', [\App\Http\Controllers\ActionListController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [\App\Http\Controllers\ActionListController::class, 'edit'])->name('edit');
         Route::put('/{id}', [\App\Http\Controllers\ActionListController::class, 'update'])->name('update');

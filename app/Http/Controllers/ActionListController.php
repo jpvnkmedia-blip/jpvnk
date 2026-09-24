@@ -250,6 +250,7 @@ class ActionListController extends Controller
             'maklumat_pelanggan_berlainan' => $request->input('maklumat_pelanggan_berlainan'),
             'maklumat_tambahan' => $request->input('maklumat_tambahan'),
             'lampiran_peta' => $lampiranPetaPath,
+            'gps_koordinat' => $request->input('gps_koordinat'),
 
             'perkhidmatan_diberi' => $perkhidmatanDiberi,
             'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
@@ -258,6 +259,7 @@ class ActionListController extends Controller
 
             'jenis_ternakan' => $jenisTernakan,
             'jenis_ternakan_lain' => $request->input('jenis_ternakan_lain'),
+            'ternakan_terlibat_ids' => $request->input('ternakan_terlibat_ids', []),
             'bil_ternakan' => $request->input('bil_ternakan'),
             'bil_yang_ada' => $request->input('bil_yang_ada'),
 
@@ -276,6 +278,7 @@ class ActionListController extends Controller
             'status' => $request->input('status', 'Selesai'),
             'pegawai_id' => $user->id,
             'temujanji_id' => $request->input('temujanji_id'),
+            'pawah_perjanjian_id' => $request->input('pawah_perjanjian_id'),
             'created_by' => $user->id,
         ]);
 
@@ -306,7 +309,7 @@ class ActionListController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'creator'])->findOrFail($id);
+        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'creator', 'pawahPerjanjian'])->findOrFail($id);
 
         return view('action_list.show', compact('actionList'));
     }
@@ -321,7 +324,7 @@ class ActionListController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji'])->findOrFail($id);
+        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'pawahPerjanjian'])->findOrFail($id);
 
         $jajahanList = array_keys(config('kelantan.jajahan', []));
         if (empty($jajahanList)) {
@@ -390,6 +393,15 @@ class ActionListController extends Controller
             $jenisTernakan = [$jenisTernakan];
         }
 
+        $targetUserId = $actionList->user_id;
+        if (!$targetUserId && $request->filled('no_kp')) {
+            $cleanIc = preg_replace('/[^0-9]/', '', $request->input('no_kp'));
+            $matchedUser = User::where('ic_number', $cleanIc)->orWhere('ic_number', $request->input('no_kp'))->first();
+            if ($matchedUser) {
+                $targetUserId = $matchedUser->id;
+            }
+        }
+
         $actionList->update([
             'no_bil' => $request->input('no_bil', $actionList->no_bil),
             'jajahan' => $request->input('jajahan'),
@@ -404,6 +416,7 @@ class ActionListController extends Controller
             'daerah' => $request->input('daerah'),
             'telefon' => $request->input('telefon'),
             'no_rujukan' => $request->input('no_rujukan'),
+            'user_id' => $targetUserId,
 
             'catatan_perkhidmatan_dipohon' => $request->input('catatan_perkhidmatan_dipohon'),
 
@@ -414,6 +427,7 @@ class ActionListController extends Controller
             'maklumat_pelanggan_berlainan' => $request->input('maklumat_pelanggan_berlainan'),
             'maklumat_tambahan' => $request->input('maklumat_tambahan'),
             'lampiran_peta' => $lampiranPetaPath,
+            'gps_koordinat' => $request->input('gps_koordinat'),
 
             'perkhidmatan_diberi' => $perkhidmatanDiberi,
             'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
@@ -422,6 +436,7 @@ class ActionListController extends Controller
 
             'jenis_ternakan' => $jenisTernakan,
             'jenis_ternakan_lain' => $request->input('jenis_ternakan_lain'),
+            'ternakan_terlibat_ids' => $request->input('ternakan_terlibat_ids', $actionList->ternakan_terlibat_ids ?? []),
             'bil_ternakan' => $request->input('bil_ternakan'),
             'bil_yang_ada' => $request->input('bil_yang_ada'),
 
@@ -437,6 +452,7 @@ class ActionListController extends Controller
             'no_resit' => $request->input('no_resit'),
             'pengesahan_ulasan_pegawai' => $request->input('pengesahan_ulasan_pegawai'),
 
+            'pawah_perjanjian_id' => $request->input('pawah_perjanjian_id', $actionList->pawah_perjanjian_id),
             'status' => $request->input('status', 'Selesai'),
         ]);
 
@@ -472,7 +488,7 @@ class ActionListController extends Controller
      */
     public function cetak($id)
     {
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji'])->findOrFail($id);
+        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'pawahPerjanjian'])->findOrFail($id);
         return view('action_list.cetak', compact('actionList'));
     }
 
@@ -494,4 +510,242 @@ class ActionListController extends Controller
 
         return response()->json($users);
     }
+
+    /**
+     * API Semak Pelanggan Lengkap Merentasi Modul (EPTR, EPU, Klinik, Pawah)
+     */
+    public function apiSemakPelangganLengkap(Request $request)
+    {
+        $rawIc = trim((string)$request->input('ic_number', $request->input('no_kp', '')));
+        $cleanIc = preg_replace('/[^0-9]/', '', $rawIc);
+
+        if (empty($cleanIc) && empty($rawIc)) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Sila masukkan No. Kad Pengenalan pelanggan.'
+            ], 400);
+        }
+
+        // 1. Cari Pengguna / Pemunya
+        $user = User::where('ic_number', $cleanIc)
+            ->orWhere('ic_number', $rawIc)
+            ->first();
+
+        $pemunya = null;
+        if (class_exists(\App\Models\Pemunya::class)) {
+            $pemunya = \App\Models\Pemunya::where('no_kp', $cleanIc)
+                ->orWhere('no_kp', $rawIc)
+                ->orWhere(function ($q) use ($user) {
+                    if ($user) {
+                        $q->where('user_id', $user->id);
+                    }
+                })
+                ->first();
+        }
+
+        if (!$user && !$pemunya) {
+            return response()->json([
+                'found' => false,
+                'message' => "Tiada rekod pengguna atau penternak dijumpai untuk No. K/P: {$rawIc}."
+            ]);
+        }
+
+        $nama = $user->name ?? $pemunya->nama ?? '';
+        $ic = $user->ic_number ?? $pemunya->no_kp ?? $rawIc;
+        $telefon = $user->phone ?? $pemunya->no_telefon ?? '';
+        $alamat = $user->address ?? $pemunya->alamat ?? '';
+        $poskod = $user->poskod ?? $pemunya->poskod ?? '16800';
+        $mukim = $pemunya->mukim ?? '';
+        $daerah = $pemunya->daerah ?? '';
+        $jajahan = $user->jajahan ?? $pemunya->jajahan ?? '';
+        $kategori = ($user && $user->is_syarikat) ? 'Syarikat' : 'Individu';
+        $userId = $user->id ?? null;
+
+        // 2. EPTR Ternakan (Ruminan: Lembu, Kerbau, Kambing, Biri-biri, Rusa, dll)
+        $eptrTernakan = [];
+        if (class_exists(\App\Models\Ternakan::class) && class_exists(\App\Models\Pemunya::class)) {
+            $pemunyaIds = \App\Models\Pemunya::where('no_kp', $cleanIc)
+                ->orWhere('no_kp', $rawIc)
+                ->orWhere(function ($q) use ($userId) {
+                    if ($userId) {
+                        $q->where('user_id', $userId);
+                    }
+                })
+                ->pluck('id');
+
+            if ($pemunyaIds->isNotEmpty()) {
+                $ternakans = \App\Models\Ternakan::whereIn('pemunya_id', $pemunyaIds)
+                    ->with('pemunya')
+                    ->latest()
+                    ->get();
+
+                foreach ($ternakans as $t) {
+                    $eptrTernakan[] = [
+                        'id' => $t->id,
+                        'no_tag' => $t->no_tag,
+                        'jenis_ternakan' => $t->jenis_ternakan,
+                        'baka' => $t->baka,
+                        'jantina' => $t->jantina,
+                        'umur' => $t->umur,
+                        'lokasi_kandang' => $t->lokasi_kandang,
+                        'status' => $t->status,
+                        'status_kelulusan' => $t->status_kelulusan,
+                        'is_active' => $t->canPerformAction(),
+                    ];
+                }
+            }
+        }
+
+        // 3. EPU Ladang Unggas (Ayam, Itik, Puyuh dll & GPS Koordinat)
+        $epuLadang = [];
+        $suggestedGps = null;
+        if (class_exists(\App\Models\EpuLadang::class) && $userId) {
+            $ladangs = \App\Models\EpuLadang::where('user_id', $userId)
+                ->orWhere('no_syarikat_atau_ssm', $cleanIc)
+                ->latest()
+                ->get();
+
+            foreach ($ladangs as $l) {
+                $gpsStr = ($l->latitude && $l->longitude) ? "{$l->latitude}, {$l->longitude}" : null;
+                if (!$suggestedGps && $gpsStr) {
+                    $suggestedGps = $gpsStr;
+                }
+
+                $epuLadang[] = [
+                    'id' => $l->id,
+                    'nama_ladang' => $l->nama_ladang,
+                    'id_premis' => $l->id_premis,
+                    'jajahan' => $l->jajahan,
+                    'daerah' => $l->daerah,
+                    'mukim' => $l->mukim,
+                    'alamat_ladang' => $l->alamat_ladang,
+                    'latitude' => $l->latitude,
+                    'longitude' => $l->longitude,
+                    'gps_koordinat' => $gpsStr,
+                    'kapasiti_maksimum_unggas' => $l->kapasiti_maksimum_unggas,
+                    'status_ladang' => $l->status_ladang,
+                ];
+            }
+        }
+
+        // 4. Klinik Temujanji & Rawatan (Haiwan Kesayangan / Ruminan Rawatan)
+        $klinikRekod = [];
+        $suggestedTemujanji = null;
+        if (class_exists(KlinikTemujanji::class)) {
+            $temujanjis = KlinikTemujanji::where(function ($q) use ($userId, $cleanIc, $rawIc) {
+                    if ($userId) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->orWhere('no_kp', $cleanIc)->orWhere('no_kp', $rawIc);
+                })
+                ->with('rawatan')
+                ->latest('tarikh_temujanji')
+                ->latest('id')
+                ->take(10)
+                ->get();
+
+            foreach ($temujanjis as $tj) {
+                if (!$suggestedTemujanji && in_array(strtolower((string)$tj->status), ['diluluskan', 'menunggu', 'sah', 'diproses'])) {
+                    $suggestedTemujanji = [
+                        'id' => $tj->id,
+                        'tarikh' => $tj->tarikh_temujanji ? $tj->tarikh_temujanji->format('Y-m-d') : null,
+                        'masa' => $tj->masa_temujanji,
+                        'tujuan' => $tj->simptom_atau_tujuan ?: $tj->tujuan,
+                        'jenis_haiwan' => $tj->jenis_haiwan,
+                        'nama_haiwan' => $tj->nama_haiwan,
+                    ];
+                }
+
+                $rawatanInfo = [];
+                if ($tj->rawatan) {
+                    $rawatanInfo = [
+                        'diagnosis' => $tj->rawatan->diagnosis,
+                        'rawatan_diberikan' => $tj->rawatan->rawatan_diberikan,
+                        'ubat_diberikan' => $tj->rawatan->ubat_diberikan,
+                    ];
+                }
+
+                $klinikRekod[] = [
+                    'id' => $tj->id,
+                    'no_rujukan' => $tj->no_rujukan,
+                    'tarikh' => $tj->tarikh_temujanji ? $tj->tarikh_temujanji->format('d/m/Y') : '-',
+                    'masa' => $tj->masa_temujanji ?: '-',
+                    'jajahan' => $tj->jajahan,
+                    'jenis_haiwan' => $tj->jenis_haiwan,
+                    'nama_haiwan' => $tj->nama_haiwan,
+                    'tujuan' => $tj->simptom_atau_tujuan ?: $tj->tujuan,
+                    'status' => $tj->status,
+                    'rawatan' => $rawatanInfo,
+                ];
+            }
+        }
+
+        // 5. Program Pawah (Perjanjian Pawah & Tag Ternakan)
+        $pawahPerjanjian = [];
+        if (class_exists(\App\Models\PawahPerjanjian::class) && $userId) {
+            $perjanjians = \App\Models\PawahPerjanjian::where('user_id', $userId)
+                ->with(['ternakanList', 'pawahTernakan.ternakan'])
+                ->latest()
+                ->get();
+
+            foreach ($perjanjians as $pj) {
+                $tags = [];
+                if ($pj->ternakanList && $pj->ternakanList->isNotEmpty()) {
+                    foreach ($pj->ternakanList as $tItem) {
+                        $tags[] = [
+                            'id' => $tItem->id,
+                            'no_tag' => $tItem->no_tag,
+                            'jenis_ternakan' => $tItem->jenis_ternakan,
+                            'baka' => $tItem->baka,
+                            'status_induk' => $tItem->pivot->status_induk ?? 'Aktif',
+                        ];
+                    }
+                }
+
+                $pawahPerjanjian[] = [
+                    'id' => $pj->id,
+                    'no_perjanjian' => $pj->no_perjanjian,
+                    'nama_program' => $pj->nama_program,
+                    'jenis_pawah' => $pj->jenis_pawah,
+                    'jajahan' => $pj->jajahan,
+                    'status' => $pj->status,
+                    'tarikh_mula' => $pj->tarikh_mula ? $pj->tarikh_mula->format('d/m/Y') : '-',
+                    'tarikh_tamat' => $pj->tarikh_tamat ? $pj->tarikh_tamat->format('d/m/Y') : '-',
+                    'bilangan_induk' => $pj->bilangan_induk,
+                    'ternakans' => $tags,
+                ];
+            }
+        }
+
+        // Semak GPS dari Action List terdahulu jika tiada di ladang
+        if (!$suggestedGps && $userId) {
+            $prevAct = ActionList::where('user_id', $userId)->whereNotNull('gps_koordinat')->latest('id')->first();
+            if ($prevAct) {
+                $suggestedGps = $prevAct->gps_koordinat;
+            }
+        }
+
+        return response()->json([
+            'found' => true,
+            'pelanggan' => [
+                'user_id' => $userId,
+                'nama' => $nama,
+                'no_kp' => $ic,
+                'telefon' => $telefon,
+                'alamat' => $alamat,
+                'poskod' => $poskod,
+                'mukim' => $mukim,
+                'daerah' => $daerah,
+                'jajahan' => $jajahan,
+                'kategori_pelanggan' => $kategori,
+            ],
+            'eptr_ternakan' => $eptrTernakan,
+            'epu_ladang' => $epuLadang,
+            'klinik_rekod' => $klinikRekod,
+            'pawah_perjanjian' => $pawahPerjanjian,
+            'suggested_gps' => $suggestedGps,
+            'suggested_temujanji' => $suggestedTemujanji,
+        ]);
+    }
 }
+

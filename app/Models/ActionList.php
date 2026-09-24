@@ -36,12 +36,14 @@ class ActionList extends Model
         'maklumat_pelanggan_berlainan',
         'maklumat_tambahan',
         'lampiran_peta',
+        'gps_koordinat',
         'perkhidmatan_diberi',
         'keterangan_pembedahan',
         'keterangan_projek',
         'keterangan_lain',
         'jenis_ternakan',
         'jenis_ternakan_lain',
+        'ternakan_terlibat_ids',
         'bil_ternakan',
         'bil_yang_ada',
         'laporan',
@@ -57,6 +59,7 @@ class ActionList extends Model
         'status',
         'pegawai_id',
         'temujanji_id',
+        'pawah_perjanjian_id',
         'created_by',
     ];
 
@@ -65,6 +68,7 @@ class ActionList extends Model
         'tandatangan_pelanggan_tarikh' => 'date',
         'perkhidmatan_diberi' => 'array',
         'jenis_ternakan' => 'array',
+        'ternakan_terlibat_ids' => 'array',
         'bayaran' => 'decimal:2',
     ];
 
@@ -86,6 +90,11 @@ class ActionList extends Model
     public function temujanji()
     {
         return $this->belongsTo(KlinikTemujanji::class, 'temujanji_id');
+    }
+
+    public function pawahPerjanjian()
+    {
+        return $this->belongsTo(PawahPerjanjian::class, 'pawah_perjanjian_id');
     }
 
     public function scopeByJajahan($query, $jajahan)

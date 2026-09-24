@@ -148,10 +148,22 @@
                 <div class="text-slate-800 mt-0.5">{{ $actionList->maklumat_pelanggan_berlainan ?: '-' }}</div>
             </div>
 
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-2">
                 <div class="text-[11px] font-bold text-slate-400 uppercase">11. Maklumat Tambahan / Catatan Lokasi</div>
                 <div class="text-slate-800 mt-0.5">{{ $actionList->maklumat_tambahan ?: '-' }}</div>
             </div>
+
+            @if($actionList->gps_koordinat)
+                <div class="lg:col-span-2">
+                    <div class="text-[11px] font-bold text-slate-400 uppercase">GPS Koordinat Lokasi:</div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="font-mono font-bold text-emerald-800 text-xs">{{ $actionList->gps_koordinat }}</span>
+                        <a href="https://www.google.com/maps?q={{ urlencode($actionList->gps_koordinat) }}" target="_blank" class="px-2.5 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] transition inline-flex items-center gap-1">
+                            <i class="fa-solid fa-map-location-dot"></i> Buka Google Maps
+                        </a>
+                    </div>
+                </div>
+            @endif
 
             @if($actionList->lampiran_peta)
                 <div class="lg:col-span-4 pt-2">
@@ -166,10 +178,17 @@
 
     <!-- D. MAKLUMAT PERKHIDMATAN YANG DIBERI -->
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
-            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">D</span>
-            MAKLUMAT PERKHIDMATAN YANG DIBERI
-        </h3>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">D</span>
+                MAKLUMAT PERKHIDMATAN YANG DIBERI
+            </h3>
+            @if($actionList->pawahPerjanjian)
+                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-300 font-bold text-[11px] flex items-center gap-1.5">
+                    <i class="fa-solid fa-handshake-angle"></i> Pawah: {{ $actionList->pawahPerjanjian->no_perjanjian }}
+                </span>
+            @endif
+        </div>
 
         @php
             $srv = is_array($actionList->perkhidmatan_diberi) ? $actionList->perkhidmatan_diberi : [];
@@ -194,8 +213,8 @@
                     Pembedahan {{ $actionList->keterangan_pembedahan ? "({$actionList->keterangan_pembedahan})" : '' }}
                 </div>
 
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['pemantauan_pawah']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['pemantauan_pawah']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
+                <div class="p-2.5 rounded-xl border {{ !empty($srv['pemantauan_pawah']) ? 'bg-purple-50 border-purple-300 text-purple-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
+                    <i class="fa-solid {{ !empty($srv['pemantauan_pawah']) ? 'fa-square-check text-purple-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
                     Pemantauan Pawah Negeri
                 </div>
 
