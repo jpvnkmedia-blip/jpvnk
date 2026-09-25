@@ -245,18 +245,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/permohonan-ubat/{id}/batal', [KlinikController::class, 'permohonanUbatBatal'])->name('permohonan_ubat.batal');
     });
 
-    // 5.1 MODUL ACTION LIST JAJAHAN (PK-RK-61)
+    // 5.1 MODUL ACTION LIST JAJAHAN (DAIRI & LOG AKTIVITI ADMIN)
     Route::prefix('action-list')->name('action-list.')->group(function () {
         Route::get('/', [\App\Http\Controllers\ActionListController::class, 'index'])->name('index');
         Route::get('/cipta', [\App\Http\Controllers\ActionListController::class, 'create'])->name('create');
         Route::post('/cipta', [\App\Http\Controllers\ActionListController::class, 'store'])->name('store');
-        Route::get('/api/cari-pelanggan', [\App\Http\Controllers\ActionListController::class, 'apiCariPelanggan'])->name('api-cari-pelanggan');
-        Route::get('/api/semak-pelanggan-lengkap', [\App\Http\Controllers\ActionListController::class, 'apiSemakPelangganLengkap'])->name('api-semak-pelanggan-lengkap');
+        Route::get('/cetak/{id?}', [\App\Http\Controllers\ActionListController::class, 'cetak'])->name('cetak');
         Route::get('/{id}', [\App\Http\Controllers\ActionListController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [\App\Http\Controllers\ActionListController::class, 'edit'])->name('edit');
         Route::put('/{id}', [\App\Http\Controllers\ActionListController::class, 'update'])->name('update');
         Route::delete('/{id}', [\App\Http\Controllers\ActionListController::class, 'destroy'])->name('destroy');
-        Route::get('/{id}/cetak', [\App\Http\Controllers\ActionListController::class, 'cetak'])->name('cetak');
+        Route::get('/{id}/cetak', [\App\Http\Controllers\ActionListController::class, 'cetak'])->name('cetak-tunggal');
     });
 
     // 6. MODUL INVENTORI (STOR PERALATAN PEJABAT & STOR UBAT VETERINAR)

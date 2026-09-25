@@ -21,7 +21,7 @@ return new class extends Migration
             // A. Maklumat Pelanggan
             $table->string('masa_pendaftaran')->nullable();
             $table->string('kategori_pelanggan')->default('Individu'); // Individu / Syarikat
-            $table->string('nama_pelanggan');
+            $table->string('nama_pelanggan')->nullable();
             $table->string('no_kp')->nullable();
             $table->text('alamat')->nullable();
             $table->string('mukim')->nullable();

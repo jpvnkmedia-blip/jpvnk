@@ -3,11 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActionList;
-use App\Models\KlinikTemujanji;
-use App\Models\KlinikUbat;
-use App\Models\InventoriItem;
 use App\Models\User;
-use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,13 +12,13 @@ use Carbon\Carbon;
 class ActionListController extends Controller
 {
     /**
-     * Papar senarai Borang Action List (PK-RK-61)
+     * Papar senarai log & dairi aktiviti admin (Action List)
      */
     public function index(Request $request)
     {
         $user = Auth::user();
         if (!$user || !$user->canManageActionList()) {
-            abort(403, 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk mengakses modul Action List Jajahan.');
+            abort(403, 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk mengakses Action List.');
         }
 
         $jajahanList = array_keys(config('kelantan.jajahan', []));
@@ -35,7 +31,7 @@ class ActionListController extends Controller
             $selectedJajahan = $user->jajahan;
         }
 
-        $query = ActionList::with(['user', 'pegawai', 'temujanji']);
+        $query = ActionList::with(['pegawai', 'creator']);
 
         if ($selectedJajahan && $selectedJajahan !== 'Semua') {
             $query->where('jajahan', $selectedJajahan);
@@ -44,21 +40,25 @@ class ActionListController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('no_bil', 'like', "%{$search}%")
-                  ->orWhere('nama_pelanggan', 'like', "%{$search}%")
-                  ->orWhere('no_kp', 'like', "%{$search}%")
-                  ->orWhere('telefon', 'like', "%{$search}%")
-                  ->orWhere('no_rujukan', 'like', "%{$search}%")
-                  ->orWhere('no_resit', 'like', "%{$search}%");
+                $q->where('tajuk_aktiviti', 'like', "%{$search}%")
+                  ->orWhere('maklumat_aktiviti', 'like', "%{$search}%")
+                  ->orWhere('lokasi', 'like', "%{$search}%")
+                  ->orWhere('nama_pegawai', 'like', "%{$search}%")
+                  ->orWhere('no_bil', 'like', "%{$search}%")
+                  ->orWhere('tindakan_susulan', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('kategori')) {
-            $query->where('kategori_pelanggan', $request->input('kategori'));
+            $query->where('kategori_aktiviti', $request->input('kategori'));
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('keutamaan')) {
+            $query->where('keutamaan', $request->input('keutamaan'));
         }
 
         if ($request->filled('tarikh_mula')) {
@@ -77,44 +77,37 @@ class ActionListController extends Controller
             $statsQuery->where('jajahan', $selectedJajahan);
         }
 
-        $totalRecords = (clone $statsQuery)->count();
-        $totalKutipan = (clone $statsQuery)->sum('bayaran');
-        
-        $allRecords = (clone $statsQuery)->get();
-        $rawatanLapanganCount = 0;
-        $rawatanKlinikCount = 0;
-        $pemantauanPawahCount = 0;
-        $pemantauanProjekCount = 0;
+        $totalAktiviti = (clone $statsQuery)->count();
+        $selesaiCount = (clone $statsQuery)->where('status', 'Selesai')->count();
+        $dalamTindakanCount = (clone $statsQuery)->where('status', 'Dalam Tindakan')->count();
+        $perancanganCount = (clone $statsQuery)->where('status', 'Perancangan')->count();
+        $bulanIniCount = (clone $statsQuery)->whereMonth('tarikh', Carbon::now()->month)->whereYear('tarikh', Carbon::now()->year)->count();
 
-        foreach ($allRecords as $rec) {
-            $services = is_array($rec->perkhidmatan_diberi) ? $rec->perkhidmatan_diberi : [];
-            if (!empty($services['rawatan_lapangan'])) $rawatanLapanganCount++;
-            if (!empty($services['rawatan_klinik'])) $rawatanKlinikCount++;
-            if (!empty($services['pemantauan_pawah'])) $pemantauanPawahCount++;
-            if (!empty($services['pemantauan_projek']) || !empty($services['pemantauan_trust'])) $pemantauanProjekCount++;
-        }
+        $kategoriList = ActionList::KATEGORI_LIST;
+        $statusList = ActionList::STATUS_LIST;
 
         return view('action_list.index', compact(
             'actionLists',
             'jajahanList',
             'selectedJajahan',
-            'totalRecords',
-            'totalKutipan',
-            'rawatanLapanganCount',
-            'rawatanKlinikCount',
-            'pemantauanPawahCount',
-            'pemantauanProjekCount'
+            'totalAktiviti',
+            'selesaiCount',
+            'dalamTindakanCount',
+            'perancanganCount',
+            'bulanIniCount',
+            'kategoriList',
+            'statusList'
         ));
     }
 
     /**
-     * Papar borang pengisian Action List baharu (PK-RK-61)
+     * Borang rekod aktiviti baharu
      */
     public function create(Request $request)
     {
         $user = Auth::user();
         if (!$user || !$user->canManageActionList()) {
-            abort(403, 'Akses Ditolak: Anda tidak mempunyai kebenaran untuk mengisi Borang Action List.');
+            abort(403, 'Akses Ditolak.');
         }
 
         $defaultJajahan = $user->jajahan ?: 'Pasir Puteh';
@@ -123,46 +116,21 @@ class ActionListController extends Controller
             $jajahanList = ['Pasir Puteh', 'Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Machang', 'Tanah Merah', 'Kuala Krai', 'Gua Musang', 'Jeli'];
         }
 
-        $proposedNoBil = ActionList::generateNoBil($defaultJajahan);
-
-        // Pre-fill data from Temujanji Klinik if passed
-        $temujanji = null;
-        if ($request->filled('temujanji_id')) {
-            $temujanji = KlinikTemujanji::with('user')->find($request->input('temujanji_id'));
-        }
-
-        // Pre-fill data from Penternak/User if passed
-        $prefillUser = null;
-        if ($request->filled('user_id')) {
-            $prefillUser = User::find($request->input('user_id'));
-        } elseif ($temujanji && $temujanji->user) {
-            $prefillUser = $temujanji->user;
-        }
-
-        // Senarai ubat sedia ada untuk autolengkap
-        $senaraiUbat = [];
-        if (class_exists(KlinikUbat::class)) {
-            $senaraiUbat = KlinikUbat::pluck('nama_ubat')->toArray();
-        }
-        if (empty($senaraiUbat) && class_exists(InventoriItem::class)) {
-            $senaraiUbat = InventoriItem::where('kategori', 'like', '%ubat%')
-                ->orWhere('kategori', 'like', '%vaksin%')
-                ->pluck('nama_item')
-                ->toArray();
-        }
+        $kategoriList = ActionList::KATEGORI_LIST;
+        $statusList = ActionList::STATUS_LIST;
+        $keutamaanList = ActionList::KEUTAMAAN_LIST;
 
         return view('action_list.create', compact(
             'defaultJajahan',
             'jajahanList',
-            'proposedNoBil',
-            'temujanji',
-            'prefillUser',
-            'senaraiUbat'
+            'kategoriList',
+            'statusList',
+            'keutamaanList'
         ));
     }
 
     /**
-     * Simpan rekod Borang Action List
+     * Simpan rekod aktiviti baharu
      */
     public function store(Request $request)
     {
@@ -172,135 +140,53 @@ class ActionListController extends Controller
         }
 
         $request->validate([
-            'nama_pelanggan' => 'required|string|max:255',
-            'jajahan' => 'required|string|max:100',
+            'tajuk_aktiviti' => 'required|string|max:255',
             'tarikh' => 'required|date',
-            'kategori_pelanggan' => 'required|in:Individu,Syarikat',
-            'no_kp' => 'nullable|string|max:50',
-            'telefon' => 'nullable|string|max:30',
-            'alamat' => 'nullable|string|max:500',
-            'mukim' => 'nullable|string|max:100',
-            'poskod' => 'nullable|string|max:10',
-            'daerah' => 'nullable|string|max:100',
-            'bayaran' => 'nullable|numeric|min:0',
-            'lampiran_peta' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'kategori_aktiviti' => 'required|string|max:100',
+            'jajahan' => 'required|string|max:100',
+            'maklumat_aktiviti' => 'required|string',
+            'masa_mula' => 'nullable|string|max:30',
+            'masa_selesai' => 'nullable|string|max:30',
+            'lokasi' => 'nullable|string|max:255',
+            'nama_pegawai' => 'nullable|string|max:255',
+            'status' => 'required|in:Selesai,Dalam Tindakan,Perancangan,Ditangguhkan,Dibatalkan',
+            'keutamaan' => 'nullable|in:Biasa,Tinggi,Segera',
+            'tindakan_susulan' => 'nullable|string',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
-        $lampiranPetaPath = null;
-        if ($request->hasFile('lampiran_peta')) {
-            $lampiranPetaPath = $request->file('lampiran_peta')->store('action_list_maps', 'public');
+        $lampiranPath = null;
+        if ($request->hasFile('lampiran')) {
+            $lampiranPath = $request->file('lampiran')->store('action_list_lampiran', 'public');
         }
 
-        $noBil = $request->input('no_bil') ?: ActionList::generateNoBil($request->input('jajahan'));
-
-        // Format Perkhidmatan Diberi
-        $perkhidmatanDiberi = [
-            'rawatan_lapangan' => $request->boolean('rawatan_lapangan'),
-            'rawatan_klinik' => $request->boolean('rawatan_klinik'),
-            'pembedahan' => $request->boolean('pembedahan'),
-            'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
-            'pemantauan_pawah' => $request->boolean('pemantauan_pawah'),
-            'pemantauan_projek' => $request->boolean('pemantauan_projek'),
-            'keterangan_projek' => $request->input('keterangan_projek'),
-            'pemantauan_trust' => $request->boolean('pemantauan_trust'),
-            'lawatan_terancang' => $request->boolean('lawatan_terancang'),
-            'perkhidmatan_lain' => $request->boolean('perkhidmatan_lain'),
-            'keterangan_lain' => $request->input('keterangan_lain'),
-        ];
-
-        // Format Jenis Ternakan
-        $jenisTernakan = $request->input('jenis_ternakan', []);
-        if (!is_array($jenisTernakan)) {
-            $jenisTernakan = [$jenisTernakan];
-        }
-
-        // Cari user_id sekiranya wujud dalam pangkalan data
-        $targetUserId = $request->input('user_id');
-        if (!$targetUserId && $request->filled('no_kp')) {
-            $cleanIc = preg_replace('/[^0-9]/', '', $request->input('no_kp'));
-            $matchedUser = User::where('ic_number', $cleanIc)->orWhere('ic_number', $request->input('no_kp'))->first();
-            if ($matchedUser) {
-                $targetUserId = $matchedUser->id;
-            }
-        }
+        $noBil = ActionList::generateNoBil($request->input('jajahan'));
 
         $actionList = ActionList::create([
-            'kod_dokumen' => $request->input('kod_dokumen', 'PK-RK-61'),
             'no_bil' => $noBil,
-            'jajahan' => $request->input('jajahan'),
+            'tajuk_aktiviti' => $request->input('tajuk_aktiviti'),
             'tarikh' => $request->input('tarikh'),
-            'masa_pendaftaran' => $request->input('masa_pendaftaran'),
-            'kategori_pelanggan' => $request->input('kategori_pelanggan', 'Individu'),
-            'nama_pelanggan' => $request->input('nama_pelanggan'),
-            'no_kp' => $request->input('no_kp'),
-            'alamat' => $request->input('alamat'),
-            'mukim' => $request->input('mukim'),
-            'poskod' => $request->input('poskod'),
-            'daerah' => $request->input('daerah'),
-            'telefon' => $request->input('telefon'),
-            'no_rujukan' => $request->input('no_rujukan'),
-            'user_id' => $targetUserId,
-
-            'catatan_perkhidmatan_dipohon' => $request->input('catatan_perkhidmatan_dipohon'),
-
+            'kategori_aktiviti' => $request->input('kategori_aktiviti'),
+            'jajahan' => $request->input('jajahan'),
+            'maklumat_aktiviti' => $request->input('maklumat_aktiviti'),
+            'masa_mula' => $request->input('masa_mula'),
+            'masa_selesai' => $request->input('masa_selesai'),
+            'lokasi' => $request->input('lokasi'),
             'nama_pegawai' => $request->input('nama_pegawai', $user->name),
-            'masa_pegawai' => $request->input('masa_pegawai'),
-            'masa_temujanji_mula' => $request->input('masa_temujanji_mula'),
-            'masa_temujanji_hingga' => $request->input('masa_temujanji_hingga'),
-            'maklumat_pelanggan_berlainan' => $request->input('maklumat_pelanggan_berlainan'),
-            'maklumat_tambahan' => $request->input('maklumat_tambahan'),
-            'lampiran_peta' => $lampiranPetaPath,
-            'gps_koordinat' => $request->input('gps_koordinat'),
-
-            'perkhidmatan_diberi' => $perkhidmatanDiberi,
-            'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
-            'keterangan_projek' => $request->input('keterangan_projek'),
-            'keterangan_lain' => $request->input('keterangan_lain'),
-
-            'jenis_ternakan' => $jenisTernakan,
-            'jenis_ternakan_lain' => $request->input('jenis_ternakan_lain'),
-            'ternakan_terlibat_ids' => $request->input('ternakan_terlibat_ids', []),
-            'bil_ternakan' => $request->input('bil_ternakan'),
-            'bil_yang_ada' => $request->input('bil_yang_ada'),
-
-            'laporan' => $request->input('laporan'),
-            'penggunaan_ubat' => $request->input('penggunaan_ubat'),
-
-            'tandatangan_pelanggan_nama' => $request->input('tandatangan_pelanggan_nama', $request->input('nama_pelanggan')),
-            'tandatangan_pelanggan_tarikh' => $request->input('tandatangan_pelanggan_tarikh', $request->input('tarikh')),
-            'tandatangan_pelanggan_masa' => $request->input('tandatangan_pelanggan_masa'),
-            'kepuasan_pelanggan' => $request->input('kepuasan_pelanggan', 'Puashati'),
-            'cadangan_pelanggan' => $request->input('cadangan_pelanggan'),
-            'bayaran' => $request->input('bayaran', 0.00),
-            'no_resit' => $request->input('no_resit'),
-            'pengesahan_ulasan_pegawai' => $request->input('pengesahan_ulasan_pegawai'),
-
             'status' => $request->input('status', 'Selesai'),
+            'keutamaan' => $request->input('keutamaan', 'Biasa'),
+            'tindakan_susulan' => $request->input('tindakan_susulan'),
+            'lampiran' => $lampiranPath,
             'pegawai_id' => $user->id,
-            'temujanji_id' => $request->input('temujanji_id'),
-            'pawah_perjanjian_id' => $request->input('pawah_perjanjian_id'),
             'created_by' => $user->id,
         ]);
 
-        // Hantar notifikasi sistem & emel jika ada user_id
-        if ($targetUserId) {
-            UserNotification::send(
-                $targetUserId,
-                'Borang Action List (PK-RK-61) Dikeluarkan',
-                "Rekod perkhidmatan veterinar anda di Pejabat Perkhidmatan Veterinar Jajahan {$actionList->jajahan} ({$noBil}) telah selesai direkodkan.",
-                'klinik',
-                route('action-list.show', $actionList->id),
-                'fa-solid fa-clipboard-check',
-                'emerald'
-            );
-        }
-
-        return redirect()->route('action-list.show', $actionList->id)
-            ->with('success', "Borang Action List '{$noBil}' bagi pelanggan '{$actionList->nama_pelanggan}' berjaya disimpan.");
+        return redirect()->route('action-list.index')
+            ->with('success', "Aktiviti '{$actionList->tajuk_aktiviti}' berjaya direkodkan ke dalam Action List.");
     }
 
     /**
-     * Papar maklumat terperinci Borang Action List
+     * Papar butiran rekod aktiviti
      */
     public function show($id)
     {
@@ -309,13 +195,13 @@ class ActionListController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'creator', 'pawahPerjanjian'])->findOrFail($id);
+        $actionList = ActionList::with(['pegawai', 'creator'])->findOrFail($id);
 
         return view('action_list.show', compact('actionList'));
     }
 
     /**
-     * Borang kemaskini Action List
+     * Borang kemaskini rekod aktiviti
      */
     public function edit($id)
     {
@@ -324,29 +210,28 @@ class ActionListController extends Controller
             abort(403, 'Akses Ditolak.');
         }
 
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'pawahPerjanjian'])->findOrFail($id);
+        $actionList = ActionList::with(['pegawai'])->findOrFail($id);
 
         $jajahanList = array_keys(config('kelantan.jajahan', []));
         if (empty($jajahanList)) {
             $jajahanList = ['Pasir Puteh', 'Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Machang', 'Tanah Merah', 'Kuala Krai', 'Gua Musang', 'Jeli'];
         }
 
-        $senaraiUbat = [];
-        if (class_exists(KlinikUbat::class)) {
-            $senaraiUbat = KlinikUbat::pluck('nama_ubat')->toArray();
-        }
-        if (empty($senaraiUbat) && class_exists(InventoriItem::class)) {
-            $senaraiUbat = InventoriItem::where('kategori', 'like', '%ubat%')
-                ->orWhere('kategori', 'like', '%vaksin%')
-                ->pluck('nama_item')
-                ->toArray();
-        }
+        $kategoriList = ActionList::KATEGORI_LIST;
+        $statusList = ActionList::STATUS_LIST;
+        $keutamaanList = ActionList::KEUTAMAAN_LIST;
 
-        return view('action_list.edit', compact('actionList', 'jajahanList', 'senaraiUbat'));
+        return view('action_list.edit', compact(
+            'actionList',
+            'jajahanList',
+            'kategoriList',
+            'statusList',
+            'keutamaanList'
+        ));
     }
 
     /**
-     * Simpan kemaskini Action List
+     * Simpan kemaskini rekod aktiviti
      */
     public function update(Request $request, $id)
     {
@@ -358,110 +243,51 @@ class ActionListController extends Controller
         $actionList = ActionList::findOrFail($id);
 
         $request->validate([
-            'nama_pelanggan' => 'required|string|max:255',
-            'jajahan' => 'required|string|max:100',
+            'tajuk_aktiviti' => 'required|string|max:255',
             'tarikh' => 'required|date',
-            'kategori_pelanggan' => 'required|in:Individu,Syarikat',
-            'bayaran' => 'nullable|numeric|min:0',
-            'lampiran_peta' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'kategori_aktiviti' => 'required|string|max:100',
+            'jajahan' => 'required|string|max:100',
+            'maklumat_aktiviti' => 'required|string',
+            'masa_mula' => 'nullable|string|max:30',
+            'masa_selesai' => 'nullable|string|max:30',
+            'lokasi' => 'nullable|string|max:255',
+            'nama_pegawai' => 'nullable|string|max:255',
+            'status' => 'required|in:Selesai,Dalam Tindakan,Perancangan,Ditangguhkan,Dibatalkan',
+            'keutamaan' => 'nullable|in:Biasa,Tinggi,Segera',
+            'tindakan_susulan' => 'nullable|string',
+            'lampiran' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,webp,pdf,doc,docx,xls,xlsx',
         ]);
 
-        $lampiranPetaPath = $actionList->lampiran_peta;
-        if ($request->hasFile('lampiran_peta')) {
-            if ($lampiranPetaPath && Storage::disk('public')->exists($lampiranPetaPath)) {
-                Storage::disk('public')->delete($lampiranPetaPath);
+        $lampiranPath = $actionList->lampiran;
+        if ($request->hasFile('lampiran')) {
+            if ($lampiranPath && Storage::disk('public')->exists($lampiranPath)) {
+                Storage::disk('public')->delete($lampiranPath);
             }
-            $lampiranPetaPath = $request->file('lampiran_peta')->store('action_list_maps', 'public');
-        }
-
-        $perkhidmatanDiberi = [
-            'rawatan_lapangan' => $request->boolean('rawatan_lapangan'),
-            'rawatan_klinik' => $request->boolean('rawatan_klinik'),
-            'pembedahan' => $request->boolean('pembedahan'),
-            'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
-            'pemantauan_pawah' => $request->boolean('pemantauan_pawah'),
-            'pemantauan_projek' => $request->boolean('pemantauan_projek'),
-            'keterangan_projek' => $request->input('keterangan_projek'),
-            'pemantauan_trust' => $request->boolean('pemantauan_trust'),
-            'lawatan_terancang' => $request->boolean('lawatan_terancang'),
-            'perkhidmatan_lain' => $request->boolean('perkhidmatan_lain'),
-            'keterangan_lain' => $request->input('keterangan_lain'),
-        ];
-
-        $jenisTernakan = $request->input('jenis_ternakan', []);
-        if (!is_array($jenisTernakan)) {
-            $jenisTernakan = [$jenisTernakan];
-        }
-
-        $targetUserId = $actionList->user_id;
-        if (!$targetUserId && $request->filled('no_kp')) {
-            $cleanIc = preg_replace('/[^0-9]/', '', $request->input('no_kp'));
-            $matchedUser = User::where('ic_number', $cleanIc)->orWhere('ic_number', $request->input('no_kp'))->first();
-            if ($matchedUser) {
-                $targetUserId = $matchedUser->id;
-            }
+            $lampiranPath = $request->file('lampiran')->store('action_list_lampiran', 'public');
         }
 
         $actionList->update([
-            'no_bil' => $request->input('no_bil', $actionList->no_bil),
-            'jajahan' => $request->input('jajahan'),
+            'tajuk_aktiviti' => $request->input('tajuk_aktiviti'),
             'tarikh' => $request->input('tarikh'),
-            'masa_pendaftaran' => $request->input('masa_pendaftaran'),
-            'kategori_pelanggan' => $request->input('kategori_pelanggan', 'Individu'),
-            'nama_pelanggan' => $request->input('nama_pelanggan'),
-            'no_kp' => $request->input('no_kp'),
-            'alamat' => $request->input('alamat'),
-            'mukim' => $request->input('mukim'),
-            'poskod' => $request->input('poskod'),
-            'daerah' => $request->input('daerah'),
-            'telefon' => $request->input('telefon'),
-            'no_rujukan' => $request->input('no_rujukan'),
-            'user_id' => $targetUserId,
-
-            'catatan_perkhidmatan_dipohon' => $request->input('catatan_perkhidmatan_dipohon'),
-
-            'nama_pegawai' => $request->input('nama_pegawai'),
-            'masa_pegawai' => $request->input('masa_pegawai'),
-            'masa_temujanji_mula' => $request->input('masa_temujanji_mula'),
-            'masa_temujanji_hingga' => $request->input('masa_temujanji_hingga'),
-            'maklumat_pelanggan_berlainan' => $request->input('maklumat_pelanggan_berlainan'),
-            'maklumat_tambahan' => $request->input('maklumat_tambahan'),
-            'lampiran_peta' => $lampiranPetaPath,
-            'gps_koordinat' => $request->input('gps_koordinat'),
-
-            'perkhidmatan_diberi' => $perkhidmatanDiberi,
-            'keterangan_pembedahan' => $request->input('keterangan_pembedahan'),
-            'keterangan_projek' => $request->input('keterangan_projek'),
-            'keterangan_lain' => $request->input('keterangan_lain'),
-
-            'jenis_ternakan' => $jenisTernakan,
-            'jenis_ternakan_lain' => $request->input('jenis_ternakan_lain'),
-            'ternakan_terlibat_ids' => $request->input('ternakan_terlibat_ids', $actionList->ternakan_terlibat_ids ?? []),
-            'bil_ternakan' => $request->input('bil_ternakan'),
-            'bil_yang_ada' => $request->input('bil_yang_ada'),
-
-            'laporan' => $request->input('laporan'),
-            'penggunaan_ubat' => $request->input('penggunaan_ubat'),
-
-            'tandatangan_pelanggan_nama' => $request->input('tandatangan_pelanggan_nama'),
-            'tandatangan_pelanggan_tarikh' => $request->input('tandatangan_pelanggan_tarikh'),
-            'tandatangan_pelanggan_masa' => $request->input('tandatangan_pelanggan_masa'),
-            'kepuasan_pelanggan' => $request->input('kepuasan_pelanggan'),
-            'cadangan_pelanggan' => $request->input('cadangan_pelanggan'),
-            'bayaran' => $request->input('bayaran', 0.00),
-            'no_resit' => $request->input('no_resit'),
-            'pengesahan_ulasan_pegawai' => $request->input('pengesahan_ulasan_pegawai'),
-
-            'pawah_perjanjian_id' => $request->input('pawah_perjanjian_id', $actionList->pawah_perjanjian_id),
-            'status' => $request->input('status', 'Selesai'),
+            'kategori_aktiviti' => $request->input('kategori_aktiviti'),
+            'jajahan' => $request->input('jajahan'),
+            'maklumat_aktiviti' => $request->input('maklumat_aktiviti'),
+            'masa_mula' => $request->input('masa_mula'),
+            'masa_selesai' => $request->input('masa_selesai'),
+            'lokasi' => $request->input('lokasi'),
+            'nama_pegawai' => $request->input('nama_pegawai', $actionList->nama_pegawai),
+            'status' => $request->input('status', $actionList->status),
+            'keutamaan' => $request->input('keutamaan', $actionList->keutamaan),
+            'tindakan_susulan' => $request->input('tindakan_susulan'),
+            'lampiran' => $lampiranPath,
         ]);
 
         return redirect()->route('action-list.show', $actionList->id)
-            ->with('success', "Borang Action List '{$actionList->no_bil}' berjaya dikemaskini.");
+            ->with('success', "Rekod aktiviti '{$actionList->tajuk_aktiviti}' berjaya dikemaskini.");
     }
 
     /**
-     * Padam rekod Action List (Super Admin / Admin Jajahan)
+     * Padam rekod aktiviti
      */
     public function destroy($id)
     {
@@ -471,318 +297,61 @@ class ActionListController extends Controller
         }
 
         $actionList = ActionList::findOrFail($id);
-        $noBil = $actionList->no_bil;
+        $tajuk = $actionList->tajuk_aktiviti ?: $actionList->no_bil;
 
-        if ($actionList->lampiran_peta && Storage::disk('public')->exists($actionList->lampiran_peta)) {
-            Storage::disk('public')->delete($actionList->lampiran_peta);
+        if ($actionList->lampiran && Storage::disk('public')->exists($actionList->lampiran)) {
+            Storage::disk('public')->delete($actionList->lampiran);
         }
 
         $actionList->delete();
 
         return redirect()->route('action-list.index')
-            ->with('success', "Borang Action List '{$noBil}' telah berjaya dipadam daripada sistem.");
+            ->with('success', "Aktiviti '{$tajuk}' telah berjaya dipadam.");
     }
 
     /**
-     * Cetak Borang Rasmi Action List (PK-RK-61 Format)
+     * Cetak Laporan / Dairi Aktiviti Pegawai
      */
-    public function cetak($id)
+    public function cetak(Request $request, $id = null)
     {
-        $actionList = ActionList::with(['user', 'pegawai', 'temujanji', 'pawahPerjanjian'])->findOrFail($id);
-        return view('action_list.cetak', compact('actionList'));
-    }
-
-    /**
-     * API Carian Pelanggan / Penternak untuk Autolengkap Bahagian A
-     */
-    public function apiCariPelanggan(Request $request)
-    {
-        $q = $request->input('query');
-        if (empty($q) || strlen($q) < 2) {
-            return response()->json([]);
+        $user = Auth::user();
+        if (!$user || !$user->canManageActionList()) {
+            abort(403, 'Akses Ditolak.');
         }
 
-        $users = User::where('name', 'like', "%{$q}%")
-            ->orWhere('ic_number', 'like', "%{$q}%")
-            ->orWhere('phone', 'like', "%{$q}%")
-            ->limit(10)
-            ->get(['id', 'name', 'ic_number', 'phone', 'address', 'poskod', 'jajahan']);
-
-        return response()->json($users);
-    }
-
-    /**
-     * API Semak Pelanggan Lengkap Merentasi Modul (EPTR, EPU, Klinik, Pawah)
-     */
-    public function apiSemakPelangganLengkap(Request $request)
-    {
-        try {
-            $rawIc = trim((string)$request->input('ic_number', $request->input('no_kp', '')));
-            $cleanIc = preg_replace('/[^0-9]/', '', $rawIc);
-            $formattedIc = (strlen($cleanIc) === 12) 
-                ? substr($cleanIc, 0, 6) . '-' . substr($cleanIc, 6, 2) . '-' . substr($cleanIc, 8, 4) 
-                : $rawIc;
-
-            if (empty($cleanIc) && empty($rawIc)) {
-                return response()->json([
-                    'found' => false,
-                    'message' => 'Sila masukkan No. Kad Pengenalan pelanggan.'
-                ]);
-            }
-
-            // 1. Cari Pengguna (User)
-            $user = User::where(function ($q) use ($cleanIc, $formattedIc, $rawIc) {
-                if (!empty($cleanIc)) {
-                    $q->where('ic_number', $cleanIc);
-                }
-                if (!empty($formattedIc)) {
-                    $q->orWhere('ic_number', $formattedIc);
-                }
-                if (!empty($rawIc)) {
-                    $q->orWhere('ic_number', $rawIc);
-                }
-            })->first();
-
-            // 2. Cari Pemunya (EPTR)
-            $pemunya = null;
-            if (class_exists(\App\Models\Pemunya::class)) {
-                $pemunyaQuery = \App\Models\Pemunya::query();
-                $pemunyaQuery->where(function ($q) use ($cleanIc, $formattedIc, $rawIc, $user) {
-                    if (!empty($cleanIc)) {
-                        $q->where('no_kp', $cleanIc);
-                    }
-                    if (!empty($formattedIc)) {
-                        $q->orWhere('no_kp', $formattedIc);
-                    }
-                    if (!empty($rawIc)) {
-                        $q->orWhere('no_kp', $rawIc);
-                    }
-                    if ($user) {
-                        $q->orWhere('user_id', $user->id);
-                    }
-                });
-                $pemunya = $pemunyaQuery->first();
-            }
-
-            if (!$user && $pemunya && $pemunya->user_id) {
-                $user = User::find($pemunya->user_id);
-            }
-
-            if (!$user && !$pemunya) {
-                return response()->json([
-                    'found' => false,
-                    'message' => "Tiada rekod pengguna atau penternak dijumpai untuk No. K/P: {$rawIc}."
-                ]);
-            }
-
-            $nama = $user->name ?? $pemunya->nama ?? '';
-            $ic = $user->ic_number ?? $pemunya->no_kp ?? $rawIc;
-            $telefon = $user->phone ?? $pemunya->no_telefon ?? '';
-            $alamat = $user->address ?? $pemunya->alamat ?? '';
-            $poskod = $user->poskod ?? $pemunya->poskod ?? '16800';
-            $mukim = $pemunya->mukim ?? '';
-            $daerah = $pemunya->daerah ?? '';
-            $jajahan = $user->jajahan ?? $pemunya->jajahan ?? '';
-            $kategori = ($user && !empty($user->nama_syarikat)) ? 'Syarikat' : 'Individu';
-            $userId = $user->id ?? ($pemunya->user_id ?? null);
-
-            // 3. EPTR Ternakan (Ruminan: Lembu, Kerbau, Kambing, Biri-biri, Rusa, dll)
-            $eptrTernakan = [];
-            if (class_exists(\App\Models\Ternakan::class) && class_exists(\App\Models\Pemunya::class)) {
-                $pemunyaIdsQuery = \App\Models\Pemunya::query();
-                $pemunyaIdsQuery->where(function ($q) use ($cleanIc, $formattedIc, $rawIc, $userId) {
-                    if (!empty($cleanIc)) {
-                        $q->where('no_kp', $cleanIc);
-                    }
-                    if (!empty($formattedIc)) {
-                        $q->orWhere('no_kp', $formattedIc);
-                    }
-                    if (!empty($rawIc)) {
-                        $q->orWhere('no_kp', $rawIc);
-                    }
-                    if ($userId) {
-                        $q->orWhere('user_id', $userId);
-                    }
-                });
-                $pemunyaIds = $pemunyaIdsQuery->pluck('id');
-
-                if ($pemunyaIds->isNotEmpty()) {
-                    $ternakans = \App\Models\Ternakan::whereIn('pemunya_id', $pemunyaIds)
-                        ->with('pemunya')
-                        ->latest('id')
-                        ->get();
-
-                    foreach ($ternakans as $t) {
-                        $eptrTernakan[] = [
-                            'id' => $t->id,
-                            'no_tag' => $t->no_tag ?: ('ID-' . $t->id),
-                            'jenis_ternakan' => ucfirst((string)$t->jenis_ternakan),
-                            'baka' => $t->baka ?: '-',
-                            'jantina' => $t->jantina ?: '-',
-                            'umur' => $t->umur ?: '-',
-                            'lokasi_kandang' => $t->lokasi_kandang ?: ($t->pemunya->alamat ?? 'Kandang Penternak'),
-                            'status' => $t->status ?: 'Aktif',
-                            'status_kelulusan' => $t->status_kelulusan ?: 'Diluluskan',
-                            'is_active' => method_exists($t, 'canPerformAction') ? $t->canPerformAction() : true,
-                        ];
-                    }
-                }
-            }
-
-            // 4. EPU Ladang Unggas (Ayam, Itik, Puyuh dll & GPS Koordinat)
-            $epuLadang = [];
-            $suggestedGps = null;
-            if (class_exists(\App\Models\EpuLadang::class) && $userId) {
-                $ladangs = \App\Models\EpuLadang::where('user_id', $userId)
-                    ->latest('id')
-                    ->get();
-
-                foreach ($ladangs as $l) {
-                    $gpsStr = ($l->latitude && $l->longitude) ? "{$l->latitude}, {$l->longitude}" : null;
-                    if (!$suggestedGps && $gpsStr) {
-                        $suggestedGps = $gpsStr;
-                    }
-
-                    $epuLadang[] = [
-                        'id' => $l->id,
-                        'nama_ladang' => $l->nama_ladang,
-                        'id_premis' => $l->id_premis,
-                        'jajahan' => $l->jajahan,
-                        'daerah' => $l->daerah,
-                        'mukim' => $l->mukim,
-                        'alamat_ladang' => $l->alamat_ladang,
-                        'latitude' => $l->latitude,
-                        'longitude' => $l->longitude,
-                        'gps_koordinat' => $gpsStr,
-                        'kapasiti_maksimum_unggas' => $l->kapasiti_maksimum_unggas,
-                        'status_ladang' => $l->status_ladang,
-                    ];
-                }
-            }
-
-            // 5. Klinik Temujanji & Rawatan
-            $klinikRekod = [];
-            $suggestedTemujanji = null;
-            if (class_exists(KlinikTemujanji::class) && $userId) {
-                $temujanjis = KlinikTemujanji::where('user_id', $userId)
-                    ->with('rawatan')
-                    ->latest('tarikh_temujanji')
-                    ->latest('id')
-                    ->take(10)
-                    ->get();
-
-                foreach ($temujanjis as $tj) {
-                    if (!$suggestedTemujanji && in_array(strtolower((string)$tj->status), ['diluluskan', 'menunggu', 'sah', 'diproses'])) {
-                        $suggestedTemujanji = [
-                            'id' => $tj->id,
-                            'tarikh' => $tj->tarikh_temujanji ? $tj->tarikh_temujanji->format('Y-m-d') : null,
-                            'masa' => $tj->masa_temujanji ?? ($tj->sesi ?? ''),
-                            'tujuan' => $tj->simptom_atau_tujuan ?: ($tj->tujuan ?? ''),
-                            'jenis_haiwan' => $tj->jenis_haiwan,
-                            'nama_haiwan' => $tj->nama_haiwan,
-                        ];
-                    }
-
-                    $rawatanInfo = [];
-                    if ($tj->rawatan) {
-                        $rawatanInfo = [
-                            'diagnosis' => $tj->rawatan->diagnosis,
-                            'rawatan_diberikan' => $tj->rawatan->rawatan_diberikan,
-                            'ubat_diberikan' => $tj->rawatan->ubat_diberikan,
-                        ];
-                    }
-
-                    $klinikRekod[] = [
-                        'id' => $tj->id,
-                        'no_rujukan' => $tj->no_temujanji ?: ('TMJ-' . $tj->id),
-                        'tarikh' => $tj->tarikh_temujanji ? $tj->tarikh_temujanji->format('d/m/Y') : '-',
-                        'masa' => $tj->masa_temujanji ?: ($tj->sesi ?: '-'),
-                        'jajahan' => $tj->klinik_jajahan ?: ($tj->jajahan ?: '-'),
-                        'jenis_haiwan' => $tj->jenis_haiwan,
-                        'nama_haiwan' => $tj->nama_haiwan,
-                        'tujuan' => $tj->simptom_atau_tujuan ?: ($tj->tujuan ?? ''),
-                        'status' => $tj->status,
-                        'rawatan' => $rawatanInfo,
-                    ];
-                }
-            }
-
-            // 6. Program Pawah (Perjanjian Pawah & Tag Ternakan)
-            $pawahPerjanjian = [];
-            if (class_exists(\App\Models\PawahPerjanjian::class) && $userId) {
-                $perjanjians = \App\Models\PawahPerjanjian::where('user_id', $userId)
-                    ->with(['ternakanList', 'pawahTernakan.ternakan'])
-                    ->latest('id')
-                    ->get();
-
-                foreach ($perjanjians as $pj) {
-                    $tags = [];
-                    if ($pj->ternakanList && $pj->ternakanList->isNotEmpty()) {
-                        foreach ($pj->ternakanList as $tItem) {
-                            $tags[] = [
-                                'id' => $tItem->id,
-                                'no_tag' => $tItem->no_tag,
-                                'jenis_ternakan' => ucfirst((string)$tItem->jenis_ternakan),
-                                'baka' => $tItem->baka,
-                                'status_induk' => $tItem->pivot->status_induk ?? 'Aktif',
-                            ];
-                        }
-                    }
-
-                    $pawahPerjanjian[] = [
-                        'id' => $pj->id,
-                        'no_perjanjian' => $pj->no_perjanjian,
-                        'nama_program' => $pj->nama_program,
-                        'jenis_pawah' => $pj->jenis_pawah,
-                        'jajahan' => $pj->jajahan,
-                        'status' => $pj->status,
-                        'tarikh_mula' => $pj->tarikh_mula ? $pj->tarikh_mula->format('d/m/Y') : '-',
-                        'tarikh_tamat' => $pj->tarikh_tamat ? $pj->tarikh_tamat->format('d/m/Y') : '-',
-                        'bilangan_induk' => $pj->bilangan_induk,
-                        'ternakans' => $tags,
-                    ];
-                }
-            }
-
-            // Semak GPS dari Action List terdahulu jika tiada di ladang
-            if (!$suggestedGps && $userId) {
-                $prevAct = ActionList::where('user_id', $userId)->whereNotNull('gps_koordinat')->latest('id')->first();
-                if ($prevAct) {
-                    $suggestedGps = $prevAct->gps_koordinat;
-                }
-            }
-
-            return response()->json([
-                'found' => true,
-                'pelanggan' => [
-                    'user_id' => $userId,
-                    'nama' => $nama,
-                    'no_kp' => $ic,
-                    'telefon' => $telefon,
-                    'alamat' => $alamat,
-                    'poskod' => $poskod,
-                    'mukim' => $mukim,
-                    'daerah' => $daerah,
-                    'jajahan' => $jajahan,
-                    'kategori_pelanggan' => $kategori,
-                ],
-                'eptr_ternakan' => $eptrTernakan,
-                'epu_ladang' => $epuLadang,
-                'klinik_rekod' => $klinikRekod,
-                'pawah_perjanjian' => $pawahPerjanjian,
-                'suggested_gps' => $suggestedGps,
-                'suggested_temujanji' => $suggestedTemujanji,
-            ]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Ralat apiSemakPelangganLengkap: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'found' => false,
-                'message' => 'Ralat memproses semakan pangkalan data: ' . $e->getMessage()
-            ], 500);
+        if ($id) {
+            $actionList = ActionList::with(['pegawai', 'creator'])->findOrFail($id);
+            return view('action_list.cetak_tunggal', compact('actionList'));
         }
+
+        // Cetak Senarai Dairi Mengikut Penapis
+        $query = ActionList::with(['pegawai']);
+
+        if ($request->filled('jajahan') && $request->input('jajahan') !== 'Semua') {
+            $query->where('jajahan', $request->input('jajahan'));
+        }
+
+        if ($request->filled('kategori')) {
+            $query->where('kategori_aktiviti', $request->input('kategori'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('tarikh_mula')) {
+            $query->whereDate('tarikh', '>=', $request->input('tarikh_mula'));
+        }
+
+        if ($request->filled('tarikh_akhir')) {
+            $query->whereDate('tarikh', '<=', $request->input('tarikh_akhir'));
+        }
+
+        $actionLists = $query->latest('tarikh')->latest('id')->get();
+        $selectedJajahan = $request->input('jajahan', 'Semua');
+        $tarikhMula = $request->input('tarikh_mula');
+        $tarikhAkhir = $request->input('tarikh_akhir');
+
+        return view('action_list.cetak', compact('actionLists', 'selectedJajahan', 'tarikhMula', 'tarikhAkhir'));
     }
 }
-

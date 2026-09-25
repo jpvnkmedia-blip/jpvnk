@@ -1,336 +1,174 @@
 @extends('layouts.app')
 
-@section('title', 'Butiran Action List ' . ($actionList->no_bil ?: ('BIL-' . $actionList->id)) . ' - JPVNK')
+@section('title', 'Butiran Aktiviti - ' . ($actionList->tajuk_aktiviti ?: $actionList->no_bil))
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="max-w-4xl mx-auto space-y-6">
     <!-- Header Banner -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
         <div class="space-y-1">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
-                <i class="fa-solid fa-file-lines"></i> KOD DOKUMEN: {{ $actionList->kod_dokumen ?? 'PK-RK-61' }}
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-white/20 border border-white/30">
+                    No. Rujukan: #{{ $actionList->no_bil }}
+                </span>
+                <span class="px-3 py-0.5 rounded-full text-xs font-bold {{ $actionList->status_badge_class }}">
+                    {{ $actionList->status }}
+                </span>
             </div>
-            <h1 class="text-2xl font-black font-mono tracking-tight">{{ $actionList->no_bil ?: ('BIL-' . $actionList->id) }}</h1>
-            <p class="text-xs text-slate-300">
-                Pejabat Perkhidmatan Veterinar Jajahan {{ $actionList->jajahan }} | Tarikh: {{ $actionList->tarikh ? $actionList->tarikh->format('d F Y') : '-' }} ({{ $actionList->masa_pendaftaran ?: '-' }})
+            <h1 class="text-2xl font-black">{{ $actionList->tajuk_aktiviti ?: 'Catatan Aktiviti' }}</h1>
+            <p class="text-xs text-slate-300 flex items-center gap-4">
+                <span><i class="fa-regular fa-calendar mr-1"></i> {{ $actionList->tarikh_formatted }}</span>
+                @if($actionList->masa_mula || $actionList->masa_selesai)
+                    <span><i class="fa-regular fa-clock mr-1"></i> {{ $actionList->masa_mula }} - {{ $actionList->masa_selesai }}</span>
+                @endif
+                <span><i class="fa-solid fa-map-pin mr-1"></i> Jajahan {{ $actionList->jajahan }}</span>
             </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('action-list.cetak', $actionList->id) }}" target="_blank" class="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg transition flex items-center gap-2">
-                <i class="fa-solid fa-print"></i> Cetak Borang Rasmi PK-RK-61 (PDF)
+            <a href="{{ route('action-list.cetak', $actionList->id) }}" target="_blank" class="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1.5 border border-white/20">
+                <i class="fa-solid fa-print"></i> Cetak
             </a>
-            <a href="{{ route('action-list.edit', $actionList->id) }}" class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1.5 border border-white/20">
-                <i class="fa-solid fa-pen"></i> Kemaskini
+            <a href="{{ route('action-list.edit', $actionList->id) }}" class="px-3.5 py-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-pen-to-square"></i> Kemaskini
             </a>
-            <a href="{{ route('action-list.index') }}" class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1.5 border border-white/20">
-                <i class="fa-solid fa-arrow-left"></i> Senarai
+            <a href="{{ route('action-list.index') }}" class="px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1.5 border border-white/20">
+                <i class="fa-solid fa-arrow-left"></i> Kembali
             </a>
         </div>
     </div>
 
-    <!-- Status & Overview Bar -->
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4 text-xs">
-        <div class="flex items-center gap-3">
-            <span class="text-slate-500 font-bold uppercase text-[11px]">Status Dokumen:</span>
-            <span class="px-3 py-1 rounded-full font-bold text-xs bg-emerald-100 text-emerald-800 border border-emerald-300">
-                <i class="fa-solid fa-circle-check"></i> {{ $actionList->status ?? 'Selesai' }}
-            </span>
-            <span class="px-3 py-1 rounded-full font-bold text-xs bg-slate-100 text-slate-700 border border-slate-200">
-                Kategori: {{ $actionList->kategori_pelanggan }}
-            </span>
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+            {{ session('success') }}
         </div>
+    @endif
 
-        <div class="flex items-center gap-4 font-semibold text-slate-700">
-            <div>
-                <span class="text-slate-400 text-[11px]">Pegawai Bertugas:</span>
-                <span class="font-bold text-slate-900 ml-1">{{ $actionList->nama_pegawai ?? ($actionList->pegawai->name ?? '-') }}</span>
-            </div>
-            <div>
-                <span class="text-slate-400 text-[11px]">Jumlah Bayaran:</span>
-                <span class="font-black text-amber-600 ml-1">RM {{ number_format($actionList->bayaran, 2) }}</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- A. MAKLUMAT PELANGGAN -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">A</span>
-                MAKLUMAT PELANGGAN
-            </h3>
-            <span class="text-xs font-mono text-slate-400">[ MASA : {{ $actionList->masa_pendaftaran ?: '-' }} ]</span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-xs">
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">1. Nama Pelanggan / Syarikat</div>
-                <div class="text-sm font-black text-slate-900 mt-0.5">{{ $actionList->nama_pelanggan }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">2. No. K/P (Baru) / SSM</div>
-                <div class="font-mono font-bold text-slate-800 mt-0.5">{{ $actionList->no_kp ?: '-' }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">6. No. Telefon</div>
-                <div class="font-bold text-slate-800 mt-0.5">{{ $actionList->telefon ?: '-' }}</div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">3. Alamat Lengkap</div>
-                <div class="text-slate-700 mt-0.5 leading-relaxed">{{ $actionList->alamat ?: '-' }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">20. No. Rujukan Fail</div>
-                <div class="font-mono font-bold text-slate-800 mt-0.5">{{ $actionList->no_rujukan ?: '-' }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">4. Mukim</div>
-                <div class="font-semibold text-slate-800 mt-0.5">{{ $actionList->mukim ?: '-' }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">Poskod</div>
-                <div class="font-mono font-semibold text-slate-800 mt-0.5">{{ $actionList->poskod ?: '-' }}</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">5. Daerah / Jajahan</div>
-                <div class="font-semibold text-slate-800 mt-0.5">{{ $actionList->daerah ?: ('Jajahan ' . $actionList->jajahan . ', Kelantan') }}</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- B. BUTIR-BUTIR PERKHIDMATAN -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
-            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">B</span>
-            BUTIR-BUTIR PERKHIDMATAN
-        </h3>
-        <div class="text-xs">
-            <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">7. Catatan Ringkas Perkhidmatan Yang Dipohon:</div>
-            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 leading-relaxed font-medium">
-                {{ $actionList->catatan_perkhidmatan_dipohon ?: 'Tiada catatan perkhidmatan dipohon.' }}
-            </div>
-        </div>
-    </div>
-
-    <!-- C. MAKLUMAT TEMUJANJI -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
-            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">C</span>
-            MAKLUMAT TEMUJANJI
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">8. Nama Pegawai</div>
-                <div class="font-bold text-slate-900 mt-0.5">{{ $actionList->nama_pegawai ?: '-' }}</div>
-                <div class="text-[11px] text-slate-500">[ Masa : {{ $actionList->masa_pegawai ?: '-' }} ]</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">9. Masa Temujanji</div>
-                <div class="font-bold text-slate-800 mt-0.5">
-                    Mula: <span class="font-mono">{{ $actionList->masa_temujanji_mula ?: '-' }}</span>
-                </div>
-                <div class="font-bold text-slate-800">
-                    Hingga: <span class="font-mono">{{ $actionList->masa_temujanji_hingga ?: '-' }}</span>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Main Content (2 cols) -->
+        <div class="md:col-span-2 space-y-6">
+            <!-- Maklumat Aktiviti -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                <h2 class="font-black text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <i class="fa-solid fa-align-left text-emerald-600"></i> Perincian & Catatan Aktiviti
+                </h2>
+                <div class="text-slate-800 text-sm leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                    {{ $actionList->maklumat_aktiviti }}
                 </div>
             </div>
 
-            <div class="lg:col-span-2">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">10. Maklumat Pelanggan (jika berlainan / wakil)</div>
-                <div class="text-slate-800 mt-0.5">{{ $actionList->maklumat_pelanggan_berlainan ?: '-' }}</div>
-            </div>
-
-            <div class="lg:col-span-2">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">11. Maklumat Tambahan / Catatan Lokasi</div>
-                <div class="text-slate-800 mt-0.5">{{ $actionList->maklumat_tambahan ?: '-' }}</div>
-            </div>
-
-            @if($actionList->gps_koordinat)
-                <div class="lg:col-span-2">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase">GPS Koordinat Lokasi:</div>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span class="font-mono font-bold text-emerald-800 text-xs">{{ $actionList->gps_koordinat }}</span>
-                        <a href="https://www.google.com/maps?q={{ urlencode($actionList->gps_koordinat) }}" target="_blank" class="px-2.5 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] transition inline-flex items-center gap-1">
-                            <i class="fa-solid fa-map-location-dot"></i> Buka Google Maps
-                        </a>
+            <!-- Tindakan Susulan (Jika ada) -->
+            @if($actionList->tindakan_susulan)
+                <div class="bg-amber-50/60 p-6 rounded-3xl border border-amber-200 shadow-xs space-y-3">
+                    <h2 class="font-black text-amber-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-amber-200/60 pb-3">
+                        <i class="fa-solid fa-list-check text-amber-600"></i> Tindakan Susulan / Catatan Tambahan
+                    </h2>
+                    <div class="text-amber-950 text-sm leading-relaxed whitespace-pre-line">
+                        {{ $actionList->tindakan_susulan }}
                     </div>
                 </div>
             @endif
 
-            @if($actionList->lampiran_peta)
-                <div class="lg:col-span-4 pt-2">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase mb-2">Lakaran Peta Lokasi / Lampiran:</div>
-                    <div class="max-w-md rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
-                        <img src="{{ asset('storage/' . $actionList->lampiran_peta) }}" alt="Lakaran Peta" class="w-full h-auto object-cover">
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
+            <!-- Lampiran (Jika ada) -->
+            @if($actionList->lampiran)
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+                    <h2 class="font-black text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-paperclip text-emerald-600"></i> Dokumen / Gambar Lampiran
+                    </h2>
+                    @php
+                        $ext = pathinfo($actionList->lampiran, PATHINFO_EXTENSION);
+                        $isImage = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'webp', 'gif']);
+                    @endphp
 
-    <!-- D. MAKLUMAT PERKHIDMATAN YANG DIBERI -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-black text-slate-900 text-sm flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">D</span>
-                MAKLUMAT PERKHIDMATAN YANG DIBERI
-            </h3>
-            @if($actionList->pawahPerjanjian)
-                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-300 font-bold text-[11px] flex items-center gap-1.5">
-                    <i class="fa-solid fa-handshake-angle"></i> Pawah: {{ $actionList->pawahPerjanjian->no_perjanjian }}
-                </span>
-            @endif
-        </div>
-
-        @php
-            $srv = is_array($actionList->perkhidmatan_diberi) ? $actionList->perkhidmatan_diberi : [];
-        @endphp
-
-        <!-- 12. Senarai Perkhidmatan -->
-        <div>
-            <div class="text-[11px] font-bold text-slate-400 uppercase mb-2">12. Jenis Perkhidmatan Dilaksanakan:</div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['rawatan_lapangan']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['rawatan_lapangan']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Rawatan Di Lapangan
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['rawatan_klinik']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['rawatan_klinik']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Rawatan Di Klinik
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['pembedahan']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['pembedahan']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Pembedahan {{ $actionList->keterangan_pembedahan ? "({$actionList->keterangan_pembedahan})" : '' }}
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['pemantauan_pawah']) ? 'bg-purple-50 border-purple-300 text-purple-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['pemantauan_pawah']) ? 'fa-square-check text-purple-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Pemantauan Pawah Negeri
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['pemantauan_projek']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['pemantauan_projek']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Pemantauan Projek {{ $actionList->keterangan_projek ? "({$actionList->keterangan_projek})" : '' }}
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['pemantauan_trust']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['pemantauan_trust']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Pemantauan TRUST
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['lawatan_terancang']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['lawatan_terancang']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Lawatan Terancang
-                </div>
-
-                <div class="p-2.5 rounded-xl border {{ !empty($srv['perkhidmatan_lain']) ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400' }}">
-                    <i class="fa-solid {{ !empty($srv['perkhidmatan_lain']) ? 'fa-square-check text-emerald-600' : 'fa-square text-slate-300' }} mr-1.5"></i>
-                    Lain-lain {{ $actionList->keterangan_lain ? "({$actionList->keterangan_lain})" : '' }}
-                </div>
-            </div>
-        </div>
-
-        <!-- 13. Catatan Ringkas: Ternakan -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">13. 1. Jenis Ternakan</div>
-                @php
-                    $animals = is_array($actionList->jenis_ternakan) ? $actionList->jenis_ternakan : [];
-                @endphp
-                <div class="font-bold text-slate-900 mt-0.5">
-                    {{ !empty($animals) ? implode(', ', $animals) : '-' }}
-                    @if($actionList->jenis_ternakan_lain)
-                        <span class="text-slate-500 font-normal">({{ $actionList->jenis_ternakan_lain }})</span>
+                    @if($isImage)
+                        <div class="space-y-2">
+                            <a href="{{ Storage::url($actionList->lampiran) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-slate-200 max-h-96 group">
+                                <img src="{{ Storage::url($actionList->lampiran) }}" alt="Lampiran Aktiviti" class="w-full object-contain group-hover:scale-105 transition duration-300">
+                            </a>
+                            <a href="{{ Storage::url($actionList->lampiran) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-900">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Gambar Penuh
+                            </a>
+                        </div>
+                    @else
+                        <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-xs uppercase">Fail Lampiran (.{{ strtoupper($ext) }})</p>
+                                    <p class="text-[11px] text-slate-500">Klik butang di sebelah untuk memuat turun atau membaca.</p>
+                                </div>
+                            </div>
+                            <a href="{{ Storage::url($actionList->lampiran) }}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i> Muat Turun
+                            </a>
+                        </div>
                     @endif
                 </div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">2. Bil. Ternakan Dirawat</div>
-                <div class="font-mono font-black text-emerald-700 text-sm mt-0.5">{{ $actionList->bil_ternakan ?? 0 }} ekor</div>
-            </div>
-
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">3. Bil. Yang Ada di Ladang/Premis</div>
-                <div class="font-mono font-black text-slate-800 text-sm mt-0.5">{{ $actionList->bil_yang_ada ?? 0 }} ekor</div>
-            </div>
+            @endif
         </div>
 
-        <!-- 17. Laporan & 21. Penggunaan Ubat -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">17. Laporan Lengkap Rawatan / Tindakan:</div>
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 leading-relaxed font-medium min-h-[90px] whitespace-pre-line">
-                    {{ $actionList->laporan ?: 'Tiada laporan direkodkan.' }}
-                </div>
-            </div>
+        <!-- Sidebar Meta (1 col) -->
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 text-xs">
+                <h2 class="font-black text-slate-900 text-sm uppercase tracking-wider border-b border-slate-100 pb-3">
+                    Ringkasan Maklumat
+                </h2>
 
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">21. Penggunaan Ubat & Vaksin:</div>
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 leading-relaxed font-medium min-h-[90px] whitespace-pre-line">
-                    {{ $actionList->penggunaan_ubat ?: 'Tiada ubat direkodkan.' }}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- E. PENGAKUAN PELANGGAN & PENGESAHAN PEGAWAI -->
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-        <h3 class="font-black text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
-            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">E</span>
-            PENGAKUAN PELANGGAN & PENGESAHAN PEGAWAI
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-xs">
-            <!-- 15. Tahap Kepuasan -->
-            <div class="lg:col-span-3 bg-amber-50/70 p-4 rounded-2xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <div class="text-[11px] font-bold text-amber-900 uppercase">15. Pengakuan Tahap Kepuasan Pelanggan:</div>
-                    <div class="text-sm font-black mt-0.5 {{ $actionList->kepuasan_pelanggan === 'Puashati' ? 'text-emerald-800' : ($actionList->kepuasan_pelanggan === 'Tidak puashati' ? 'text-rose-800' : 'text-amber-800') }}">
-                        <i class="fa-solid {{ $actionList->kepuasan_pelanggan === 'Puashati' ? 'fa-face-smile text-emerald-600' : ($actionList->kepuasan_pelanggan === 'Tidak puashati' ? 'fa-face-frown text-rose-600' : 'fa-face-meh text-amber-600') }} mr-1.5"></i>
-                        {{ $actionList->kepuasan_pelanggan ?: 'Puashati' }}
+                <div class="space-y-3.5">
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Kategori Aktiviti</span>
+                        <span class="font-bold text-slate-800 text-sm">{{ $actionList->kategori_label }}</span>
                     </div>
+
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Pejabat Jajahan</span>
+                        <span class="font-bold text-slate-800 text-sm">Jajahan {{ $actionList->jajahan }}</span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Lokasi / Premis</span>
+                        <span class="font-semibold text-slate-700">{{ $actionList->lokasi ?: '-' }}</span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Pegawai Bertugas / Staf</span>
+                        <span class="font-semibold text-slate-700">{{ $actionList->nama_pegawai ?: '-' }}</span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Tahap Keutamaan</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold text-[11px] {{ $actionList->keutamaan_badge_class }}">
+                            {{ $actionList->keutamaan }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase block text-[10px]">Direkodkan Oleh</span>
+                        <span class="font-semibold text-slate-700">{{ $actionList->creator->name ?? 'Sistem' }}</span>
+                        <span class="text-slate-400 text-[10px] block">{{ $actionList->created_at->format('d/m/Y H:i A') }}</span>
+                    </div>
+
+                    @if($actionList->updated_at->ne($actionList->created_at))
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase block text-[10px]">Kemaskini Terakhir</span>
+                            <span class="text-slate-600 text-[11px]">{{ $actionList->updated_at->format('d/m/Y H:i A') }}</span>
+                        </div>
+                    @endif
                 </div>
 
-                @if($actionList->cadangan_pelanggan)
-                    <div class="text-xs text-amber-950 font-medium">
-                        <span class="font-bold">16. Cadangan:</span> "{{ $actionList->cadangan_pelanggan }}"
+                @if(Auth::user()->isSuperAdmin() || Auth::user()->isAdminJajahan())
+                    <div class="pt-4 border-t border-slate-100">
+                        <form action="{{ route('action-list.destroy', $actionList->id) }}" method="POST" onsubmit="return confirm('Adakah anda pasti ingin memadam rekod aktiviti ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200 flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-trash-can"></i> Padam Rekod Aktiviti
+                            </button>
+                        </form>
                     </div>
                 @endif
-            </div>
-
-            <!-- 14. Tandatangan -->
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">14. Tandatangan & Nama Pelanggan</div>
-                <div class="font-bold text-slate-900 mt-0.5">{{ $actionList->tandatangan_pelanggan_nama ?: ($actionList->nama_pelanggan ?: '-') }}</div>
-                <div class="text-[11px] text-slate-500">
-                    Tarikh: {{ $actionList->tandatangan_pelanggan_tarikh ? $actionList->tandatangan_pelanggan_tarikh->format('d/m/Y') : '-' }} ({{ $actionList->tandatangan_pelanggan_masa ?: '-' }})
-                </div>
-            </div>
-
-            <!-- 18. Bayaran -->
-            <div>
-                <div class="text-[11px] font-bold text-slate-400 uppercase">18. Bayaran Perkhidmatan (RM)</div>
-                <div class="text-base font-black text-amber-600 mt-0.5">RM {{ number_format($actionList->bayaran, 2) }}</div>
-                <div class="text-[11px] font-mono text-slate-500">No. Resit: {{ $actionList->no_resit ?: 'Tiada Resit / Dikecualikan' }}</div>
-            </div>
-
-            <!-- 19. Pengesahan dan Ulasan Pegawai -->
-            <div class="lg:col-span-3">
-                <div class="text-[11px] font-bold text-slate-400 uppercase mb-1">19. Pengesahan dan Ulasan Pegawai Projek:</div>
-                <div class="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200 text-slate-800 leading-relaxed font-medium">
-                    {{ $actionList->pengesahan_ulasan_pegawai ?: 'Perkhidmatan veterinar telah disahkan dan direkodkan dengan sempurna mengikut tatacara jabatan.' }}
-                </div>
             </div>
         </div>
     </div>

@@ -3,9 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\ActionList;
-use App\Models\KlinikTemujanji;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminJajahanActionListTest extends TestCase
@@ -60,8 +61,8 @@ class AdminJajahanActionListTest extends TestCase
     {
         $response = $this->actingAs($this->adminJajahanPasirPuteh)->get(route('action-list.index'));
         $response->assertStatus(200);
-        $response->assertSee('Action List Pejabat Perkhidmatan Veterinar Jajahan');
-        $response->assertSee('PK-RK-61');
+        $response->assertSee('Action List');
+        $response->assertSee('Dairi &amp; Log Aktiviti', false);
     }
 
     public function test_unauthorized_regular_user_cannot_access_action_list(): void
@@ -70,356 +71,143 @@ class AdminJajahanActionListTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_admin_jajahan_can_create_and_store_action_list_form_pk_rk_61(): void
+    public function test_admin_jajahan_can_create_and_store_activity_diary(): void
     {
+        Storage::fake('public');
+
         $formData = [
-            'kod_dokumen' => 'PK-RK-61',
-            'no_bil' => 'AL/PP/2026/0001',
+            'tajuk_aktiviti' => 'Lawatan Pemantauan Projek Ruminan Gong Chapa',
+            'tarikh' => '2026-09-25',
+            'masa_mula' => '09:00 AM',
+            'masa_selesai' => '12:30 PM',
+            'kategori_aktiviti' => 'Lawatan / Pemeriksaan Lapangan',
             'jajahan' => 'Pasir Puteh',
-            'tarikh' => '2026-09-24',
-            'masa_pendaftaran' => '09:30 AM',
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Mohd Azman bin Salleh',
-            'no_kp' => $this->penternak->ic_number,
-            'telefon' => '019-9887766',
-            'alamat' => 'Kampung Gong Chapa, Pasir Puteh',
-            'mukim' => 'Padang Pak Amat',
-            'poskod' => '16800',
-            'daerah' => 'Jajahan Pasir Puteh, Kelantan',
-            'no_rujukan' => 'JPVNK/PP/RAW/2026/001',
-            'user_id' => $this->penternak->id,
-
-            // B. Butir-butir Perkhidmatan
-            'catatan_perkhidmatan_dipohon' => 'Rawatan lembu sakit demam dan permohonan suntikan vaksin.',
-
-            // C. Maklumat Temujanji
-            'nama_pegawai' => 'Dr. Nik Farhan',
-            'masa_pegawai' => '08:30 AM',
-            'masa_temujanji_mula' => '09:00 AM',
-            'masa_temujanji_hingga' => '11:00 AM',
-            'maklumat_pelanggan_berlainan' => 'Pemilik sendiri hadir di kandang',
-            'maklumat_tambahan' => 'Kandang belakang masjid Gong Chapa',
-
-            // D. Perkhidmatan Diberi
-            'rawatan_lapangan' => '1',
-            'pemantauan_pawah' => '1',
-            'jenis_ternakan' => ['Lembu'],
-            'bil_ternakan' => 3,
-            'bil_yang_ada' => 15,
-            'laporan' => 'Pemeriksaan fizikal mendapati 3 ekor lembu mengalami demam ringan. Suhu 39.5C.',
-            'penggunaan_ubat' => 'Oxytetracycline 20% LA 15ml, Vitamin B-Complex 10ml, Flunixin 5ml',
-
-            // E. Pengakuan Pelanggan & Pengesahan
-            'tandatangan_pelanggan_nama' => 'Mohd Azman bin Salleh',
-            'tandatangan_pelanggan_tarikh' => '2026-09-24',
-            'tandatangan_pelanggan_masa' => '10:45 AM',
-            'kepuasan_pelanggan' => 'Puashati',
-            'cadangan_pelanggan' => 'Perkhidmatan pantas dan terbaik.',
-            'bayaran' => '45.00',
-            'no_resit' => 'R-2026-0988',
-            'pengesahan_ulasan_pegawai' => 'Rawatan selesai. Keadaan lembu stabil.',
+            'lokasi' => 'Ladang Ternakan Lembu Jaya, Gong Chapa',
+            'nama_pegawai' => 'Dr. Nik Farhan & En. Yusof',
             'status' => 'Selesai',
+            'keutamaan' => 'Tinggi',
+            'maklumat_aktiviti' => 'Pemeriksaan kesihatan ternakan dan pemberian vaksin pencegahan penyakit hawar berdarah (HS).',
+            'tindakan_susulan' => 'Jadualkan pemantauan ulangan dalam tempoh 1 bulan.',
+            'lampiran' => UploadedFile::fake()->create('laporan_lawatan.pdf', 500, 'application/pdf'),
         ];
 
         $response = $this->actingAs($this->adminJajahanPasirPuteh)->post(route('action-list.store'), $formData);
         
-        $actionList = ActionList::where('no_bil', 'AL/PP/2026/0001')->first();
+        $response->assertRedirect(route('action-list.index'));
+
+        $actionList = ActionList::where('tajuk_aktiviti', 'Lawatan Pemantauan Projek Ruminan Gong Chapa')->first();
         $this->assertNotNull($actionList);
-        $response->assertRedirect(route('action-list.show', $actionList->id));
-
-        $this->assertEquals('Mohd Azman bin Salleh', $actionList->nama_pelanggan);
         $this->assertEquals('Pasir Puteh', $actionList->jajahan);
-        $this->assertEquals(45.00, $actionList->bayaran);
-        $this->assertEquals('Puashati', $actionList->kepuasan_pelanggan);
-        $this->assertTrue($actionList->perkhidmatan_diberi['rawatan_lapangan']);
-        $this->assertTrue($actionList->perkhidmatan_diberi['pemantauan_pawah']);
-        $this->assertContains('Lembu', $actionList->jenis_ternakan);
+        $this->assertEquals('Selesai', $actionList->status);
+        $this->assertEquals('Tinggi', $actionList->keutamaan);
+        $this->assertNotNull($actionList->lampiran);
+        Storage::disk('public')->assertExists($actionList->lampiran);
     }
 
-    public function test_action_list_prefill_from_klinik_temujanji(): void
+    public function test_admin_can_view_activity_details(): void
     {
-        $temujanji = KlinikTemujanji::create([
-            'user_id' => $this->penternak->id,
-            'no_temujanji' => 'TMJ-2026-9901',
-            'jenis_haiwan' => 'Kambing',
-            'nama_haiwan' => 'Billy',
-            'baka' => 'Boer',
-            'jantina_haiwan' => 'Jantan',
-            'umur_haiwan' => '2 Tahun',
-            'simptom_atau_tujuan' => 'Pemeriksaan luka dan vaksinasi tahunan.',
-            'tarikh_temujanji' => now()->toDateString(),
-            'sesi' => 'Pagi (8:30 AM - 12:30 PM)',
-            'klinik_jajahan' => 'Pusat Veterinar Pasir Puteh',
-            'status' => 'Disahkan',
-        ]);
-
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->get(route('action-list.create', ['temujanji_id' => $temujanji->id]));
-        $response->assertStatus(200);
-        $response->assertSee($this->penternak->name);
-        $response->assertSee($this->penternak->ic_number);
-        $response->assertSee('Pemeriksaan luka dan vaksinasi tahunan.');
-    }
-
-    public function test_admin_jajahan_can_view_and_print_pk_rk_61(): void
-    {
-        $actionList = ActionList::create([
-            'kod_dokumen' => 'PK-RK-61',
-            'no_bil' => 'AL/KB/2026/0005',
+        $activity = ActionList::create([
+            'no_bil' => 'AL/KB/2026/0001',
+            'tajuk_aktiviti' => 'Mesyuarat Penyelarasan Veterinar Jajahan',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Mesyuarat / Perbincangan',
             'jajahan' => 'Kota Bharu',
-            'tarikh' => now()->toDateString(),
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Nik Siti Nurhaliza',
-            'no_kp' => '950101035999',
-            'telefon' => '011-22334455',
-            'alamat' => 'Kubang Kerian, Kota Bharu',
-            'mukim' => 'Kubang Kerian',
-            'poskod' => '16150',
-            'daerah' => 'Jajahan Kota Bharu, Kelantan',
-            'catatan_perkhidmatan_dipohon' => 'Rawatan kucing sakit',
-            'perkhidmatan_diberi' => ['rawatan_klinik' => true],
-            'jenis_ternakan' => ['Kucing'],
-            'bil_ternakan' => 1,
-            'laporan' => 'Kucing diberikan ubat cacing dan antibiotik.',
-            'bayaran' => 30.00,
-            'kepuasan_pelanggan' => 'Puashati',
+            'maklumat_aktiviti' => 'Membincangkan pelan pemantauan ladang ternakan.',
             'status' => 'Selesai',
+            'created_by' => $this->adminJajahanKotaBharu->id,
         ]);
 
-        // Show page
-        $showResp = $this->actingAs($this->adminJajahanKotaBharu)->get(route('action-list.show', $actionList->id));
-        $showResp->assertStatus(200);
-        $showResp->assertSee('AL/KB/2026/0005');
-        $showResp->assertSee('Nik Siti Nurhaliza');
-
-        // Cetak PK-RK-61 official printable page
-        $cetakResp = $this->actingAs($this->adminJajahanKotaBharu)->get(route('action-list.cetak', $actionList->id));
-        $cetakResp->assertStatus(200);
-        $cetakResp->assertSee('ACTION LIST');
-        $cetakResp->assertSee('PK-RK-61');
-        $cetakResp->assertSee('JAJAHAN');
-        $cetakResp->assertSee('KOTA BHARU');
-        $cetakResp->assertSee('Nik Siti Nurhaliza');
-        $cetakResp->assertSee('A. MAKLUMAT PELANGGAN');
-        $cetakResp->assertSee('B. BUTIR-BUTIR PERKHIDMATAN');
-        $cetakResp->assertSee('C. MAKLUMAT TEMUJANJI');
-        $cetakResp->assertSee('D. MAKLUMAT PERKHIDMATAN YANG DIBERI');
-        $cetakResp->assertSee('E. PENGAKUAN PELANGGAN');
+        $response = $this->actingAs($this->adminJajahanKotaBharu)->get(route('action-list.show', $activity->id));
+        $response->assertStatus(200);
+        $response->assertSee('Mesyuarat Penyelarasan Veterinar Jajahan');
+        $response->assertSee('AL/KB/2026/0001');
     }
 
-    public function test_admin_jajahan_can_update_action_list(): void
+    public function test_admin_can_update_activity(): void
     {
-        $actionList = ActionList::create([
-            'kod_dokumen' => 'PK-RK-61',
-            'no_bil' => 'AL/PP/2026/0010',
+        $activity = ActionList::create([
+            'no_bil' => 'AL/PP/2026/0002',
+            'tajuk_aktiviti' => 'Operasi Vaksinasi Lapangan',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Rawatan & Survelan Penyakit',
             'jajahan' => 'Pasir Puteh',
-            'tarikh' => now()->toDateString(),
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Pak Seman Penternak',
-            'no_kp' => '700101035777',
-            'bayaran' => 0.00,
-            'status' => 'Deraf',
+            'maklumat_aktiviti' => 'Vaksinasi 20 ekor lembu.',
+            'status' => 'Dalam Tindakan',
+            'created_by' => $this->adminJajahanPasirPuteh->id,
         ]);
 
         $updateData = [
-            'no_bil' => 'AL/PP/2026/0010',
+            'tajuk_aktiviti' => 'Operasi Vaksinasi Lapangan - SELESAI',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Rawatan & Survelan Penyakit',
             'jajahan' => 'Pasir Puteh',
-            'tarikh' => now()->toDateString(),
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Pak Seman Penternak Kemaskini',
-            'no_kp' => '700101035777',
-            'bayaran' => '50.00',
-            'no_resit' => 'R-8899',
+            'maklumat_aktiviti' => 'Vaksinasi 20 ekor lembu telah selesai dijalankan dengan lancar.',
             'status' => 'Selesai',
+            'keutamaan' => 'Biasa',
         ];
 
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->put(route('action-list.update', $actionList->id), $updateData);
-        $response->assertRedirect(route('action-list.show', $actionList->id));
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->put(route('action-list.update', $activity->id), $updateData);
+        $response->assertRedirect(route('action-list.show', $activity->id));
 
-        $actionList->refresh();
-        $this->assertEquals('Pak Seman Penternak Kemaskini', $actionList->nama_pelanggan);
-        $this->assertEquals(50.00, $actionList->bayaran);
-        $this->assertEquals('Selesai', $actionList->status);
+        $activity->refresh();
+        $this->assertEquals('Operasi Vaksinasi Lapangan - SELESAI', $activity->tajuk_aktiviti);
+        $this->assertEquals('Selesai', $activity->status);
     }
 
-    public function test_super_admin_and_admin_jajahan_can_delete_action_list(): void
+    public function test_super_admin_can_delete_activity(): void
     {
-        $actionList = ActionList::create([
-            'kod_dokumen' => 'PK-RK-61',
-            'no_bil' => 'AL/PP/2026/0099',
+        $activity = ActionList::create([
+            'no_bil' => 'AL/PP/2026/0003',
+            'tajuk_aktiviti' => 'Aktiviti untuk dipadam',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Lain-lain',
             'jajahan' => 'Pasir Puteh',
-            'tarikh' => now()->toDateString(),
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Penternak Untuk Dipadam',
+            'maklumat_aktiviti' => 'Ujian padam aktiviti.',
+            'status' => 'Dibatalkan',
+            'created_by' => $this->adminJajahanPasirPuteh->id,
         ]);
 
-        $deleteResp = $this->actingAs($this->superAdmin)->delete(route('action-list.destroy', $actionList->id));
-        $deleteResp->assertRedirect(route('action-list.index'));
+        $response = $this->actingAs($this->superAdmin)->delete(route('action-list.destroy', $activity->id));
+        $response->assertRedirect(route('action-list.index'));
 
-        $this->assertDatabaseMissing('action_lists', [
-            'id' => $actionList->id,
-        ]);
+        $this->assertDatabaseMissing('action_lists', ['id' => $activity->id]);
     }
 
-    public function test_api_cari_pelanggan_returns_matching_users(): void
+    public function test_admin_can_print_activity_diary_list(): void
     {
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->getJson(route('action-list.api-cari-pelanggan', ['query' => substr($this->penternak->name, 0, 5)]));
-        $response->assertStatus(200);
-        $response->assertJsonFragment([
-            'name' => $this->penternak->name,
-            'ic_number' => $this->penternak->ic_number,
-        ]);
-    }
-
-    public function test_api_semak_pelanggan_lengkap_returns_cross_module_data(): void
-    {
-        // 1. Create/Update Pemunya & EPTR Ternakan
-        $pemunya = \App\Models\Pemunya::updateOrCreate(
-            ['no_kp' => $this->penternak->ic_number],
-            [
-                'user_id' => $this->penternak->id,
-                'nama' => $this->penternak->name,
-                'no_telefon' => '019-9887766',
-                'alamat' => 'Kampung Gong Chapa',
-                'jajahan' => 'Pasir Puteh',
-                'daerah' => 'Jajahan Pasir Puteh',
-                'mukim' => 'Padang Pak Amat',
-                'poskod' => '16800',
-            ]
-        );
-
-        $ternakan = \App\Models\Ternakan::create([
-            'pemunya_id' => $pemunya->id,
-            'no_tag' => 'MY-KEL-2026-9988',
-            'jenis_ternakan' => 'Lembu',
-            'baka' => 'Brakmas',
-            'jantina' => 'Betina',
+        ActionList::create([
+            'no_bil' => 'AL/PP/2026/0004',
+            'tajuk_aktiviti' => 'Pemeriksaan Premis Sembelihan',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Pemeriksaan Premis / Kebajikan Haiwan',
             'jajahan' => 'Pasir Puteh',
-            'status' => 'Aktif',
-            'status_kelulusan' => 'Diluluskan',
-            'lokasi_kandang' => 'Kandang Gong Chapa',
-        ]);
-
-        // 2. Create EPU Ladang
-        $ladang = \App\Models\EpuLadang::create([
-            'user_id' => $this->penternak->id,
-            'nama_pemohon_atau_syarikat' => $this->penternak->name,
-            'nama_ladang' => 'Ladang Ayam Chapa',
-            'id_premis' => 'EPU-PP-001',
-            'jajahan' => 'Pasir Puteh',
-            'alamat_ladang' => 'Lot 123 Kampung Gong Chapa',
-            'latitude' => 5.839212,
-            'longitude' => 102.394123,
-            'kapasiti_maksimum_unggas' => 5000,
-            'status_ladang' => 'Aktif',
-        ]);
-
-        // 3. Create Pawah Perjanjian
-        $pawah = \App\Models\PawahPerjanjian::create([
-            'user_id' => $this->penternak->id,
-            'no_perjanjian' => 'PW-PP-2026-0099',
-            'nama_program' => 'Program Pawah Lembu Baka Kelantan',
-            'jenis_pawah' => 'Pawah Lembu',
-            'jajahan' => 'Pasir Puteh',
-            'status' => 'Aktif',
-            'tarikh_mula' => now()->toDateString(),
-            'tarikh_tamat' => now()->addYears(3)->toDateString(),
-            'bilangan_induk' => 2,
-        ]);
-
-        // 4. Test API Semak Pelanggan Lengkap
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->getJson(route('action-list.api-semak-pelanggan-lengkap', ['ic_number' => $this->penternak->ic_number]));
-        $response->assertStatus(200);
-        $response->assertJson([
-            'found' => true,
-            'pelanggan' => [
-                'nama' => $this->penternak->name,
-                'no_kp' => $this->penternak->ic_number,
-            ],
-            'suggested_gps' => '5.839212, 102.394123',
-        ]);
-
-        $response->assertJsonFragment([
-            'no_tag' => 'MY-KEL-2026-9988',
-            'jenis_ternakan' => 'Lembu',
-        ]);
-
-        $response->assertJsonFragment([
-            'no_perjanjian' => 'PW-PP-2026-0099',
-        ]);
-
-        $response->assertJsonFragment([
-            'nama_ladang' => 'Ladang Ayam Chapa',
-        ]);
-    }
-
-    public function test_admin_jajahan_can_store_action_list_with_smart_fields(): void
-    {
-        $formData = [
-            'kod_dokumen' => 'PK-RK-61',
-            'no_bil' => 'AL/PP/2026/0888',
-            'jajahan' => 'Pasir Puteh',
-            'tarikh' => '2026-09-24',
-            'kategori_pelanggan' => 'Individu',
-            'nama_pelanggan' => 'Mohd Azman bin Salleh',
-            'no_kp' => $this->penternak->ic_number,
-            'gps_koordinat' => '5.839212, 102.394123',
-            'rawatan_lapangan' => '1',
-            'pemantauan_pawah' => '1',
-            'jenis_ternakan' => ['Lembu'],
-            'ternakan_terlibat_ids' => [1, 2],
-            'bil_ternakan' => 2,
+            'maklumat_aktiviti' => 'Pemeriksaan premis rumah sembelih.',
             'status' => 'Selesai',
-        ];
+            'created_by' => $this->adminJajahanPasirPuteh->id,
+        ]);
 
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->post(route('action-list.store'), $formData);
-        
-        $actionList = ActionList::where('no_bil', 'AL/PP/2026/0888')->first();
-        $this->assertNotNull($actionList);
-        $this->assertEquals('5.839212, 102.394123', $actionList->gps_koordinat);
-        $this->assertEquals([1, 2], $actionList->ternakan_terlibat_ids);
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->get(route('action-list.cetak', ['jajahan' => 'Pasir Puteh']));
+        $response->assertStatus(200);
+        $response->assertSee('LOG & DAIRI AKTIVITI ADMIN / PEGAWAI', false);
+        $response->assertSee('Pemeriksaan Premis Sembelihan');
     }
 
-    public function test_api_semak_pelanggan_lengkap_for_pemunya_without_user_account_and_with_hyphens(): void
+    public function test_admin_can_print_single_activity_report(): void
     {
-        $pemunyaOnly = \App\Models\Pemunya::create([
-            'user_id' => null,
-            'nama' => 'Pak Daud Penternak Tradisional',
-            'no_kp' => '650101-03-7788',
-            'no_telefon' => '017-8899001',
-            'alamat' => 'Kampung Bukit Jawa, Pasir Puteh',
+        $activity = ActionList::create([
+            'no_bil' => 'AL/PP/2026/0005',
+            'tajuk_aktiviti' => 'Audit Bio-sekuriti Reban Ayam',
+            'tarikh' => '2026-09-25',
+            'kategori_aktiviti' => 'Lawatan / Pemeriksaan Lapangan',
             'jajahan' => 'Pasir Puteh',
-            'daerah' => 'Jajahan Pasir Puteh',
-            'mukim' => 'Bukit Jawa',
-            'poskod' => '16800',
+            'maklumat_aktiviti' => 'Laporan audit biosekuriti reban tertutup.',
+            'status' => 'Selesai',
+            'created_by' => $this->adminJajahanPasirPuteh->id,
         ]);
 
-        $ternakan = \App\Models\Ternakan::create([
-            'pemunya_id' => $pemunyaOnly->id,
-            'no_tag' => 'MY-KEL-2026-7788',
-            'jenis_ternakan' => 'Lembu',
-            'baka' => 'Kedah-Kelantan',
-            'jantina' => 'Jantan',
-            'jajahan' => 'Pasir Puteh',
-            'status' => 'Aktif',
-            'status_kelulusan' => 'Diluluskan',
-            'lokasi_kandang' => 'Kandang Bukit Jawa',
-        ]);
-
-        // Search using clean IC without hyphens
-        $response = $this->actingAs($this->adminJajahanPasirPuteh)->getJson(route('action-list.api-semak-pelanggan-lengkap', ['ic_number' => '650101037788']));
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)->get(route('action-list.cetak', $activity->id));
         $response->assertStatus(200);
-        $response->assertJson([
-            'found' => true,
-            'pelanggan' => [
-                'nama' => 'Pak Daud Penternak Tradisional',
-                'no_kp' => '650101-03-7788',
-                'jajahan' => 'Pasir Puteh',
-            ],
-        ]);
-
-        $response->assertJsonFragment([
-            'no_tag' => 'MY-KEL-2026-7788',
-            'jenis_ternakan' => 'Lembu',
-        ]);
+        $response->assertSee('Audit Bio-sekuriti Reban Ayam');
+        $response->assertSee('AL/PP/2026/0005');
     }
 }
