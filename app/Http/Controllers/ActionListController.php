@@ -26,10 +26,7 @@ class ActionListController extends Controller
             $jajahanList = ['Pasir Puteh', 'Kota Bharu', 'Pasir Mas', 'Tumpat', 'Bachok', 'Machang', 'Tanah Merah', 'Kuala Krai', 'Gua Musang', 'Jeli'];
         }
 
-        $selectedJajahan = $request->input('jajahan');
-        if (!$selectedJajahan && !$user->isSuperAdmin() && !$user->isPengarah() && !empty($user->jajahan)) {
-            $selectedJajahan = $user->jajahan;
-        }
+        $selectedJajahan = $request->input('jajahan', 'Semua');
 
         $query = ActionList::with(['pegawai', 'creator']);
 

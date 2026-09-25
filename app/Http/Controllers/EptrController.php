@@ -469,6 +469,17 @@ class EptrController extends Controller implements HasMiddleware
                 'fa-solid fa-cow',
                 'emerald'
             );
+
+            // Catat ke Action List
+            \App\Models\ActionList::catatAktiviti([
+                'tajuk_aktiviti' => "Pendaftaran & Kelulusan Ternakan EPTR (Tag: {$noTag})",
+                'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+                'maklumat_aktiviti' => "Pendaftaran serta kelulusan serta-merta ternakan {$ternakan->jenis_ternakan} ({$ternakan->baka}) bagi pemunya " . ($ternakan->pemunya->nama ?? 'Penternak') . " dengan No. Tag Rasmi {$noTag} dan No Siri Kad Kuning {$noSiriKadKuning}.",
+                'jajahan' => $ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+                'lokasi' => 'Pejabat JPV Jajahan ' . ($ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
+                'status' => 'Selesai',
+            ]);
+
             return redirect()->route('eptr.show', $ternakan->id)->with('success', "Pendaftaran Ternakan EPTR (Borang A) berjaya! No. Tag Telinga Rasmi: {$noTag} telah dijana secara automatik.");
         }
 
@@ -2444,6 +2455,16 @@ class EptrController extends Controller implements HasMiddleware
                 'fa-solid fa-baby',
                 'emerald'
             );
+
+            // Catat ke Action List
+            \App\Models\ActionList::catatAktiviti([
+                'tajuk_aktiviti' => "Pendaftaran Kelahiran Anak Ternakan (" . ($noTagAnak ?: 'Tag Induk: ' . ($induk->no_tag ?? $induk->id)) . ")",
+                'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+                'maklumat_aktiviti' => "Perekodan kelahiran anak ternakan {$validated['baka_anak']} ({$validated['jantina_anak']}) bagi Induk " . ($induk->no_tag ?? $induk->id) . " (Pemunya: {$namaPemunya}).",
+                'jajahan' => $jajahanKelahiran ?: ($user->jajahan ?: 'Pasir Puteh'),
+                'lokasi' => 'Pejabat JPV Jajahan ' . ($jajahanKelahiran ?: ($user->jajahan ?: 'Pasir Puteh')),
+                'status' => 'Selesai',
+            ]);
         } else {
             // 1. Notifikasi kepada pemohon (Penternak)
             \App\Models\UserNotification::send(
@@ -2705,6 +2726,16 @@ class EptrController extends Controller implements HasMiddleware
             'catatan_dan_syor' => $validated['catatan_dan_syor'] ?? null,
             'dokumen_lampiran' => $lampiranPath,
             'didaftar_oleh' => $user->id,
+        ]);
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Program Kesihatan Ternakan ({$validated['jenis_program']} - Tag: {$ternakan->no_tag})",
+            'kategori_aktiviti' => 'Khidmat Rawatan & Klinikal',
+            'maklumat_aktiviti' => "Pemberian rawatan/vaksinasi ({$validated['nama_vaksin_atau_ubat']}) bagi ternakan No. Tag {$ternakan->no_tag}. Status: {$validated['status_kesihatan']}. Pemeriksa: {$validated['pegawai_pemeriksa']}.",
+            'jajahan' => $ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => $validated['lokasi_pemeriksaan'] ?? ($ternakan->lokasi_kandang ?? ('Kandang Penternak ' . $ternakan->jajahan)),
+            'status' => 'Selesai',
         ]);
 
         return redirect()->route('eptr.kesihatan.show', $rekod->id)->with('success', "Rekod Program Kesihatan ({$validated['jenis_program']}) berjaya disimpan bagi No. Tag: {$ternakan->no_tag}.");
