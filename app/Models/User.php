@@ -325,19 +325,7 @@ class User extends Authenticatable
 
     public function canManageActionList(): bool
     {
-        return $this->hasAnyRole([
-            'super_admin',
-            'pengarah',
-            'admin_jajahan',
-            'admin_eptr_jajahan',
-            'pegawai_jajahan',
-            'admin_klinik',
-            'admin_ubat',
-            'admin_eptr',
-            'admin_program',
-            'admin_naimbif_jajahan',
-            'admin_epu_jajahan',
-        ]);
+        return $this->isAdmin();
     }
 
     public function isAdminEptrJajahan(): bool

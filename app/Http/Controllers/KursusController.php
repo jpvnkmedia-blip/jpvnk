@@ -387,6 +387,16 @@ class KursusController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Peserta Kursus ({$application->course->title})",
+            'kategori_aktiviti' => 'Program & Kursus Ternakan',
+            'maklumat_aktiviti' => "Meluluskan pendaftaran peserta kursus {$application->user->name} ({$application->registration_number}) bagi kursus '{$application->course->title}'.",
+            'jajahan' => $application->course->jajahan ?: 'Kota Bharu',
+            'lokasi' => $application->course->location,
+            'status' => 'Selesai',
+        ]);
+
         return back()->with('success', "Permohonan pendaftaran bagi '{$application->user->name}' ({$application->registration_number}) telah DILULUSKAN.");
     }
 
@@ -423,6 +433,16 @@ class KursusController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Peserta Kursus ({$application->course->title})",
+            'kategori_aktiviti' => 'Program & Kursus Ternakan',
+            'maklumat_aktiviti' => "Menolak permohonan peserta {$application->user->name} bagi kursus '{$application->course->title}'. Sebab: {$request->rejection_reason}.",
+            'jajahan' => $application->course->jajahan ?: 'Kota Bharu',
+            'lokasi' => $application->course->location,
+            'status' => 'Selesai',
+        ]);
+
         return back()->with('success', "Permohonan bagi '{$application->user->name}' telah DITOLAK. Sebab penolakan telah direkodkan.");
     }
 
@@ -455,6 +475,16 @@ class KursusController extends Controller implements HasMiddleware
                 'amber'
             );
         }
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pengesahan Kehadiran & Sijil Kursus ({$certNo})",
+            'kategori_aktiviti' => 'Program & Kursus Ternakan',
+            'maklumat_aktiviti' => "Mengesahkan kehadiran peserta {$application->user->name} dalam kursus '{$application->course->title}' dan menjana Sijil Digital ({$certNo}).",
+            'jajahan' => $application->course->jajahan ?: 'Kota Bharu',
+            'lokasi' => $application->course->location,
+            'status' => 'Selesai',
+        ]);
 
         return back()->with('success', "Kehadiran '{$application->user->name}' disahkan. Sijil Digital rasmi ({$certNo}) berjaya dijana.");
     }

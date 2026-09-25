@@ -503,6 +503,16 @@ class EpuController extends Controller implements HasMiddleware
             Auth::id()
         );
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pemeriksaan Premis Unggas EPU ({$ladang->nama_ladang})",
+            'kategori_aktiviti' => 'Pelesenan & Permit (EPU)',
+            'maklumat_aktiviti' => "Menjalankan pemeriksaan tapak & penguatkuasaan Enakmen Perladangan Unggas (EPU Borang D) bagi ladang '{$ladang->nama_ladang}' ({$ladang->pemilik->name}). Keputusan: {$validated['status_keputusan']}.",
+            'jajahan' => $ladang->jajahan ?: 'Pasir Puteh',
+            'lokasi' => $ladang->lokasi_ladang ?: ('Jajahan ' . $ladang->jajahan),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('epu.show', $ladang->id)->with('success', 'Laporan Pemeriksaan Tapak & Penguatkuasaan (EPU Borang D) telah direkodkan.');
     }
 
@@ -616,6 +626,16 @@ class EpuController extends Controller implements HasMiddleware
                 $user->id
             );
         }
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Verifikasi Permohonan Lesen EPU (#{$permohonan->no_rujukan})",
+            'kategori_aktiviti' => 'Pelesenan & Permit (EPU)',
+            'maklumat_aktiviti' => "Menjalankan verifikasi PPVJ bagi permohonan lesen ladang '{$permohonan->ladang->nama_ladang}' ({$permohonan->ladang->pemilik->name}). Status Verifikasi: {$statusVerifikasi}. " . ($catatan ? "Catatan: {$catatan}" : ""),
+            'jajahan' => $permohonan->ladang->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($permohonan->ladang->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Status verifikasi PPVJ telah dikemaskini kepada: {$statusVerifikasi}");
     }
@@ -758,6 +778,16 @@ class EpuController extends Controller implements HasMiddleware
             $keputusan === 'Lulus' ? 'emerald' : 'rose',
             $user->id
         );
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Keputusan Kelulusan Lesen EPU (#{$permohonan->no_rujukan}) - {$keputusan}",
+            'kategori_aktiviti' => 'Pelesenan & Permit (EPU)',
+            'maklumat_aktiviti' => "Pegawai Pelesen telah membuat keputusan [{$keputusan}] bagi permohonan lesen ladang unggas '{$permohonan->ladang->nama_ladang}' ({$permohonan->ladang->pemilik->name}). " . (!empty($validated['catatan_pegawai']) ? "Ulasan: {$validated['catatan_pegawai']}" : ""),
+            'jajahan' => $permohonan->ladang->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Ibu Pejabat JPV Negeri Kelantan / Jajahan ' . ($permohonan->ladang->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', "Keputusan Pegawai Pelesen ({$keputusan}) telah direkodkan dan makluman dihantar.");
     }
@@ -1011,6 +1041,16 @@ class EpuController extends Controller implements HasMiddleware
             'emerald',
             $user->id
         );
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pengesahan Bayaran Fi Lesen EPU (#{$permohonan->no_rujukan})",
+            'kategori_aktiviti' => 'Pelesenan & Permit (EPU)',
+            'maklumat_aktiviti' => "Mengesahkan pembayaran fi lesen (RM " . number_format($permohonan->yuran_lesen, 2) . ") bagi ladang '{$permohonan->ladang->nama_ladang}' ({$permohonan->ladang->pemilik->name}). Lesen Borang B dijana.",
+            'jajahan' => $permohonan->ladang->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($permohonan->ladang->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('epu.show', $permohonan->ladang->id)->with('success', 'Pembayaran fi lesen telah disahkan.');
     }

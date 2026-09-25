@@ -198,7 +198,7 @@ class AdminJajahanActionListTest extends TestCase
             'no_bil' => 'AL/PP/2026/0005',
             'tajuk_aktiviti' => 'Audit Bio-sekuriti Reban Ayam',
             'tarikh' => '2026-09-25',
-            'kategori_aktiviti' => 'Lawatan / Pemeriksaan Lapangan',
+            'kategori_aktiviti' => 'Lawatan Lapangan',
             'jajahan' => 'Pasir Puteh',
             'maklumat_aktiviti' => 'Laporan audit biosekuriti reban tertutup.',
             'status' => 'Selesai',
@@ -209,5 +209,72 @@ class AdminJajahanActionListTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Audit Bio-sekuriti Reban Ayam');
         $response->assertSee('AL/PP/2026/0005');
+    }
+
+    public function test_eptr_admin_approval_automatically_logs_to_action_list(): void
+    {
+        $pemunya = \App\Models\Pemunya::firstOrCreate(
+            ['no_kp' => '900101035544'],
+            [
+                'user_id' => $this->penternak->id,
+                'nama' => 'Ahmad Razak',
+                'no_telefon' => '012-3456789',
+                'alamat' => 'Kampung Padang Pak Amat',
+                'jajahan' => 'Pasir Puteh',
+                'status' => 'Aktif',
+            ]
+        );
+
+        $ternakan = \App\Models\Ternakan::create([
+            'pemunya_id' => $pemunya->id,
+            'jenis_ternakan' => 'Lembu',
+            'baka' => 'Kedah-Kelantan (KK)',
+            'jantina' => 'Jantan',
+            'tarikh_lahir' => '2024-01-01',
+            'status_kelulusan' => 'Menunggu Kelulusan',
+            'status' => 'Menunggu Kelulusan',
+            'jajahan' => 'Pasir Puteh',
+            'daerah' => 'Padang Pak Amat',
+        ]);
+
+        $response = $this->actingAs($this->adminJajahanPasirPuteh)
+            ->post(route('eptr.lulus', $ternakan->id));
+
+        $response->assertRedirect(route('eptr.show', $ternakan->id));
+
+        // Semak rekod automatik dalam action_lists
+        $this->assertDatabaseHas('action_lists', [
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'jajahan' => 'Pasir Puteh',
+            'status' => 'Selesai',
+        ]);
+
+        $loggedActivity = ActionList::where('kategori_aktiviti', 'Pendaftaran Ternakan (EPTR)')->first();
+        $this->assertNotNull($loggedActivity);
+        $this->assertStringContainsString('Kelulusan Pendaftaran Ternakan EPTR', $loggedActivity->tajuk_aktiviti);
+    }
+
+    public function test_all_admin_roles_can_access_action_list(): void
+    {
+        $adminRoles = [
+            'admin_eptr',
+            'admin_epu_negeri',
+            'admin_epu_jajahan',
+            'admin_kursus',
+            'admin_ubat',
+            'admin_klinik',
+            'admin_kenderaan',
+            'admin_pejabat',
+        ];
+
+        foreach ($adminRoles as $role) {
+            $adminUser = User::factory()->create([
+                'role' => $role,
+                'jajahan' => 'Pasir Puteh',
+            ]);
+
+            $response = $this->actingAs($adminUser)->get(route('action-list.index'));
+            $response->assertStatus(200);
+        }
     }
 }

@@ -505,6 +505,16 @@ class PawahController extends Controller implements HasMiddleware
             }
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Permohonan Skim Pawah (#{$noPerjanjian})",
+            'kategori_aktiviti' => 'Skim Pawah & Ternakan',
+            'maklumat_aktiviti' => "Meluluskan permohonan skim pawah bagi peserta " . ($perjanjian->peserta->name ?? 'Peserta') . " ({$perjanjian->nama_program}) melibatkan " . count($validated['ternakan_ids']) . " ekor induk lembu.",
+            'jajahan' => $perjanjian->jajahan ?: 'Pasir Puteh',
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($perjanjian->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('pawah.show', $perjanjian->id)->with('success', 'Permohonan Pawah telah diluluskan dan lembu induk EPTR berjaya dipautkan!');
     }
 
@@ -524,6 +534,16 @@ class PawahController extends Controller implements HasMiddleware
         $perjanjian->status = 'Ditolak';
         $perjanjian->catatan = ($perjanjian->catatan ? $perjanjian->catatan . " | " : "") . "Sebab Penolakan: " . $validated['sebab_tolak'] . " (Pegawai: " . Auth::user()->name . " pada " . date('d/m/Y') . ")";
         $perjanjian->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Permohonan Skim Pawah (ID: #{$perjanjian->id})",
+            'kategori_aktiviti' => 'Skim Pawah & Ternakan',
+            'maklumat_aktiviti' => "Menolak permohonan skim pawah bagi peserta " . ($perjanjian->peserta->name ?? 'Peserta') . ". Alasan: {$validated['sebab_tolak']}.",
+            'jajahan' => $perjanjian->jajahan ?: 'Pasir Puteh',
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($perjanjian->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('pawah.show', $perjanjian->id)->with('success', 'Permohonan Program Pawah telah ditolak.');
     }

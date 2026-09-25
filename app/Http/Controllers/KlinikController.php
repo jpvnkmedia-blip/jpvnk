@@ -366,6 +366,18 @@ class KlinikController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List jika didaftarkan oleh Admin / Staf
+        if (Auth::user()->isStaff()) {
+            \App\Models\ActionList::catatAktiviti([
+                'tajuk_aktiviti' => "Pendaftaran Temujanji Klinik Veterinar (#{$temujanji->no_temujanji})",
+                'kategori_aktiviti' => 'Khidmat Rawatan & Klinikal',
+                'maklumat_aktiviti' => "Mendaftar temujanji klinikal bagi haiwan {$temujanji->jenis_haiwan} (" . ($temujanji->pemilik->name ?? 'Pemilik') . ") untuk tujuan: {$temujanji->simptom_atau_tujuan}.",
+                'jajahan' => Auth::user()->jajahan ?: 'Kota Bharu',
+                'lokasi' => $temujanji->klinik_jajahan,
+                'status' => 'Selesai',
+            ]);
+        }
+
         return redirect()->route('klinik.show', $temujanji->id)->with('success', 'Temujanji Klinik Haiwan berjaya didaftarkan.');
     }
 
@@ -420,6 +432,16 @@ class KlinikController extends Controller implements HasMiddleware
 
         $temujanji->status = 'Selesai';
         $temujanji->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penyelesaian Rawatan Klinikal Veterinar (#{$noRawatan})",
+            'kategori_aktiviti' => 'Khidmat Rawatan & Klinikal',
+            'maklumat_aktiviti' => "Memberikan rawatan pesakit veterinar bagi {$temujanji->jenis_haiwan} ({$temujanji->nama_haiwan}). Diagnosis: {$validated['diagnosis']}. Rawatan: {$validated['rawatan_diberikan']}. Ubat: " . ($validated['ubat_diberikan'] ?? 'Tiada') . ".",
+            'jajahan' => Auth::user()->jajahan ?: 'Kota Bharu',
+            'lokasi' => $temujanji->klinik_jajahan,
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('klinik.show', $temujanji->id)->with('success', 'Rekod rawatan pesakit veterinar berjaya disimpan.');
     }

@@ -176,6 +176,16 @@ class InventoriController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pendaftaran Stok Peralatan Pejabat ({$item->nama_item})",
+            'kategori_aktiviti' => 'Pengurusan Stor & Inventori',
+            'maklumat_aktiviti' => "Mendaftar barangan pejabat baharu: {$item->nama_item} ({$item->kod_item}) - Kuantiti Permulaan: {$item->kuantiti_semasa} {$item->unit}.",
+            'jajahan' => 'Kota Bharu',
+            'lokasi' => $item->lokasi_rak,
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('inventori.pejabat.index')->with('success', "Barangan pejabat '{$item->nama_item}' ({$item->kod_item}) berjaya didaftarkan.");
     }
 
@@ -319,6 +329,16 @@ class InventoriController extends Controller implements HasMiddleware
                 'catatan' => 'Pendaftaran item farmaseutikal / ubat / vaksin baharu (Batch: ' . ($validated['no_batch'] ?? 'N/A') . ').',
             ]);
         }
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pendaftaran Stok Ubat / Farmasi ({$item->nama_item})",
+            'kategori_aktiviti' => 'Pengurusan Stor & Inventori',
+            'maklumat_aktiviti' => "Mendaftar ubat/vaksin veterinar baharu: {$item->nama_item} ({$item->kod_item}) - Kuantiti: {$item->kuantiti_semasa} {$item->unit}, Batch: " . ($item->no_batch ?? 'N/A') . ", Luput: " . ($item->tarikh_luput ? \Carbon\Carbon::parse($item->tarikh_luput)->format('d/m/Y') : 'N/A') . ".",
+            'jajahan' => 'Kota Bharu',
+            'lokasi' => $item->lokasi_rak,
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('inventori.ubat.index')->with('success', "Item ubat/vaksin '{$item->nama_item}' ({$item->kod_item}) berjaya didaftarkan.");
     }

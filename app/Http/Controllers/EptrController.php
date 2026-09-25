@@ -582,6 +582,16 @@ class EptrController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List (Dairi Aktiviti Admin)
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Pendaftaran Ternakan EPTR (Tag: {$noTag})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Meluluskan pendaftaran ternakan {$ternakan->jenis_ternakan} ({$ternakan->baka}) bagi pemunya " . ($ternakan->pemunya->nama ?? 'Penternak') . " dengan No. Tag Rasmi {$noTag} dan No Siri Kad Kuning {$noSiriKadKuning}.",
+            'jajahan' => $ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($ternakan->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('eptr.show', $ternakan->id)->with('success', "Permohonan pendaftaran ternakan berjaya DILULUSKAN! No. Tag Telinga Rasmi: {$noTag} telah dijana secara automatik mengikut Daerah {$ternakan->daerah}.");
     }
 
@@ -597,6 +607,8 @@ class EptrController extends Controller implements HasMiddleware
 
         $ternakan = Ternakan::findOrFail($id);
         $ternakan->status_kelulusan = 'Ditolak';
+        $ternakan->status = 'Batal';
+        $ternakan->catatan = ($ternakan->catatan ? $ternakan->catatan . " | " : "") . "Ditolak oleh Admin Jajahan pada " . Carbon::now()->format('d/m/Y');
         $ternakan->save();
 
         // Notifikasi penolakan kepada pemunya
@@ -611,10 +623,16 @@ class EptrController extends Controller implements HasMiddleware
                 'rose'
             );
         }
-        $ternakan->status_kelulusan = 'Ditolak';
-        $ternakan->status = 'Batal';
-        $ternakan->catatan = ($ternakan->catatan ? $ternakan->catatan . " | " : "") . "Ditolak oleh Admin Jajahan pada " . Carbon::now()->format('d/m/Y');
-        $ternakan->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Pendaftaran Ternakan EPTR (ID: #{$ternakan->id})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Menolak permohonan pendaftaran ternakan {$ternakan->jenis_ternakan} ({$ternakan->baka}) bagi pemunya " . ($ternakan->pemunya->nama ?? 'Penternak') . ".",
+            'jajahan' => $ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($ternakan->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('eptr.index')->with('info', "Permohonan pendaftaran ternakan telah DITOLAK.");
     }
@@ -1264,6 +1282,16 @@ class EptrController extends Controller implements HasMiddleware
             $ternakan->save();
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Pindah Milik Ternakan (Tag: " . ($ternakan->no_tag ?? '-') . ")",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Meluluskan Borang B (Pindah Milik Ternakan) bagi No. Tag " . ($ternakan->no_tag ?? '-') . " daripada pemunya asal kepada {$pindahMilik->pemunyaBaru->nama}.",
+            'jajahan' => $pindahMilik->pemunyaBaru->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($pindahMilik->pemunyaBaru->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('eptr.borang-b.show', $pindahMilik->id)->with('success', "Permohonan Borang B (Pindah Milik Ternakan) telah BERJAYA DILULUSKAN. Hak milik No. Tag {$ternakan->no_tag} telah dipindahkan kepada {$pindahMilik->pemunyaBaru->nama}.");
     }
 
@@ -1284,6 +1312,16 @@ class EptrController extends Controller implements HasMiddleware
         $pindahMilik->diluluskan_oleh = $user->id;
         $pindahMilik->catatan = ($pindahMilik->catatan ? $pindahMilik->catatan . " | " : "") . "Ditolak oleh {$user->nama} pada " . Carbon::now()->format('d/m/Y');
         $pindahMilik->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Pindah Milik Ternakan (ID: #{$pindahMilik->id})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Menolak permohonan Borang B pindah milik bagi ternakan " . ($pindahMilik->ternakan->no_tag ?? "ID #{$pindahMilik->ternakan_id}") . ".",
+            'jajahan' => $user->jajahan ?: 'Pasir Puteh',
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($user->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('eptr.borang-b.show', $pindahMilik->id)->with('info', 'Permohonan Pindah Milik Ternakan (Borang B) telah DITOLAK.');
     }
@@ -1519,7 +1557,17 @@ class EptrController extends Controller implements HasMiddleware
             $ternakan->save();
         }
 
-        return redirect()->route('eptr.borang-c.index')->with('success', "Notis Pembatalan EPTR (Borang C) untuk Ternakan No. Tag {$ternakan->no_tag} telah berjaya DISAHKAN.");
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pengesahan Notis Pembatalan Ternakan (Tag: " . ($ternakan->no_tag ?? '-') . ")",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Mengesahkan Notis Borang C (Pembatalan/Kematian/Kecurian) bagi No. Tag " . ($ternakan->no_tag ?? '-') . " (Sebab: {$pembatalan->jenis_batal}).",
+            'jajahan' => $pembatalan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($pembatalan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
+            'status' => 'Selesai',
+        ]);
+
+        return redirect()->route('eptr.borang-c.index')->with('success', "Notis Pembatalan EPTR (Borang C) untuk Ternakan No. Tag " . ($ternakan->no_tag ?? '') . " telah berjaya DISAHKAN.");
     }
 
     /**
@@ -1537,6 +1585,16 @@ class EptrController extends Controller implements HasMiddleware
         $pembatalan->disahkan_oleh = $user->id;
         $pembatalan->catatan = ($pembatalan->catatan ? $pembatalan->catatan . " | " : "") . "Ditolak oleh {$user->nama} pada " . Carbon::now()->format('d/m/Y H:i');
         $pembatalan->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Notis Pembatalan Ternakan (ID: #{$pembatalan->id})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Menolak Notis Pembatalan Ternakan Borang C (ID: #{$pembatalan->id}).",
+            'jajahan' => $pembatalan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($pembatalan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('eptr.borang-c.index')->with('info', "Notis Pembatalan EPTR (Borang C) telah DITOLAK.");
     }
@@ -2040,6 +2098,16 @@ class EptrController extends Controller implements HasMiddleware
             }
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Permit Sembelihan (No: {$permit->no_permit})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Meluluskan Borang D (Permit Sembelihan Luar / Rumah Sembelih) No. {$permit->no_permit} bagi pemunya " . ($permit->pemunya->nama ?? 'Penternak') . " melibatkan " . count($ternakanIds) . " ekor ternakan.",
+            'jajahan' => $permit->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => $permit->lokasi_sembelih ?: ('Pejabat JPV Jajahan ' . ($permit->jajahan ?: 'Pasir Puteh')),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('eptr.borang-d.show', $permit->id)->with('success', "Permit Sembelihan No. {$permit->no_permit} dan SKV Sembelih telah BERJAYA DILULUSKAN.");
     }
 
@@ -2058,6 +2126,16 @@ class EptrController extends Controller implements HasMiddleware
         $permit->diluluskan_oleh = $user->id;
         $permit->catatan = ($permit->catatan ? $permit->catatan . " | " : "") . "Ditolak oleh {$user->nama} pada " . Carbon::now()->format('d/m/Y H:i');
         $permit->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Permit Sembelihan (No: {$permit->no_permit})",
+            'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
+            'maklumat_aktiviti' => "Menolak permohonan Permit Sembelihan Borang D No. {$permit->no_permit}.",
+            'jajahan' => $permit->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
+            'lokasi' => 'Pejabat JPV Jajahan ' . ($permit->jajahan ?: 'Pasir Puteh'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('eptr.borang-d.show', $permit->id)->with('info', "Permit Sembelihan No. {$permit->no_permit} telah DITOLAK.");
     }

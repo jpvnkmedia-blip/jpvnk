@@ -372,6 +372,16 @@ class UserController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Pendaftaran Pengguna Sistem ({$user->name})",
+            'kategori_aktiviti' => 'Pengurusan Pengguna & Pentadbiran',
+            'maklumat_aktiviti' => "Mendaftar akaun pengguna/pentadbir baharu: {$user->name} (Emel: {$user->email}, Peranan: {$user->role_label}, Jajahan: " . ($user->jajahan ?: 'Semua') . ").",
+            'jajahan' => $user->jajahan ?: 'Kota Bharu',
+            'lokasi' => 'Ibu Pejabat JPV Negeri Kelantan / Jajahan ' . ($user->jajahan ?: 'Kota Bharu'),
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->route('users.index')->with('success', "Akaun pengguna baharu berjaya didaftarkan untuk: {$user->name} ({$user->role_label})!");
     }
 
@@ -513,6 +523,16 @@ class UserController extends Controller implements HasMiddleware
                 );
             }
         }
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kemaskini Profil/Peranan Pengguna ({$targetUser->name})",
+            'kategori_aktiviti' => 'Pengurusan Pengguna & Pentadbiran',
+            'maklumat_aktiviti' => "Mengemaskini maklumat profil dan peranan pengguna bagi {$targetUser->name} (Peranan Terkini: {$targetUser->role_label}).",
+            'jajahan' => $targetUser->jajahan ?: 'Kota Bharu',
+            'lokasi' => 'Ibu Pejabat JPV Negeri Kelantan / Jajahan ' . ($targetUser->jajahan ?: 'Kota Bharu'),
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->route('users.index')->with('success', "Maklumat pengguna {$targetUser->name} berjaya dikemaskini!");
     }

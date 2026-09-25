@@ -238,6 +238,16 @@ class KenderaanController extends Controller implements HasMiddleware
             );
         }
 
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Kelulusan Tempahan Kenderaan Jabatan (#{$tempahan->no_tempahan}) - {$validated['status']}",
+            'kategori_aktiviti' => 'Tempahan Kenderaan & Media',
+            'maklumat_aktiviti' => "Tindakan kelulusan tempahan kenderaan rasmi (#{$tempahan->no_tempahan}) ke {$tempahan->destinasi} bagi tujuan '{$tempahan->tujuan_perjalanan}'. Status: {$validated['status']}.",
+            'jajahan' => 'Kota Bharu',
+            'lokasi' => $tempahan->destinasi,
+            'status' => 'Selesai',
+        ]);
+
         return redirect()->back()->with('success', 'Status permohonan kenderaan berjaya dikemaskini.');
     }
 
@@ -256,6 +266,16 @@ class KenderaanController extends Controller implements HasMiddleware
         $tempahan->catatan_kelulusan = $catatan;
         $tempahan->diluluskan_oleh = Auth::id();
         $tempahan->save();
+
+        // Catat ke Action List
+        \App\Models\ActionList::catatAktiviti([
+            'tajuk_aktiviti' => "Penolakan Tempahan Kenderaan Jabatan (#{$tempahan->no_tempahan})",
+            'kategori_aktiviti' => 'Tempahan Kenderaan & Media',
+            'maklumat_aktiviti' => "Menolak tempahan kenderaan (#{$tempahan->no_tempahan}) ke {$tempahan->destinasi}. Sebab: {$catatan}.",
+            'jajahan' => 'Kota Bharu',
+            'lokasi' => $tempahan->destinasi,
+            'status' => 'Selesai',
+        ]);
 
         return redirect()->back()->with('success', 'Permohonan tempahan kenderaan telah ditolak.');
     }
