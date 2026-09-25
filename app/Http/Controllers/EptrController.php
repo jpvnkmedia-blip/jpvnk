@@ -361,11 +361,8 @@ class EptrController extends Controller implements HasMiddleware
             }
         }
 
-        // Jika kakitangan (Admin Jajahan / EPTR / Super Admin) yang mendaftar, boleh terus diluluskan dan dijana no tag
-        $isStaff = $user->isStaff();
-        $statusKelulusan = $isStaff ? 'Diluluskan' : 'Menunggu';
-        $statusTernakan = $isStaff ? ((!empty($validated['program']) && $validated['program'] !== 'Tiada' && str_contains(strtolower($validated['program']), 'pawah')) ? 'Pawah' : 'Aktif') : 'Menunggu';
-        
+        $statusKelulusan = 'Menunggu';
+        $statusTernakan = 'Menunggu';
         $noTag = null;
         $noSiriKadKuning = null;
         $qrCode = null;
@@ -373,17 +370,9 @@ class EptrController extends Controller implements HasMiddleware
         $diluluskanOleh = null;
         $tarikhKelulusan = null;
 
-        if ($isStaff) {
-            $noTag = self::generateNoTag($validated['jajahan'], $validated['daerah'] ?? $validated['jajahan']);
-            $noSiriKadKuning = 'DB-' . strtoupper(substr($validated['jajahan'], 0, 2)) . '-' . date('Y') . '-' . rand(10000, 99999);
-            $qrCode = 'QR-EPTR-' . $noTag;
-            $tarikhDaftar = Carbon::now()->toDateString();
-            $diluluskanOleh = $user->id;
-            $tarikhKelulusan = Carbon::now();
-        }
-
+        $isStaff = $user->isStaff();
         $programValue = $isStaff ? ($validated['program'] ?? 'Tiada') : 'Tiada';
-        $catatanValue = $isStaff ? ($validated['catatan'] ?? null) : null;
+        $catatanValue = $validated['catatan'] ?? null;
 
         // Semak dan pautkan No. Tag Induk jika wujud dalam sistem
         $tagInduk = trim($validated['no_tanda_pengenalan_induk'] ?? '');
@@ -457,30 +446,6 @@ class EptrController extends Controller implements HasMiddleware
                     'didaftar_oleh' => $user->id,
                 ]
             );
-        }
-
-        if ($isStaff) {
-            \App\Models\UserNotification::send(
-                $user->id,
-                'Pendaftaran Ternakan Selesai',
-                "Ternakan " . ucfirst($ternakan->jenis_ternakan) . " ({$ternakan->baka}) berjaya didaftarkan dengan No. Tag: {$noTag}.",
-                'eptr',
-                route('eptr.show', $ternakan->id),
-                'fa-solid fa-cow',
-                'emerald'
-            );
-
-            // Catat ke Action List
-            \App\Models\ActionList::catatAktiviti([
-                'tajuk_aktiviti' => "Pendaftaran & Kelulusan Ternakan EPTR (Tag: {$noTag})",
-                'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
-                'maklumat_aktiviti' => "Pendaftaran serta kelulusan serta-merta ternakan {$ternakan->jenis_ternakan} ({$ternakan->baka}) bagi pemunya " . ($ternakan->pemunya->nama ?? 'Penternak') . " dengan No. Tag Rasmi {$noTag} dan No Siri Kad Kuning {$noSiriKadKuning}.",
-                'jajahan' => $ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh'),
-                'lokasi' => 'Pejabat JPV Jajahan ' . ($ternakan->jajahan ?: ($user->jajahan ?: 'Pasir Puteh')),
-                'status' => 'Selesai',
-            ]);
-
-            return redirect()->route('eptr.show', $ternakan->id)->with('success', "Pendaftaran Ternakan EPTR (Borang A) berjaya! No. Tag Telinga Rasmi: {$noTag} telah dijana secara automatik.");
         }
 
         // 1. Notifikasi kepada pemohon (Penternak / Orang Awam)
@@ -2358,23 +2323,14 @@ class EptrController extends Controller implements HasMiddleware
 
         // Jika anak hidup, daftarkan rekod ternakan baharu secara automatik
         if ($validated['status_kelahiran'] === 'Hidup') {
-            $statusKelulusan = $isStaff ? 'Diluluskan' : 'Menunggu';
-            $statusAnak = $isStaff ? ((!empty($induk->program) && $induk->program !== 'Tiada' && str_contains(strtolower($induk->program), 'pawah')) ? 'Pawah' : 'Aktif') : 'Menunggu';
-
+            $statusKelulusan = 'Menunggu';
+            $statusAnak = 'Menunggu';
+            $noTagAnak = null;
             $noSiriKadKuning = null;
             $qrCode = null;
             $tarikhDaftar = null;
             $diluluskanOleh = null;
             $tarikhKelulusan = null;
-
-            if ($isStaff) {
-                $noTagAnak = self::generateNoTag($induk->jajahan, $induk->daerah ?? $induk->jajahan);
-                $noSiriKadKuning = 'DB-' . strtoupper(substr($induk->jajahan, 0, 2)) . '-' . date('Y') . '-' . rand(10000, 99999);
-                $qrCode = 'QR-EPTR-' . $noTagAnak;
-                $tarikhDaftar = Carbon::now()->toDateString();
-                $diluluskanOleh = $user->id;
-                $tarikhKelulusan = Carbon::now();
-            }
 
             $anakTernakan = Ternakan::create([
                 'pemunya_id' => $induk->pemunya_id,
@@ -2445,88 +2401,63 @@ class EptrController extends Controller implements HasMiddleware
         $targetUrl = route('eptr.show', $anakTernakan ? $anakTernakan->id : $induk->id);
         $jajahanKelahiran = $induk->jajahan;
 
-        if ($isStaff) {
-            \App\Models\UserNotification::send(
-                $user->id,
-                'Pendaftaran Kelahiran Anak Selesai',
-                "Pendaftaran kelahiran anak ternakan bagi Induk " . ($induk->no_tag ?? $induk->id) . " berjaya direkodkan" . ($noTagAnak ? " dengan No. Tag: {$noTagAnak}." : "."),
-                'eptr',
-                $targetUrl,
-                'fa-solid fa-baby',
-                'emerald'
-            );
+        // 1. Notifikasi kepada pemohon (Penternak)
+        \App\Models\UserNotification::send(
+            $user->id,
+            'Pendaftaran Kelahiran Anak Ternakan Dihantar',
+            "Pendaftaran kelahiran anak ternakan bagi Induk " . ($induk->no_tag ?? $induk->id) . " ({$validated['jantina_anak']} - {$validated['baka_anak']}) telah dihantar dan sedang menunggu semakan kelulusan Pegawai JPVNK.",
+            'eptr',
+            $targetUrl,
+            'fa-solid fa-baby',
+            'amber'
+        );
 
-            // Catat ke Action List
-            \App\Models\ActionList::catatAktiviti([
-                'tajuk_aktiviti' => "Pendaftaran Kelahiran Anak Ternakan (" . ($noTagAnak ?: 'Tag Induk: ' . ($induk->no_tag ?? $induk->id)) . ")",
-                'kategori_aktiviti' => 'Pendaftaran Ternakan (EPTR)',
-                'maklumat_aktiviti' => "Perekodan kelahiran anak ternakan {$validated['baka_anak']} ({$validated['jantina_anak']}) bagi Induk " . ($induk->no_tag ?? $induk->id) . " (Pemunya: {$namaPemunya}).",
-                'jajahan' => $jajahanKelahiran ?: ($user->jajahan ?: 'Pasir Puteh'),
-                'lokasi' => 'Pejabat JPV Jajahan ' . ($jajahanKelahiran ?: ($user->jajahan ?: 'Pasir Puteh')),
-                'status' => 'Selesai',
-            ]);
-        } else {
-            // 1. Notifikasi kepada pemohon (Penternak)
+        // 2. Notifikasi kepada Admin EPTR Jajahan berkenaan
+        $adminJajahanList = User::whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan'])
+            ->where(function ($q) use ($jajahanKelahiran) {
+                $q->where('jajahan', $jajahanKelahiran)
+                  ->orWhereNull('jajahan')
+                  ->orWhere('jajahan', '');
+            })
+            ->where('id', '!=', $user->id)
+            ->get();
+
+        if ($adminJajahanList->isEmpty()) {
+            $adminJajahanList = User::whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan'])
+                ->where('id', '!=', $user->id)
+                ->get();
+        }
+
+        foreach ($adminJajahanList as $aj) {
             \App\Models\UserNotification::send(
-                $user->id,
-                'Pendaftaran Kelahiran Anak Ternakan Dihantar',
-                "Pendaftaran kelahiran anak ternakan bagi Induk " . ($induk->no_tag ?? $induk->id) . " ({$validated['jantina_anak']} - {$validated['baka_anak']}) telah dihantar dan sedang menunggu semakan kelulusan Pegawai JPVNK.",
+                $aj->id,
+                "Kelahiran Anak Ternakan Menunggu Kelulusan ({$jajahanKelahiran})",
+                "Pendaftaran kelahiran anak ternakan baharu bagi Induk " . ($induk->no_tag ?? $induk->id) . " oleh {$namaPemunya} di Jajahan {$jajahanKelahiran} memerlukan semakan & kelulusan anda.",
                 'eptr',
                 $targetUrl,
-                'fa-solid fa-baby',
+                'fa-solid fa-clipboard-check',
                 'amber'
             );
-
-            // 2. Notifikasi kepada Admin EPTR Jajahan berkenaan
-            $adminJajahanList = User::whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan'])
-                ->where(function ($q) use ($jajahanKelahiran) {
-                    $q->where('jajahan', $jajahanKelahiran)
-                      ->orWhereNull('jajahan')
-                      ->orWhere('jajahan', '');
-                })
-                ->where('id', '!=', $user->id)
-                ->get();
-
-            if ($adminJajahanList->isEmpty()) {
-                $adminJajahanList = User::whereIn('role', ['admin_jajahan', 'admin_eptr_jajahan'])
-                    ->where('id', '!=', $user->id)
-                    ->get();
-            }
-
-            foreach ($adminJajahanList as $aj) {
-                \App\Models\UserNotification::send(
-                    $aj->id,
-                    "Kelahiran Anak Ternakan Menunggu Kelulusan ({$jajahanKelahiran})",
-                    "Pendaftaran kelahiran anak ternakan baharu bagi Induk " . ($induk->no_tag ?? $induk->id) . " oleh {$namaPemunya} di Jajahan {$jajahanKelahiran} memerlukan semakan & kelulusan anda.",
-                    'eptr',
-                    $targetUrl,
-                    'fa-solid fa-clipboard-check',
-                    'amber'
-                );
-            }
-
-            // 3. Notifikasi kepada Admin EPTR Negeri & Super Admin
-            $adminNegeriList = User::whereIn('role', ['admin_eptr', 'super_admin'])
-                ->where('id', '!=', $user->id)
-                ->get();
-
-            foreach ($adminNegeriList as $an) {
-                \App\Models\UserNotification::send(
-                    $an->id,
-                    "Pendaftaran Kelahiran Anak Baharu ({$jajahanKelahiran})",
-                    "Pendaftaran kelahiran anak ternakan baharu bagi Induk " . ($induk->no_tag ?? $induk->id) . " oleh {$namaPemunya} (Jajahan {$jajahanKelahiran}).",
-                    'eptr',
-                    $targetUrl,
-                    'fa-solid fa-cow',
-                    'blue'
-                );
-            }
         }
 
-        $mesej = "Pendaftaran kelahiran anak ternakan bagi Induk " . ($induk->no_tag ?? $induk->id) . " berjaya direkodkan!";
-        if ($anakTernakan && $noTagAnak) {
-            $mesej .= " No. Tag Telinga Rasmi anak: {$noTagAnak} telah dijana secara automatik.";
+        // 3. Notifikasi kepada Admin EPTR Negeri & Super Admin
+        $adminNegeriList = User::whereIn('role', ['admin_eptr', 'super_admin'])
+            ->where('id', '!=', $user->id)
+            ->get();
+
+        foreach ($adminNegeriList as $an) {
+            \App\Models\UserNotification::send(
+                $an->id,
+                "Pendaftaran Kelahiran Anak Baharu ({$jajahanKelahiran})",
+                "Pendaftaran kelahiran anak ternakan baharu bagi Induk " . ($induk->no_tag ?? $induk->id) . " oleh {$namaPemunya} (Jajahan {$jajahanKelahiran}).",
+                'eptr',
+                $targetUrl,
+                'fa-solid fa-cow',
+                'blue'
+            );
         }
+
+        $mesej = "Pendaftaran kelahiran anak ternakan bagi Induk " . ($induk->no_tag ?? $induk->id) . " berjaya dihantar dan sedang menunggu kelulusan Pegawai JPVNK.";
 
         return redirect()->route('eptr.show', $anakTernakan ? $anakTernakan->id : $induk->id)->with('success', $mesej);
     }

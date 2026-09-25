@@ -226,6 +226,8 @@ class ActionList extends Model
                 'lampiran' => $data['lampiran'] ?? null,
                 'pegawai_id' => $user ? $user->id : null,
                 'created_by' => $user ? $user->id : null,
+                'nama_pelanggan' => $data['nama_pelanggan'] ?? ($user ? $user->name : 'Pegawai JPVNK'),
+                'kod_dokumen' => $data['kod_dokumen'] ?? 'DAIRI-AKTIVITI',
             ]);
         } catch (\Throwable $e) {
             Log::warning('Gagal mencatat log Action List: ' . $e->getMessage());
